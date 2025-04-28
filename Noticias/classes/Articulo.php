@@ -1,13 +1,11 @@
 <?php
-
-    class Articulo
-    {
+    class Articulo {
         private array $imagenes;
         private string $especifiacacion;
         private bool $disponibilidad;
         private string $condicion;
         private Vendedor $vendedor;
-        private Categoria $categorias;
+        private array $categorias;
 
         function __construct(array $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor, Categoria $categorias) {
             $this->imagenes = $imagenes;
