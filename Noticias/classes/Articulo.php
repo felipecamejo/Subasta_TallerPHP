@@ -1,5 +1,7 @@
 <?php
-    //include Vendedor.php 
+    include 'Vendedor.php';
+    include 'Categoria.php';
+
     class Articulo {
         private string $imagenes;
         private string $especifiacacion;

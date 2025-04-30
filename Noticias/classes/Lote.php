@@ -1,6 +1,7 @@
 <?php
     include 'Articulo.php';
-    //incluir puja
+    include 'Puja.php';
+    
     class Lote {
             private float $valorBase;
             private float $pujaMinima;
