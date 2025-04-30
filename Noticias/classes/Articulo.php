@@ -1,19 +1,20 @@
 <?php
+    //include Vendedor.php 
     class Articulo {
-        private array $imagenes;
+        private string $imagenes;
         private string $especifiacacion;
         private bool $disponibilidad;
         private string $condicion;
         private Vendedor $vendedor;
         private array $categorias;
 
-        function __construct(array $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor, Categoria $categorias) {
+        function __construct(array $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor) {
             $this->imagenes = $imagenes;
             $this->especifiacacion = $especifiacacion;
             $this->disponibilidad = $disponibilidad;
             $this->condicion = $condicion;
             $this->vendedor = $vendedor;
-            $this->categorias = $categorias;
+            $this->categorias = [];
         }
 
         // Getters
@@ -62,8 +63,12 @@
             $this->vendedor = $vendedor;
         }
 
-        public function setCategorias(Categoria $categorias): void {
+        public function setCategorias(array $categorias): void {
             $this->categorias = $categorias;
+        }
+
+        public function addCategorias(Categoria $categorias): void {
+            $this->categorias[] = $categorias;
         }
     
     }

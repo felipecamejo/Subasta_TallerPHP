@@ -1,6 +1,5 @@
 <?php
-// Requiere hace que se detenga el codigo cuando da error a diferencia de include.
-require 'DtoDireccion.php';
+include 'DtoDireccion.php';
 
 class CasaRemate {
     private string $nombre;
@@ -9,10 +8,19 @@ class CasaRemate {
     private string $email;
     private string $telefono;
     private float $calificacion;
-    private array $subastas = [];
-
-    private array $rematadores = [];
-    // Falta el get y set rematadores
+    private array $subastas;
+    private array $rematadores;
+    
+    function __construct(string $nombre, string $idFiscal, DtoDireccion $direccion, string $email, string $telefono, float $calificacion) {
+        $this->nombre = $nombre;
+        $this->idFiscal = $idFiscal;
+        $this->direccion = $direccion;
+        $this->email = $email;
+        $this->calificacion = $calificacion;
+        $this->telefono = $telefono;
+        $this->rematadores = [];
+        $this->subastas = [];
+    }
 
     //Get´s
     public function getNombre(): string {
@@ -43,6 +51,10 @@ class CasaRemate {
         return $this->subastas;
     }
 
+    public function getRematadores(): array {
+        return $this->rematadores;
+    }
+
     // Setters
     public function setNombre(string $nombre): void {
         $this->nombre = $nombre;
@@ -68,7 +80,6 @@ class CasaRemate {
         $this->direccion = $direccion;
     }
 
-    // Es necesario tener un set y un add? 
     public function setSubastas(array $subastas): void {
         $this->subastas = $subastas;
     }

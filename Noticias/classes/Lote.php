@@ -1,15 +1,17 @@
 <?php
+    include 'Articulo.php';
+    //incluir puja
     class Lote {
             private float $valorBase;
             private float $pujaMinima;
             private array $articulos;
             private array $pujas;
 
-            function __construct(float $valorBase, float $pujaMinima, array $articulos, array $pujas) {
+            function __construct(float $valorBase, float $pujaMinima) {
                 $this->valorBase = $valorBase;
                 $this->pujaMinima = $pujaMinima;
-                $this->articulos = $articulos;
-                $this->pujas = $pujas;
+                $this->articulos = [];
+                $this->pujas = [];
             }
 
             // Getters
@@ -42,8 +44,16 @@
                 $this->articulos = $articulos;
             }
 
+            public function addArticulos(Articulo $articulo): void{
+                $this->articulos[] = $articulo;
+            }
+
             public function setPujas(array $pujas): void{
                 $this->pujas = $pujas;
+            }
+
+            public function addPujas(Puja $puja): void{
+                $this->pujas[] = $puja;
             }
 
         }

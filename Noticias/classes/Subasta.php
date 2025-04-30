@@ -1,22 +1,33 @@
 <?php
-require 'DtoDireccion.php';
-require 'CasaRemate.php';
+
+include 'DtoDireccion.php';
+include 'CasaRemate.php';
+include 'Rematador.php';
 
 class Subasta{
-    // En el diagrama estaba el atributo tipo subasta pero entiendo que ahora eso
-    // es la relacion con Lote, no?
     private DateTime $fecha;
-    private int $duracion;
+    private int $duracionMinutos;
     private DtoDireccion $direccion;
+    private Rematador $rematador;
     private CasaRemate $remate;
+    private array $lotes;
+
+    function __construct(DateTime $fecha, int $duracionMinutos, DtoDireccion $direccion, Rematador $rematador, CasaRemate $remate) {
+        $this->fecha = $fecha;
+        $this->duracionMinutos = $duracionMinutos;
+        $this->direccion = $direccion;
+        $this->rematador = $rematador;
+        $this->remate = $remate;
+        $this->lotes = [];
+    }
 
     //Getters
     public function getFecha(): DateTime {
         return $this->fecha;
     }
 
-    public function getDuracion(): int {
-        return $this->duracion;
+    public function getDuracionNinutos(): int {
+        return $this->duracionMinutos;
     }
 
     public function getDireccion(): DtoDireccion {
@@ -25,6 +36,14 @@ class Subasta{
 
     public function getRemate(): CasaRemate {
         return $this->remate;
+    }
+
+    public function getRematador(): Rematador {
+        return $this->rematador;
+    }
+
+    public function getLotes(): array {
+        return $this->lotes;
     }
 
     // Setters
@@ -36,12 +55,24 @@ class Subasta{
         $this->fecha = $fecha;
     }
 
-    public function setDuracion(int $duracion): void {
-        $this->duracion = $duracion;
+    public function setDuracionMinutos(int $duracionMinutos): void {
+        $this->duracionMinutos = $duracionMinutos;
     }
 
     public function setCasaRemate(CasaRemate $remate): void {
         $this->remate = $remate;
+    }
+
+    public function setRematador(Rematador $rematador): void {
+        $this->rematador = $rematador;
+    }
+
+    public function setLote(array $lotes): void {
+        $this->lotes = $lotes;
+    }
+
+    public function addLote(Lote $lote): void {
+        $this->lotes[] = $lote;
     }
 }
 

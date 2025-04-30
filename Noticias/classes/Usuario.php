@@ -1,16 +1,16 @@
 <?php
 
-require_once 'DtDireccion.php';
+include 'DtoDireccion.php';
 
 class Usuario {
     private string $nombre;
     private string $cedula;
     private string $email;
     private string $telefono;
-    private DtDireccion $direccionFiscal;
+    private DtoDireccion $direccionFiscal;
     private string $imagen;
 
-    public function __construct(string $nombre, string $cedula, string $email, string $telefono, DtDireccion $direccionFiscal, string $imagen) {
+    public function __construct(string $nombre, string $cedula, string $email, string $telefono, DtoDireccion $direccionFiscal, string $imagen) {
         $this->nombre = $nombre;
         $this->cedula = $cedula;
         $this->email = $email;
@@ -51,11 +51,11 @@ class Usuario {
         $this->telefono = $telefono;
     }
 
-    public function getDireccionFiscal(): DtDireccion {
+    public function getDireccionFiscal(): DtoDireccion {
         return $this->direccionFiscal;
     }
 
-    public function setDireccionFiscal(DtDireccion $direccionFiscal): void {
+    public function setDireccionFiscal(DtoDireccion $direccionFiscal): void {
         $this->direccionFiscal = $direccionFiscal;
     }
 
