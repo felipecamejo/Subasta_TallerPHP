@@ -10,7 +10,7 @@
         private Vendedor $vendedor;
         private array $categorias;
 
-        function __construct(array $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor) {
+        function __construct(string $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor) {
             $this->imagenes = $imagenes;
             $this->especifiacacion = $especifiacacion;
             $this->disponibilidad = $disponibilidad;
@@ -20,7 +20,7 @@
         }
 
         // Getters
-        public function getImagenes(): array{
+        public function getImagenes(): string{
             return $this->imagenes;
         }
 
@@ -40,12 +40,12 @@
             return $this->vendedor;
         }
 
-        public function getCategorias(): Categoria {
+        public function getCategorias(): array {
             return $this->categorias;
         }
 
         // Setters
-        public function setImagenes(array $imagenes): void {
+        public function setImagenes(string $imagenes): void {
             $this->imagenes = $imagenes;
         }
 

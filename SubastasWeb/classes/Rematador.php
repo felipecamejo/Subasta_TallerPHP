@@ -38,7 +38,7 @@
         }
 
         public function addSubasta(Subasta $subasta): void {
-            $this->subasta[] = $subasta;
+            $this->subastas[] = $subasta;
         }
 
         public function setCasasRemate(array $casasRemate): void {

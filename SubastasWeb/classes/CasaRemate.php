@@ -73,7 +73,7 @@
             $this->telefono = $telefono;
         }
 
-        public function setCalificacion(string $calificacion): void {
+        public function setCalificacion(float $calificacion): void {
             $this->calificacion = $calificacion;
         }
 
