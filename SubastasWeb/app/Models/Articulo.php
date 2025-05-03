@@ -3,13 +3,31 @@
     namespace App\Models;
 
     use Illuminate\Database\Eloquent\Model;
+    use App\Models\Categoria;
+    use App\Models\Vendedor;
 
     class Articulo extends Model{
 
-        protected $table = 'articulos'; // Nombre de la tabla si es diferente al plural de la clase
-        protected $fillable = [ 'imagenes', 'especifiacacion', 'disponibilidad', 'condicion', 'vendedor', 'categorias']; // Columnas asignables en masa
-        protected $hidden = []; // Columnas ocultas en las respuestas JSON
-    }
+        protected $table = 'articulos'; 
 
+        protected $fillable = [ 
+            'imagenes', 
+            'especifiacacion', 
+            'disponibilidad', 
+            'condicion', 
+            'vendedor_id'
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function categorias() {
+            return $this->belongsToMany(Categoria::class, 'articulo_categoria', 'articulo_id', 'categoria_id');
+        }
+
+        public function vendedor() {
+            return $this->belongsTo(Vendedor::class);
+        }
+
+    }
 
 ?>

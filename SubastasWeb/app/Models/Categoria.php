@@ -1,46 +1,28 @@
 <?php
-    include 'Articulo.php';
+    namespace App\Models;
 
-    class Categoria {
-        
-        private string $nombre;
-        private array $categoriasPadre;
-        private array $articulos;
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\Articulo;
 
-        public function __construct(string $nombre) {
-            $this->nombre = $nombre;
-            $this->categorias = [];
-            $this->articulos = [];
+    class Categoria extends Model{
+        protected $table = 'categorias'; // Nombre de la tabla si es diferente al plural de la clase
+
+        protected $fillable = [ 
+            'nombre',
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function categoriaPadre(){
+            return $this->belongsTo(Categoria::class, 'categoria_padre_id');
         }
 
-        //Getters
-        public function getNombre(): string {
-            return $this->nombre;
+        public function categoriasHijas(){
+            return $this->hasMany(Categoria::class, 'categoria_padre_id');
         }
 
-        public function getCategoriasPadre(): array {
-            return $this->categoriasPadre;
-        }
-
-        public function getArticulos(): array {
-            return $this->articulos;
-        }
-
-        //Setters
-        public function setNombre(string $nombre): void {
-            $this->nombre = $nombre;
-        }
-
-        public function setCategoriasPadre(array $categoriasPadre): void {
-            $this->categoriasPadre = $categoriasPadre;
-        }
-
-        public function setArticulos(array $articulos): void {
-            $this->articulos = $articulos;
-        }
-
-        public function addArticulos(Articulo $articulo): void {
-            $this->articulos[] = $articulo;
+        public function articulos() {
+            return $this->belongsToMany(Articulo::class, 'articulo_categoria', 'categoria_id', 'articulo_id');
         }
 
     }
