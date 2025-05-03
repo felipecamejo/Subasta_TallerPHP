@@ -1,77 +1,15 @@
 <?php
-    include 'Vendedor.php';
-    include 'Categoria.php';
 
-    class Articulo {
-        private string $imagenes;
-        private string $especifiacacion;
-        private bool $disponibilidad;
-        private string $condicion;
-        private Vendedor $vendedor;
-        private array $categorias;
+    namespace App\Models;
 
-        function __construct(string $imagenes, string  $especifiacacion, bool $disponibilidad, string $condicion, Vendedor $vendedor) {
-            $this->imagenes = $imagenes;
-            $this->especifiacacion = $especifiacacion;
-            $this->disponibilidad = $disponibilidad;
-            $this->condicion = $condicion;
-            $this->vendedor = $vendedor;
-            $this->categorias = [];
-        }
+    use Illuminate\Database\Eloquent\Model;
 
-        // Getters
-        public function getImagenes(): string{
-            return $this->imagenes;
-        }
+    class Articulo extends Model{
 
-        public function getEspecifiacacion(): string {
-            return $this->especifiacacion;
-        }
-
-        public function getDisponibilidad(): bool {
-            return $this->disponibilidad;
-        }
-
-        public function getCondicion(): string {
-            return $this->condicion;
-        }
-
-        public function getVendedor(): Vendedor {
-            return $this->vendedor;
-        }
-
-        public function getCategorias(): array {
-            return $this->categorias;
-        }
-
-        // Setters
-        public function setImagenes(string $imagenes): void {
-            $this->imagenes = $imagenes;
-        }
-
-        public function setEspecifiacacion(string $especifiacacion): void {
-            $this->especifiacacion = $especifiacacion;
-        }
-
-        public function setDisponibilidad(bool $disponibilidad): void {
-            $this->disponibilidad = $disponibilidad;
-        }
-
-        public function setCondicion(string $condicion): void {
-            $this->condicion = $condicion;
-        }
-
-        public function setVendedor(Vendedor $vendedor): void {
-            $this->vendedor = $vendedor;
-        }
-
-        public function setCategorias(array $categorias): void {
-            $this->categorias = $categorias;
-        }
-
-        public function addCategorias(Categoria $categorias): void {
-            $this->categorias[] = $categorias;
-        }
-    
+        protected $table = 'articulos'; // Nombre de la tabla si es diferente al plural de la clase
+        protected $fillable = [ 'imagenes', 'especifiacacion', 'disponibilidad', 'condicion', 'vendedor', 'categorias']; // Columnas asignables en masa
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
     }
+
+
 ?>
