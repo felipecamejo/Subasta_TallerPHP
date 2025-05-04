@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             
             $table->string('imagenes')->nullable(); 
-            $table->text('especificacion');
+            $table->string('especificacion');
             $table->boolean('disponibilidad');
             $table->string('condicion'); 
             

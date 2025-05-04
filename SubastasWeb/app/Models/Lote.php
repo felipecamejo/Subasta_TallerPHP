@@ -15,7 +15,6 @@
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-
         public function pujas(){
             return $this->hasMany(Puja::class);
         }
