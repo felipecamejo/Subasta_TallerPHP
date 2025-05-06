@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('subastas', function (Blueprint $table) {
             $table->id();
-            
+        
             $table->integer('duracionMinutos');
             $table->dateTime('fecha');
-            $table->foreignId('casaremate_id')->nullable()->constrained('casaremate')->onDelete('cascade');
-
+        
+            $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
+            $table->foreignId('rematador_id')->nullable()->constrained('rematadores')->onDelete('cascade');
+        
             $table->timestamps();
         });
+        
     }
 
     /**
