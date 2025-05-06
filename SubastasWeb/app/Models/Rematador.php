@@ -7,7 +7,7 @@
     use App\Models\CasaRemate;
 
     class Rematador extends Usuario {
-        protected $table = 'rematador';
+        protected $table = 'rematadores';
 
         protected $fillable = [ 
             'matricula', 

@@ -6,7 +6,7 @@
     use App\Models\Puja;
 
     class Cliente extends Usuario {
-        protected $table = 'cliente';
+        protected $table = 'clientes';
 
         protected $fillable = [ 
             'notificaciones', 
