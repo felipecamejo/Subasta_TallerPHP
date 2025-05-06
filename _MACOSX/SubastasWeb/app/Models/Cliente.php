@@ -1,47 +1,27 @@
 <?php
-
-    include 'Usuario.php';
-    include 'DtoDireccion.php';
-    include 'Puja.php';
+    namespace App\Models;
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\DtoDireccion;
+    use App\Models\Usuario;
+    use App\Models\Puja;
 
     class Cliente extends Usuario {
-        private array $notificaciones;
-        private float $calificacion;
-        private array $pujas;
+        protected $table = 'cliente';
 
-        public function __construct(string $nombre, string $cedula, string $email, string $telefono, DtoDireccion $direccionFiscal, string $imagen, array $notificaciones, float $calificacion) {
-            parent::__construct($nombre, $cedula, $email, $telefono, $direccionFiscal, $imagen);
-            $this->notificaciones = $notificaciones;
-            $this->calificacion = $calificacion;
-            $this->pujas = [];
-        }
+        protected $fillable = [ 
+            'notificaciones', 
+            'calificacion',
+            'pujas',
+        ]; 
 
-        public function getNotificaciones(): array {
-            return $this->notificaciones;
-        }
+        protected $casts = [
+            'notificaciones' => 'array',
+        ];
 
-        public function getCalificacion(): float {
-            return $this->calificacion;
-        }
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-        public function getPujas(): array {
-            return $this->pujas;
-        }
-
-        public function setNotificaciones(array $notificaciones): void {
-            $this->notificaciones = $notificaciones;
-        }
-        
-        public function setCalificacion(float $calificacion): void {
-            $this->calificacion = $calificacion;
-        }
-
-        public function setPujas(array $pujas): void {
-            $this->pujas = $pujas;
-        }
-
-        public function addPujas(Puja $puja): void {
-            $this->pujas[] = $puja;
+        public function pujas() {
+            return $this->hasMany(Puja::class);
         }
 
 }

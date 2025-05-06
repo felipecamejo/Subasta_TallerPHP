@@ -1,14 +1,27 @@
 <?php
-
-    include 'Usuario.php';
-    include 'DtoDireccion.php';
-    include 'Subasta.php';
-    include 'CasaRemate.php';
+    namespace App\Models;
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\DtoDireccion;
+    use App\Models\Usuario;
+    use App\Models\Subasta;
+    use App\Models\CasaRemate;
 
     class Rematador extends Usuario {
-        private string $matricula;
-        private array $casasRemate;
-        private array $subastas;
+        protected $table = 'rematador';
+
+        protected $fillable = [ 
+            'matricula', 
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function subastas() {
+            return $this->hasMany(Subasta::class);
+        }
+
+        public function casasRemate() {
+            return $this->hasMany(CasaRemate::class);
+        }
 
         public function __construct(string $nombre, string $cedula, string $email, string $telefono, DtoDireccion $direccionFiscal, string $imagen, string $matricula) {
             parent::__construct($nombre, $cedula, $email, $telefono, $direccionFiscal, $imagen);

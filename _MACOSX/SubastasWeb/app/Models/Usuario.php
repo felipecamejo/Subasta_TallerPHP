@@ -1,14 +1,21 @@
 <?php
+    namespace App\Models;
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\DtoDireccion;
 
-    include 'DtoDireccion.php';
+    class Usuario extends Model{
+        protected $table = 'usuarios';
 
-    class Usuario {
-        private string $nombre;
-        private string $cedula;
-        private string $email;
-        private string $telefono;
-        private DtoDireccion $direccionFiscal;
-        private string $imagen;
+        protected $fillable = [ 
+            'nombre', 
+            'cedula',
+            'email',
+            'telefono',
+            'imagen',
+            'direccionFiscal'
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
         public function __construct(string $nombre, string $cedula, string $email, string $telefono, DtoDireccion $direccionFiscal, string $imagen) {
             $this->nombre = $nombre;
