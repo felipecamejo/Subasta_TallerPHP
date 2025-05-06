@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('articulo_categoria', function (Blueprint $table) {
             $table->id(); //dudoso
             
-            $table->foreignId('articulo_id')->constrained()->onDelete('cascade');
-            $table->foreignId('categoria_id')->constrained()->onDelete('cascade');
+            $table->foreignId('articulo_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('categoria_id')->nullable()->constrained()->onDelete('cascade');
             
             $table->timestamps();
         });
