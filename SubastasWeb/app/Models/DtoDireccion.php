@@ -1,39 +1,36 @@
 <?php
+    namespace App\Models;
+    use App\Models\CasaRemate;
+    use App\Models\Usuario;
+    use App\Models\Subasta;
 
-    class DtoDireccion {
-        private string $calle1;
-        private string $calle2;
-        private int $numero;
-        private string $ciudad;
-        private string $pais;
+    class DtoDireccion extends Model{
 
-        public function __construct(string $calle1, string $calle2, int $numero, string $ciudad, string $pais) {
-            $this->calle1 = $calle1;
-            $this->calle2 = $calle2;
-            $this->numero = $numero;
-            $this->ciudad = $ciudad;
-            $this->pais = $pais;
-        }
-        
-        public function getCalle1(): string {
-            return $this->calle1;
-        }
 
-        public function getCalle2(): string {
-            return $this->calle2;
-        }
+        protected $table = 'casa_remate'; 
 
-        public function getNumero(): int {
-            return $this->numero;
+        protected $fillable = [ 
+            'calle1', 
+            'calle2', 
+            'numero', 
+            'ciudad', 
+            'pais'
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function casaRemate() {
+            return $this->belongsTo(CasaRemate::class);
         }
 
-        public function getCiudad(): string {
-            return $this->ciudad;
+        public function usuario() {
+            return $this->belongsTo(Usuario::class);
         }
 
-        public function getPais(): string {
-            return $this->pais;
+        public function subasta() {
+            return $this->belongsTo(Subasta::class);
         }
+
     }
 
 

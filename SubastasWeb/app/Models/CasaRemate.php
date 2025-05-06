@@ -1,94 +1,36 @@
 <?php
-    include 'DtoDireccion.php';
-    include 'Subasta.php';
+    namespace App\Models;
+    use App\Models\DtoDireccion;
+use DtoDireccion as GlobalDtoDireccion;
+use Rematador;
+use Subasta;
 
-    class CasaRemate {
-        private string $nombre;
-        private string $idFiscal;
-        private DtoDireccion $direccion;
-        private string $email;
-        private string $telefono;
-        private float $calificacion;
-        private array $subastas;
-        private array $rematadores;
-        
-        function __construct(string $nombre, string $idFiscal, DtoDireccion $direccion, string $email, string $telefono, float $calificacion) {
-            $this->nombre = $nombre;
-            $this->idFiscal = $idFiscal;
-            $this->direccion = $direccion;
-            $this->email = $email;
-            $this->calificacion = $calificacion;
-            $this->telefono = $telefono;
-            $this->rematadores = [];
-            $this->subastas = [];
+    class CasaRemate extends Model{
+
+
+        protected $table = 'casa_remate'; 
+
+        protected $fillable = [ 
+            'nombre', 
+            'idFiscal', 
+            'email', 
+            'telefono', 
+            'calificacion'
+        ]; 
+
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function rematadores() {
+            return $this->belongsToMany(Rematador::class, 'casa_remate_rematador', 'casa_remate_id', 'rematador_id');
         }
 
-        //Get´s
-        public function getNombre(): string {
-            return $this->nombre;
+        public function subastas() {
+            return $this->belongsToMany(Subasta::class, 'casa_remate_subasta', 'casa_remate_id', 'subasta_id');
         }
 
-        public function getIdFiscal(): string {
-            return $this->idFiscal;
+        public function direccion() {
+            return $this->hasOne(DtoDireccion::class);
         }
-
-        public function getEmail(): string {
-            return $this->email;
-        }
-
-        public function getTelefono(): string {
-            return $this->telefono;
-        }
-
-        public function getCalificacion(): float {
-            return $this->calificacion;
-        }
-
-        public function getDireccion(): DtoDireccion {
-            return $this->direccion;
-        }
-
-        public function getSubastas(): array {
-            return $this->subastas;
-        }
-
-        public function getRematadores(): array {
-            return $this->rematadores;
-        }
-
-        // Setters
-        public function setNombre(string $nombre): void {
-            $this->nombre = $nombre;
-        }
-
-        public function setIdFiscal(string $idFiscal): void {
-            $this->idFiscal = $idFiscal;
-        }
-
-        public function setEmail(string $email): void {
-            $this->email = $email;
-        }
-
-        public function setTelefono(string $telefono): void {
-            $this->telefono = $telefono;
-        }
-
-        public function setCalificacion(float $calificacion): void {
-            $this->calificacion = $calificacion;
-        }
-
-        public function setDireccion(DtoDireccion $direccion): void {
-            $this->direccion = $direccion;
-        }
-
-        public function setSubastas(array $subastas): void {
-            $this->subastas = $subastas;
-        }
-
-        public function addSubasta(Subasta $subastas): void {
-            $this->subastas[] = $subastas;
-        }
-
 
     }
 
