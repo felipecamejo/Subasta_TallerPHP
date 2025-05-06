@@ -1,14 +1,14 @@
 <?php
     namespace App\Models;
     use App\Models\DtoDireccion;
-use DtoDireccion as GlobalDtoDireccion;
-use Rematador;
-use Subasta;
+    use App\Models\Rematador;
+    use App\Models\Subasta;
+    use Illuminate\Database\Eloquent\Model;
 
     class CasaRemate extends Model{
 
 
-        protected $table = 'casa_remate'; 
+        protected $table = 'casa_remates'; 
 
         protected $fillable = [ 
             'nombre', 
@@ -25,11 +25,12 @@ use Subasta;
         }
 
         public function subastas() {
-            return $this->belongsToMany(Subasta::class, 'casa_remate_subasta', 'casa_remate_id', 'subasta_id');
+            return $this->hasMany(Subasta::class);
         }
 
-        public function direccion() {
-            return $this->hasOne(DtoDireccion::class);
+        public function direccion()
+        {
+            return $this->morphOne(DtoDireccion::class, 'direccionable');
         }
 
     }

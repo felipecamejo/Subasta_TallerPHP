@@ -1,34 +1,28 @@
 <?php
     namespace App\Models;
-    use App\Models\CasaRemate;
-    use App\Models\Usuario;
-    use App\Models\Subasta;
+    use Illuminate\Database\Eloquent\Model;
 
     class DtoDireccion extends Model{
 
 
-        protected $table = 'casa_remate'; 
+        protected $table = 'dto_direccion'; 
 
         protected $fillable = [ 
             'calle1', 
             'calle2', 
             'numero', 
             'ciudad', 
-            'pais'
+            'pais',
+            'direccionable_id',
+            'direccionable_type'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-        public function casaRemate() {
-            return $this->belongsTo(CasaRemate::class);
-        }
-
-        public function usuario() {
-            return $this->belongsTo(Usuario::class);
-        }
-
-        public function subasta() {
-            return $this->belongsTo(Subasta::class);
+        // funcion polimorfica
+        public function direccionable()
+        {
+            return $this->morphTo();
         }
 
     }

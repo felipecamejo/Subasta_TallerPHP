@@ -1,36 +1,39 @@
 <?php
 
-    include 'DtoDireccion.php';
-    include 'CasaRemate.php';
-    include 'Rematador.php';
-    include 'Lote.php';
+namespace App\Models;
 
-    class Subasta extends Model{
+use Illuminate\Database\Eloquent\Model;
+use App\Models\CasaRemate;
+use App\Models\Rematador;
+use App\Models\DtoDireccion;
+use App\Models\Lote;
 
+class Subasta extends Model
+{
+    protected $table = 'subastas'; 
 
-        protected $table = 'casa_remate'; 
+    protected $fillable = [ 
+        'duracionMinutos', 
+        'fecha',
+        'casaremate_id',
+        'rematador_id'
+    ]; 
 
-        protected $fillable = [ 
-            'duracionMinutos', 
-            'fecha'
-        ]; 
+    protected $hidden = [];
 
-        protected $hidden = []; // Columnas ocultas en las respuestas JSON
-
-
-        public function casaRemate() {
-            return $this->hasOne(CasaRemate::class);
-        }
-
-        public function rematador() {
-            return $this->hasOne(Rematador::class);
-        }
-
-        public function direccion() {
-            return $this->hasOne(DtoDireccion::class);
-        }
-
+    public function casaRemate() {
+        return $this->belongsTo(CasaRemate::class, 'casaremate_id');
     }
 
+    public function rematador() {
+        return $this->belongsTo(Rematador::class, 'rematador_id');
+    }
 
-?>
+    public function direccion() {
+        return $this->morphOne(DtoDireccion::class, 'direccionable');
+    }
+
+    public function lotes() {
+        return $this->hasMany(Lote::class);
+    }
+}
