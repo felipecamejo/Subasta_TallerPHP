@@ -9,7 +9,8 @@
     protected $table = 'pujas'; // Nombre de la tabla si es diferente al plural de la clase
 
     protected $fillable = [ 
-        'fechaHora','monto'
+        'fechaHora',
+        'monto'
     ]; 
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
