@@ -1,76 +1,29 @@
 <?php
 
-    include 'Factura.php';
-    include 'CasaRemate.php';
-    include 'Articulo.php';
+    namespace App\Models;
 
-    class Vendedor{
-        private int $id;
-        private String $nombre;
-        private array $facturas;
-        private array $articulos;
-        private array $casasRemate;
-
-        public function __construct(int $id, String $nombre){
-            $this->id = $id;
-            $this->nombre = $nombre;
-            $this->facturas = [];
-            $this->articulos = [];
-            $this->casasRemate = [];
-        }
-
-        public function getId(){
-            return $this->id;
-        }
-
-        public function getNombre(){
-            return $this->nombre; 
-        }
-
-        public function getFacturas () {
-            return $this->facturas;
-        }
-
-        public function getArticulos () {
-            return $this->articulos;
-        }
-
-        public function getCasasRemate () {
-            return $this->casasRemate;
-        } 
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\Factura;
+    use App\Models\Articulo;
     
-        public function setId(int $id){
-            $this->id = $id;
-        }
 
-        public function setNombre(String $nombre){
-            $this->nombre = $nombre;
-        }
+    class Vendedor extends Model{
 
-        public function setFacturas(array $facturas) {
-            $this->facturas = $facturas;
-        }
+        protected $table = 'vendedores'; // Nombre de la tabla si es diferente al plural de la clase
 
-        public function addFacturas(Factura $factura) {
-            $this->facturas[] = $factura;
-        }
+        protected $fillable = [ 
+            'nombre','factura','articulo','casasRemate'
+        ]; 
 
-        public function setArticulos(array $articulos) {
-            $this->articulos = $articulos;
+        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+       
+        public function Facturas(){
+            return $this->hasMany(Factura::class);
         }
-
-        public function addArticulos(Articulo $articulo) {
-            $this->articulos[] = $articulo;
-        }
-
-        public function setCasasremate(array $casasRemate) {
-            $this->casasRemate = $casasRemate;
-        }
-
-        public function addCasasRemate(CasaRemate $casaRemate) {
-            $this->casasRemate[] = $casaRemate;
-        }
-
         
+        public function Articulos(){
+            return $this->hasMany(Articulo::class);
+        }
+
     }
 ?>

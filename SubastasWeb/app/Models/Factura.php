@@ -1,69 +1,27 @@
 <?php
-    include 'Vendedor.php';
-    include 'Puja.php';
+   namespace App\Models;
 
-    class Factura {
-        private int $id;
-        private float $montoTotal;
-        private string $condicionesDePago;
-        private string $entrega;
-        private Vendedor $vendedor;
-        private Puja $puja;
+   use Illuminate\Database\Eloquent\Model;
+   use App\Models\Vendedor;
+   use App\Models\Puja;
+  
+   class Factura extends Model {
 
-        public function __construct(int $id, float $montoTotal, string $condicionesDePago, string $entrega, Vendedor $vendedor, Puja $puja){
-            $this->montoTotal = $montoTotal;
-            $this->condicionesDePago = $condicionesDePago;
-            $this->entrega = $entrega;
-            $this->vendedor = $vendedor;
-            $this->puja = $puja;
-        }
+    protected $table = 'Facturas'; // Nombre de la tabla si es diferente al plural de la clase
+
+    protected $fillable = [ 
+        'montoTotal','condicionesDePago','entrega'
+    ]; 
+
+    protected $hidden = []; // Columnas ocultas en las respuestas JSON
         
-        public function getId() {
-            return $this->id;
-        }
+    public function Vendedor(){
+        return  $this->hasOne(Vendedor::class);
+    } 
 
-        public function getMontoTotal(){
-            return $this->montoTotal;
-        }
+    public function Puja(){
+        return  $this->hasOne(Puja::class);
+    } 
 
-        public function getCondicionesDePago(){
-            return $this->condicionesDePago;
-        }
-
-        public function getEntrega(){
-            return $this->entrega;
-        }
-        
-        public function getVendedor(): Vendedor {
-            return $this->vendedor;
-        }
-
-        public function getPuja(): Puja {
-            return $this->puja;
-        }
-
-        public function setId(int $id){
-            $this->id = $id;
-        }
-
-        public function setMontoTotal(float $montoTotal){
-            $this->montoTotal = $montoTotal;
-        }
-
-        public function setCondicionesDePago(string $condicionesDePago){
-            $this->condicionesDePago = $condicionesDePago;
-        }
-
-        public function setEntrega(string $entrega){
-            $this->entrega = $entrega;
-        }
-
-        public function setVendedor(Vendedor $vendedor) {
-            return $this->vendedor;
-        }
-
-        public function setPuja(Puja $puja) {
-            return $this->puja;
-        }
     }
 ?>

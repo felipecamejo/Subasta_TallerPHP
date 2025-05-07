@@ -1,72 +1,27 @@
 <?php
+ namespace App\Models;
 
-    include 'Factura.php';
-    include 'Cliente.php';
-    include 'Lote.php';
+ use Illuminate\Database\Eloquent\Model;
+ use App\Models\Cliente;
+ use App\Models\Factura;
 
-    class Puja{
-        private int $id;
-        private DateTime $fechaHora;
-        private float $monto;
-        private Factura $factura;
-        private Lote $lote;
-        private Cliente $cliente;
+ class Puja extends Model {
+    protected $table = 'pujas'; // Nombre de la tabla si es diferente al plural de la clase
 
-        public function __construct(int $id, DateTime $fechaHora, float $monto, Factura $factura, Lote $lote, Cliente $cliente){
-            $this->id = $id;
-            $this->fechaHora = $fechaHora;
-            $this->monto = $monto;
-            $this->factura = $factura;
-            $this->lote = $lote;
-            $this->cliente = $cliente;
-        }
+    protected $fillable = [ 
+        'fechaHora','monto'
+    ]; 
 
-        public function getId(){
-            return $this->id;
-        }
-        
-        public function getFechaHora(){
-            return $this->fechaHora;
-        }
-
-        public function getMonto(){
-            return $this->monto;
-        }
-
-        public function getFactura(){
-            return $this->factura;
-        }
-
-        public function getLote() {
-            return $this->lote;
-        }
-
-        public function getCliente() {
-            return $this->cliente;
-        }
-
-        public function setId(int $id){
-            $this->id = $id;
-        }
-
-        public function setFechaHora(DateTime $fechaHora){
-            $this->fechaHora = $fechaHora;
-        }
-
-        public function setMonto(float $monto){
-            $this->monto = $monto;
-        }
-
-        public function setFactura(Factura $factura){
-            $this->factura = $factura;
-        }
-
-        public function setCliente(Cliente $cliente){
-            $this->cliente = $cliente;
-        }
-
-        public function setLote(Lote $lote){
-            $this->lote = $lote;
-        }
+    protected $hidden = []; // Columnas ocultas en las respuestas JSON
+    
+    public function Cliente(){
+        return $this->hasOne(Cliente::class);
+       
     }
+
+    public function Facturas(){
+        return $this->hasOne(Factura::class);
+    }
+
+}
 ?>
