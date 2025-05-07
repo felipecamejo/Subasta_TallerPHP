@@ -3,6 +3,7 @@
 
  use Illuminate\Database\Eloquent\Model;
  use App\Models\Cliente;
+ use App\Models\Lote;
  use App\Models\Factura;
 
  class Puja extends Model {
@@ -15,9 +16,13 @@
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
     
-    public function Cliente(){
+    public function Clientes(){
         return $this->hasOne(Cliente::class);
        
+    }
+
+    public function Lote(){
+        return $this->hasOne(Lote::class);
     }
 
     public function Facturas(){
