@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('pujas', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('id')->constrained('lotes')->onDelete('set null');
-            $table->foreignId('id')->nullable()->constrained('facturas')->onDelete('set null');
-            $table->foreignId('id')->constrained('clientes')->onDelete('set null');
+
+            $table->foreignId('lote_id')->constrained('lotes')->onDelete('set null');
+
+            $table->foreignId('facturas_id')->nullable()->constrained('facturas')->onDelete('set null');
+
+            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('set null');
 
         });
     }

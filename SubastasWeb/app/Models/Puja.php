@@ -11,7 +11,10 @@
 
     protected $fillable = [ 
         'fechaHora',
-        'monto'
+        'monto',
+        'lote_id',
+        'cliente_id',
+        'facturas_id'
     ]; 
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON

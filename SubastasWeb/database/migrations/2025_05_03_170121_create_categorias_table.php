@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             
             $table->string('nombre');
+            
             $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias')->onDelete('set null');
 
             $table->timestamps();

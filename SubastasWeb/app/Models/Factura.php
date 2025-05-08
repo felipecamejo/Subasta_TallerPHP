@@ -7,7 +7,7 @@
   
    class Factura extends Model {
 
-    protected $table = 'Facturas'; // Nombre de la tabla si es diferente al plural de la clase
+    protected $table = 'facturas'; // Nombre de la tabla si es diferente al plural de la clase
 
     protected $fillable = [ 
         'montoTotal',
