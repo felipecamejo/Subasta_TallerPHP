@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('telefono'); // Teléfono del usuario
             $table->string('imagen'); // Imagen del usuario 
             $table->string('direccionFiscal'); // Dirección fiscal del usuario
+            
+            $table->string('contrasenia');
+
             $table->timestamps();
         });
     }

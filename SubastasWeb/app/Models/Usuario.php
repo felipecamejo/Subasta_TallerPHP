@@ -15,6 +15,8 @@
             'direccionFiscal'
         ]; 
 
-        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+        protected $hidden = [
+            'contrasenia'
+        ]; // Columnas ocultas en las respuestas JSON
 
 }
