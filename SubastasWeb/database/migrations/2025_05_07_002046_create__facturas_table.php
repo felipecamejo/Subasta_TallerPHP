@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('_facturas', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+
+            $table->foreignId('vendedor_id')->constrained('vendedores')->cascadeOnDelete();
+            $table->foreignId('puja_id')->constrained('pujas')->cascadeOnDelete();
+
         });
     }
 
