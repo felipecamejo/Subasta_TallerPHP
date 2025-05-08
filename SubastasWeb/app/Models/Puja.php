@@ -17,16 +17,16 @@
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
     
     public function Clientes(){
-        return $this->hasOne(Cliente::class);
+        return $this->belongsTo(Cliente::class);
        
     }
 
     public function Lote(){
-        return $this->hasOne(Lote::class);
+        return $this->belongsTo(Lote::class);
     }
 
     public function Facturas(){
-        return $this->hasOne(Factura::class);
+        return $this->belongsTo(Factura::class);
     }
 
 }

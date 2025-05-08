@@ -12,7 +12,10 @@
         protected $table = 'vendedores'; // Nombre de la tabla si es diferente al plural de la clase
 
         protected $fillable = [ 
-            'nombre','factura','articulo','casasRemate'
+            'nombre',
+            'factura',
+            'articulo',
+            
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
