@@ -11,8 +11,7 @@
             'cedula',
             'email',
             'telefono',
-            'imagen',
-            'direccionFiscal'
+            'imagen'
         ]; 
 
         protected $hidden = [
