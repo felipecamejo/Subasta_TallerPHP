@@ -12,7 +12,7 @@
 
         protected $fillable = [ 
             'imagenes', 
-            'especifiacacion', 
+            'especificacion', 
             'disponibilidad', 
             'condicion', 
             'vendedor_id'

@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('rematadores', function (Blueprint $table) {
             $table->id();
+
             $table->string('matricula');
+            
             $table->timestamps();
         });
     }

@@ -20,7 +20,7 @@
         }
 
         public function casasRemate() {
-            return $this->BelongsToMany(CasaRemate::class);
+            return $this->BelongsToMany(CasaRemate::class,'casa_remate_rematador', 'rematador_id', 'casa_remate_id');
         }
 
 }
