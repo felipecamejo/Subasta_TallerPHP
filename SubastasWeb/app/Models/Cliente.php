@@ -4,7 +4,7 @@
     use App\Models\DtoDireccion;
     use App\Models\Usuario;
     use App\Models\Puja;
-    use App\Models\Notificacion
+    use App\Models\Notificacion;
 
     class Cliente extends Usuario {
         protected $table = 'clientes';
