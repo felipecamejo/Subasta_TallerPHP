@@ -9,6 +9,7 @@
 
         protected $fillable = [ 
             'nombre',
+            'categoria_padre_id',
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
