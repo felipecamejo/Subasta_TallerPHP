@@ -1,0 +1,202 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API de Articulos",
+        "description": "Documentación de la API para manejar artículos",
+        "contact": {
+            "email": "tu-email@ejemplo.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Servidor local de desarrollo"
+        }
+    ],
+    "paths": {
+        "/api/articulos": {
+            "get": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Obtener todos los articulos",
+                "operationId": "021362b92b70d8c24f566bb0db7178d5",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Crear un nuevo artículo",
+                "operationId": "1576d3467aeea24559ab2a70e9a963d9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "imagenes",
+                                    "especificacion",
+                                    "disponibilidad",
+                                    "condicion",
+                                    "vendedor_id"
+                                ],
+                                "properties": {
+                                    "imagenes": {
+                                        "type": "string"
+                                    },
+                                    "especificacion": {
+                                        "type": "string"
+                                    },
+                                    "disponibilidad": {
+                                        "type": "boolean"
+                                    },
+                                    "condicion": {
+                                        "type": "string"
+                                    },
+                                    "vendedor_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Artículo creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/articulos/{id}": {
+            "get": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Obtener un artículo por ID",
+                "operationId": "53ebb83e59d006abd1bd488176d98899",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del artículo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Artículo encontrado"
+                    },
+                    "404": {
+                        "description": "Artículo no encontrado"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Actualizar un artículo",
+                "operationId": "8b012fffca1a2f25e37727c1097c0471",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del artículo a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "imagenes",
+                                    "especificacion",
+                                    "disponibilidad",
+                                    "condicion",
+                                    "vendedor_id"
+                                ],
+                                "properties": {
+                                    "imagenes": {
+                                        "type": "string"
+                                    },
+                                    "especificacion": {
+                                        "type": "string"
+                                    },
+                                    "disponibilidad": {
+                                        "type": "boolean"
+                                    },
+                                    "condicion": {
+                                        "type": "string"
+                                    },
+                                    "vendedor_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Artículo actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Artículo no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Eliminar un artículo por ID",
+                "operationId": "de4809e8ad8eea751584f66ed2aab554",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del artículo a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Artículo eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Artículo no encontrado"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Articulos",
+            "description": "API para gestionar artículos"
+        }
+    ]
+}
