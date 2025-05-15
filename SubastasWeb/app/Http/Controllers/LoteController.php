@@ -2,63 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lote;
 use Illuminate\Http\Request;
 
-class LoteController extends Controller
-{
+class LoteController extends Controller{
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    public function index(){
+        return response()->json(Lote::all());
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request){
+        $request->validate([
+            'valorBase' => 'required|numeric',
+            'pujaMinima' => 'required|numeric',
+        ]);
+
+        $lote = Lote::create([
+            'valorBase' => $request->valorBase,
+            'pujaMinima' => $request->pujaMinima,
+        ]);
+
+        return response()->json($lote, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+    public function show(string $id){
+        $lote = Lote::find($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        if (!$lote) {
+            return response()->json(['Error' => 'Lote no encontrado. id:', $id], 404);
+        }
+
+        return response()->json($lote);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+    public function update(Request $request, string $id){
+       $lote = Lote::find($id);
+
+        if (!$lote) {
+            return response()->json(['Error' => 'Lote no encontrado. id:', $id], 404);
+        }
+
+        $request->validate([
+            'valorBase' => 'required|numeric',
+            'pujaMinima' => 'required|numeric',
+        ]);
+
+        $lote->valorBase = $request->valorBase;
+        $lote->pujaMinima = $request->pujaMinima;
+        
+        $lote->save();
+
+        return response()->json($lote);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
+    public function destroy(string $id){
+        $lote = Lote::find($id);
+
+        if (!$lote) {
+            return response()->json(['Error' => "Lote no encontrado. id: $id"], 404);
+        }
+
+        $lote->delete();
+
+        return response()->json(['Mensaje' => "Lote eliminado correctamente. id: $id"], 200);
     }
 }
