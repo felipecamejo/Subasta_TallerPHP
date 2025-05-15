@@ -7,16 +7,19 @@
   
    class Factura extends Model {
 
-    protected $table = 'Facturas'; // Nombre de la tabla si es diferente al plural de la clase
+    protected $table = 'facturas'; // Nombre de la tabla si es diferente al plural de la clase
 
     protected $fillable = [ 
-        'montoTotal','condicionesDePago','entrega'
+        'montoTotal',
+        'condicionesDePago',
+        'entrega',
+        'vendedor_id'
     ]; 
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
         
     public function Vendedor(){
-        return  $this->hasOne(Vendedor::class);
+        return  $this->belongsTo(Vendedor::class);
     } 
 
     public function Puja(){

@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('articulo_categoria', function (Blueprint $table) {
-            $table->id(); //dudoso
+        Schema::create('categorias', function (Blueprint $table) {
+            $table->id();
             
-            $table->foreignId('articulo_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('categoria_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('nombre');
             
+            $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias')->onDelete('set null');
+
             $table->timestamps();
+            
         });
-        
     }
 
     /**
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('articulo_categoria');
+        Schema::dropIfExists('categorias');
     }
 };

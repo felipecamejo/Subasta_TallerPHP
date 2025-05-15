@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('_facturas', function (Blueprint $table) {
-            $table->id();
+        Schema::create('notificaciones_clientes', function (Blueprint $table) {
+
+            $table->foreignId('cliente_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('notificaciones_id')->nullable()->constrained()->onDelete('cascade');
+
             $table->timestamps();
         });
     }
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('_facturas');
+        Schema::dropIfExists('notificaciones_clientes');
     }
 };

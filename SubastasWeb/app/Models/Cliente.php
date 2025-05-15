@@ -4,6 +4,7 @@
     use App\Models\DtoDireccion;
     use App\Models\Usuario;
     use App\Models\Puja;
+    use App\Models\Notificacion;
 
     class Cliente extends Usuario {
         protected $table = 'clientes';
@@ -21,6 +22,10 @@
 
         public function pujas() {
             return $this->hasMany(Puja::class);
+        }
+
+        public function notificaciones() {
+            return $this->belongsToMany(Notificacion::class, 'notificacion_clientes', 'cliente_id', 'notificacion_id');
         }
 
 }

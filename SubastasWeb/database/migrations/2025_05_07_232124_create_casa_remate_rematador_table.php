@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categorias', function (Blueprint $table) {
-            $table->id();
-            
-            $table->string('nombre');
-            $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias')->onDelete('set null');
+        Schema::create('casa_remate_rematador', function (Blueprint $table) {
+
+            $table->foreignId('casa_remate_id')->references('id')->on('casa_remates')->onDelete('cascade');
+            $table->foreignId('rematador_id')->references('id')->on('rematadores')->onDelete('cascade');
 
             $table->timestamps();
-            
         });
     }
 
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categorias');
+        Schema::dropIfExists('casa_remate_rematador');
     }
 };

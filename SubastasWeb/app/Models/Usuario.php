@@ -11,10 +11,15 @@
             'cedula',
             'email',
             'telefono',
-            'imagen',
-            'direccionFiscal'
+            'imagen'
         ]; 
 
-        protected $hidden = []; // Columnas ocultas en las respuestas JSON
+        protected $hidden = [
+            'contrasenia'
+        ]; // Columnas ocultas en las respuestas JSON
+
+        public function direccion() {
+            return $this->morphOne(DtoDireccion::class, 'direccionable');
+        }
 
 }

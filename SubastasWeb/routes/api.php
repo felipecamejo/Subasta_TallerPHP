@@ -8,5 +8,5 @@ use App\Http\Controllers\SubastaController;
 Route::apiResource('casaremates', CasaRemateController::class);
 Route::apiResource('subasta', SubastaController::class);
 Route::apiResource('dtodireccion', DtoDireccionController::class);
-
+//Route::apiResource('lotes', LoteController::class);
 ?>

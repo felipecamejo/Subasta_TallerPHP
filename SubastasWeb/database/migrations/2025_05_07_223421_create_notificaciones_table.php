@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('casa_remate_rematador', function (Blueprint $table) {
+        Schema::create('notificaciones', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('casa_remate_id')->references('id')->on('casa_remates')->onDelete('cascade');
-            $table->foreignId('rematador_id')->references('id')->on('rematadores')->onDelete('cascade');
+            $table->string('mensaje');
 
             $table->timestamps();
         });
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('casa_remate_rematador');
+        Schema::dropIfExists('notificaciones');
     }
 };
