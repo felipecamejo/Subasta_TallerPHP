@@ -48,7 +48,8 @@ class ProveedorController extends Controller
      */
     public function show(string $id)
     {
-        $rematador = Rematador::with(['direccion', 'subastas', 'casasRemate'])->find($id);
+        $rematador = Rematador::with(['direccion', 'subastas', 'casasRemate'])->find($id); // el with es para cargar las relaciones
+        // $rematador = Rematador::find($id); // sin relaciones
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);

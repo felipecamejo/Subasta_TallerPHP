@@ -48,7 +48,8 @@ class ClienteController extends Controller
      */
     public function show(string $id)
     {
-       $cliente = Cliente::with(['direccion', 'pujas'])->find($id);
+       $cliente = Cliente::with(['direccion', 'pujas', 'notificaciones'])->find($id); // el with es para cargar las relaciones
+        // $cliente = Cliente::find($id); // sin relaciones
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
