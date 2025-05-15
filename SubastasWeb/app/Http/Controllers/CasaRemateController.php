@@ -27,6 +27,8 @@ class CasaRemateController extends Controller
             'email'       => 'required|email|max:255',
             'telefono'    => 'nullable|string|max:20',
             'calificacion'=> 'nullable|numeric|min:0|max:5',
+            'rematadores'       => 'sometimes|array',
+            'direccion'       => 'sometimes|array',
         ]);
 
         if ($validator->fails()) {
@@ -34,6 +36,16 @@ class CasaRemateController extends Controller
         }
 
         $casaRemate = CasaRemate::create($request->all());
+
+        // despues de ser creada la casa de remate se hace la asociacion con las demas relaciones
+        if ($request->has('rematadores')) {
+            $casaRemate->rematadores()->sync($request->input('rematadores')); // espera un array con ids de rematadores
+        }
+        if ($request->has('direccion')) {
+            $casaRemate->direccion()->create($request->input('direccion'));
+        }
+
+        // las subastas se crean una vez existe la casa de remate por ende es imposible crear una casa de remate y asociar una subasta
 
         return response()->json($casaRemate, 201);
     }
