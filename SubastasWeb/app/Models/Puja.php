@@ -21,7 +21,6 @@
     
     public function Clientes(){
         return $this->belongsTo(Cliente::class);
-       
     }
 
     public function Lote(){
@@ -31,6 +30,4 @@
     public function Facturas(){
         return $this->belongsTo(Factura::class);
     }
-
 }
-?>
