@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CasaRemateController;
-use App\Http\Controllers\DtoDireccionController;
 use App\Http\Controllers\SubastaController;
 use App\Http\Controllers\LoteController;
 
