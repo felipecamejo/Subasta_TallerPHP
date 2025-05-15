@@ -21,7 +21,7 @@ class Subasta extends Model
 
     protected $hidden = [];
 
-    public function casaRemate() {
+    public function casaremate() {
         return $this->belongsTo(CasaRemate::class, 'casaremate_id');
     }
 
