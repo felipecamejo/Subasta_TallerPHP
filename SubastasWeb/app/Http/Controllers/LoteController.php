@@ -14,25 +14,6 @@ class LoteController extends Controller{
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request){
-
-        $request->validate([
-            'valorBase' => 'required|numeric',
-            'pujaMinima' => 'required|numeric',
-             
-        ]);
-
-        $lote = Lote::create([
-            'valorBase' => $request->valorBase,
-            'pujaMinima' => $request->pujaMinima,
-        ]);
-
-        return response()->json($lote, 201);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request){
@@ -60,13 +41,6 @@ class LoteController extends Controller{
         }
 
         return response()->json($lote);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id){
-        return response()->json(['message' => 'Método no implementado'], 501);
     }
 
     /**

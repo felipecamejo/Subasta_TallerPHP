@@ -14,24 +14,6 @@ class CategoriaController extends Controller{
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request){
-
-        $request->validate([
-            'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
-        ]);
-
-        $categoria = Categoria::create([
-            'nombre' => $request->nombre,
-            'categoria_padre_id' => $request->categoria_padre_id,
-        ]);
-
-        return response()->json($categoria, 201);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request){
@@ -60,13 +42,6 @@ class CategoriaController extends Controller{
         }
 
         return response()->json($categoria);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id){
-        return response()->json(['message' => 'Método no implementado'], 501);
     }
 
     /**

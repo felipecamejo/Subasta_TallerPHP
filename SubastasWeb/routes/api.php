@@ -9,6 +9,6 @@ use App\Http\Controllers\LoteController;
 
 Route::apiResource('articulos', ArticuloController::class);
 
-Route::apiResource('lotes', LoteController::class);
+//Route::apiResource('lotes', LoteController::class);
 
-Route::apiResource('categorias', controller: CategoriaController::class);
+//Route::apiResource('categorias', CategoriaController::class);

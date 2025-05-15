@@ -4,16 +4,16 @@
     /**
      * @OA\Info(
      *     version="1.0.0",
-     *     title="API de Articulos",
-     *     description="Documentación de la API para manejar artículos",
+     *     title="API Subastas",
+     *     description="Documentación de la API de Subastas",
      *     @OA\Contact(
-     *         email="tu-email@ejemplo.com"
+     *         email="contacto@subastas.com"
      *     )
      * )
-     * 
+     *
      * @OA\Server(
-     *  url="http://127.0.0.1:8000",
-     *description="Servidor local de desarrollo"
-     *)
+     *     url="http://127.0.0.1:8000",
+     *     description="Servidor local"
+     * )
     */
     class SwaggerInfo {}
