@@ -65,23 +65,23 @@ class LoteController extends Controller{
 
     /**
      * @OA\Delete(
-     *     path="/api/categorias/{id}",
-     *     summary="Eliminar un categoria por ID",
-     *     tags={"Categorias"},
+     *     path="/api/lotes/{id}",
+     *     summary="Eliminar un lote por ID",
+     *     tags={"Lotes"},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="ID del categoria a eliminar",
+     *         description="ID del lote a eliminar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Categoria eliminada correctamente"
+     *         description="Lote eliminado correctamente"
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Categoria no encontrada"
+     *         description="Categoria no encontrado"
      *     )
      * )
      */

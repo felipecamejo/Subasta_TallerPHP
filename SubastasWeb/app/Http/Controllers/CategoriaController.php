@@ -65,7 +65,26 @@ class CategoriaController extends Controller{
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/categorias/{id}",
+     *     summary="Eliminar una categoria por ID",
+     *     tags={"Categorias"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la categoria a eliminar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Categoria eliminada correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Categoria no encontrada"
+     *     )
+     * )
      */
     public function destroy(string $id){
         $categoria = Categoria::find($id);

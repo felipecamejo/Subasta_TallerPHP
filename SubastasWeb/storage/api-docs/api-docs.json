@@ -193,12 +193,180 @@
                     }
                 }
             }
+        },
+        "/api/categorias": {
+            "get": {
+                "tags": [
+                    "Categorias"
+                ],
+                "summary": "Obtener todas las categoria",
+                "operationId": "66bfb3e0bf7747700be142ec5329dfae",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Categorias"
+                ],
+                "summary": "Crear una nueva categoria",
+                "operationId": "acace4e67a5f9bbaa41b456c95b2bd05",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "categoria_padre_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "categoria_padre_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Categoria creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/categorias/{id}": {
+            "delete": {
+                "tags": [
+                    "Categorias"
+                ],
+                "summary": "Eliminar una categorias por ID",
+                "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la categoria a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Categoria eliminada correctamente"
+                    },
+                    "404": {
+                        "description": "Categoria no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/lotes": {
+            "get": {
+                "tags": [
+                    "Lotes"
+                ],
+                "summary": "Obtener todos los lotes",
+                "operationId": "0bb575f5c36032c445a3ca5ee9131c79",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lotes"
+                ],
+                "summary": "Crear un nuevo lote",
+                "operationId": "e8facbb615018d87d8a7fb9e0842e751",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "valorBase",
+                                    "pujaMinima"
+                                ],
+                                "properties": {
+                                    "valorBase": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "pujaMinima": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Lote creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/lotes/{id}": {
+            "delete": {
+                "tags": [
+                    "Lotes"
+                ],
+                "summary": "Eliminar un lote por ID",
+                "operationId": "a5e5e3d0e53c34dbb503eee4c2db6b50",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del lote a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lote eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Categoria no encontrado"
+                    }
+                }
+            }
         }
     },
     "tags": [
         {
             "name": "Articulos",
             "description": "API para gestionar artículos"
+        },
+        {
+            "name": "Categorias",
+            "description": "API para gestionar categoria"
+        },
+        {
+            "name": "Lotes",
+            "description": "API para gestionar lotes"
         }
     ]
 }
