@@ -58,7 +58,7 @@ class ArticuloController extends Controller{
             'especificacion' => 'required|string', 
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
-            'vendedor_id' => 'required|exists:vendedores,id',
+            'vendedor_id' => 'nullable|exists:vendedores,id',
         ]);
 
         $articulo = Articulo::create([
@@ -143,7 +143,7 @@ class ArticuloController extends Controller{
             'especificacion' => 'required|string', 
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
-            'vendedor_id' => 'required|exists:vendedores,id',
+            'vendedor_id' => 'nullable|exists:vendedores,id',
         ]);
 
         $articulo->imagenes = $request->imagenes;
