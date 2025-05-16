@@ -106,11 +106,11 @@ class ArticuloController extends Controller{
 
     /**
      * @OA\Put(
-     *     path="/api/articulos/{id}",
+     *     path="/api/articulos/{articulo}",
      *     summary="Actualizar un artículo",
      *     tags={"Articulos"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="articulo",
      *         in="path",
      *         description="ID del artículo a actualizar",
      *         required=true,
@@ -131,12 +131,7 @@ class ArticuloController extends Controller{
      *     @OA\Response(response=404, description="Artículo no encontrado")
      * )
     */
-    public function update(Request $request, string $id){
-       $articulo = Articulo::find($id);
-
-        if (!$articulo) {
-            return response()->json(['Error' => 'Articulo no encontrado. id:', $id], 404);
-        }
+    public function update(Request $request, Articulo $articulo){
 
         $request->validate([
             'imagenes' => 'required|string', 

@@ -105,15 +105,43 @@
                     }
                 }
             },
+            "delete": {
+                "tags": [
+                    "Articulos"
+                ],
+                "summary": "Eliminar un artículo por ID",
+                "operationId": "de4809e8ad8eea751584f66ed2aab554",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del artículo a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Artículo eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Artículo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/articulos/{articulo}": {
             "put": {
                 "tags": [
                     "Articulos"
                 ],
                 "summary": "Actualizar un artículo",
-                "operationId": "8b012fffca1a2f25e37727c1097c0471",
+                "operationId": "120961dbd2e0a7f21e6f6fedf9756524",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "articulo",
                         "in": "path",
                         "description": "ID del artículo a actualizar",
                         "required": true,
@@ -159,32 +187,6 @@
                 "responses": {
                     "200": {
                         "description": "Artículo actualizado correctamente"
-                    },
-                    "404": {
-                        "description": "Artículo no encontrado"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "Articulos"
-                ],
-                "summary": "Eliminar un artículo por ID",
-                "operationId": "de4809e8ad8eea751584f66ed2aab554",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del artículo a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Artículo eliminado correctamente"
                     },
                     "404": {
                         "description": "Artículo no encontrado"

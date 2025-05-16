@@ -21,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Route::prefix('api')
             ->middleware('api') // solo middleware api
-            ->namespace('App\Http\Controllers') // define namespace si usás Laravel < 8
             ->group(base_path('routes/api.php'));
     }
 }
