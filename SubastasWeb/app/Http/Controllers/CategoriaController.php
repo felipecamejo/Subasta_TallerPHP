@@ -5,17 +5,50 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Categorias",
+ *     description="API para gestionar categoria"
+ * )
+*/
+
 class CategoriaController extends Controller{
+    
     /**
-     * Display a listing of the resource.
-     */
+     * @OA\Get(
+     *     path="/api/categorias",
+     *     summary="Obtener todas las categoria",
+     *     tags={"Categorias"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+    */
     public function index(){
         return response()->json(Categoria::all());
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+     * @OA\Post(
+     *     path="/api/categorias",
+     *     summary="Crear una nueva categoria",
+     *     tags={"Categorias"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"nombre", "categoria_padre_id"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="categoria_padre_id", type="integer"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Categoria creada exitosamente"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     )
+     * )
+    */
     public function store(Request $request){
         $request->validate([
             'nombre' => 'required|string', 
@@ -29,42 +62,6 @@ class CategoriaController extends Controller{
         ]);
 
         return response()->json($categoria, 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id){
-        $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['Error' => 'Categoria no encontrado. id:', $id], 404);
-        }
-
-        return response()->json($categoria);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id){
-       $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['Error' => 'Categoria no encontrado. id:', $id], 404);
-        }
-
-        $request->validate([
-            'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
-        ]);
-
-        $categoria->nombre = $request->nombre;
-        $categoria->categoria_padre_id = $request->categoria_padre_id;
-
-        $categoria->save();
-
-        return response()->json($categoria);
     }
 
     /**
