@@ -15,3 +15,4 @@ Route::apiResource('articulos', ArticuloController::class);
 //Route::apiResource('lotes', LoteController::class);
 
 //Route::apiResource('categorias', CategoriaController::class);
+ 
