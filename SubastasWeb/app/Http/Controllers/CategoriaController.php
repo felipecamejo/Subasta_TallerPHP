@@ -52,7 +52,7 @@ class CategoriaController extends Controller{
     public function store(Request $request){
         $request->validate([
             'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
+            'categoria_padre_id' => 'nullable|exists:categorias,id',
         ]);
 
         $categoria = Categoria::create([
