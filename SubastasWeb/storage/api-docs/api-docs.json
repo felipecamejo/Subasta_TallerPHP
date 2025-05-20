@@ -250,7 +250,7 @@
                 "tags": [
                     "Categorias"
                 ],
-                "summary": "Eliminar una categorias por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
@@ -269,6 +269,106 @@
                     },
                     "404": {
                         "description": "Categoria no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/facturas": {
+            "get": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Obtener todas las facturas",
+                "operationId": "bbbe5c66d08b31e895bcb4daf020827f",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Crear una nueva factura",
+                "description": "Registra una factura con monto, condiciones de pago, fecha de entrega y referencia a un vendedor.",
+                "operationId": "storeFactura",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "montoTotal",
+                                    "condicionesDePago",
+                                    "entrega",
+                                    "vendedor_id"
+                                ],
+                                "properties": {
+                                    "montoTotal": {
+                                        "description": "Monto total de la venta",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500.75
+                                    },
+                                    "condicionesDePago": {
+                                        "description": "Condiciones de pago acordadas",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "30 días neto"
+                                    },
+                                    "entrega": {
+                                        "description": "Fecha de entrega pactada",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-06-01"
+                                    },
+                                    "vendedor_id": {
+                                        "description": "ID del vendedor existente",
+                                        "type": "integer",
+                                        "example": 42
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Venta creada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Los datos no son válidos"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -363,6 +463,10 @@
         {
             "name": "Categorias",
             "description": "API para gestionar categoria"
+        },
+        {
+            "name": "Facturas",
+            "description": "API para gestionar Facturas"
         },
         {
             "name": "Lotes",
