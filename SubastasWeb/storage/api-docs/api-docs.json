@@ -250,7 +250,7 @@
                 "tags": [
                     "Categorias"
                 ],
-                "summary": "Eliminar una categorias por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
@@ -269,6 +269,191 @@
                     },
                     "404": {
                         "description": "Categoria no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/clientes": {
+            "get": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Obtener todos los clientes",
+                "operationId": "de55d50d1b708d9e5c63ee3f8fe8f54a",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Crear un nuevo cliente",
+                "operationId": "4ac6cdfa8d6c188fa2cb4f3263d4318a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number"
+                                    },
+                                    "notificaciones": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Cliente creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/clientes/{id}": {
+            "get": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Obtener un cliente por ID",
+                "operationId": "0d3826d79390929601421b5810b61231",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del cliente",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente encontrado"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Eliminar un cliente por ID",
+                "operationId": "d15e304c609752c9f409ab81072fb52e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del cliente a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/clientes/{cliente}": {
+            "put": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Actualizar un cliente",
+                "operationId": "dfaf60e73f35810fb160b2946330b76d",
+                "parameters": [
+                    {
+                        "name": "cliente",
+                        "in": "path",
+                        "description": "ID del cliente a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "telefono",
+                                    "imagen",
+                                    "calificacion",
+                                    "notificaciones"
+                                ],
+                                "properties": {
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number"
+                                    },
+                                    "notificaciones": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cliente actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
                     }
                 }
             }
@@ -353,6 +538,188 @@
                     }
                 }
             }
+        },
+        "/api/rematadores": {
+            "get": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Obtener todos los rematadores",
+                "operationId": "2b3d8f6bf5b9050bbf0b945f358ce847",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Crear un nuevo rematador",
+                "operationId": "edd6c45d9363bbe0393b3197ab2e9ce0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "matricula": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rematador creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/rematadores/{id}": {
+            "get": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Obtener un rematador por ID",
+                "operationId": "e162cda2fa5e49a5a37a0688370060a0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rematador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rematador encontrado"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Eliminar un rematador por ID",
+                "operationId": "035569f192e025a7dfd4bd7447ba7c4b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rematador a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rematador eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/rematadores/{rematador}": {
+            "put": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Actualizar un rematador",
+                "operationId": "b22f78ccac6989b3aabe837d9d518070",
+                "parameters": [
+                    {
+                        "name": "rematador",
+                        "in": "path",
+                        "description": "ID del rematador a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "matricula"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "matricula": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rematador actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            }
         }
     },
     "tags": [
@@ -365,8 +732,20 @@
             "description": "API para gestionar categoria"
         },
         {
+            "name": "Cliente",
+            "description": "API para gestionar clientes"
+        },
+        {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Rematador",
+            "description": "API para gestionar rematadores"
+        },
+        {
+            "name": "Clientes",
+            "description": "Clientes"
         }
     ]
 }
