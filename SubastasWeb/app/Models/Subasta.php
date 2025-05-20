@@ -16,12 +16,14 @@ class Subasta extends Model
         'duracionMinutos', 
         'fecha',
         'casaremate_id',
-        'rematador_id'
+        'rematador_id',
+        'latitud',
+        'longitud',
     ]; 
 
     protected $hidden = [];
 
-    public function casaRemate() {
+    public function casaremate() {
         return $this->belongsTo(CasaRemate::class, 'casaremate_id');
     }
 

@@ -5,36 +5,50 @@ namespace App\Http\Controllers;
 use App\Models\Lote;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Lotes",
+ *     description="API para gestionar lotes"
+ * )
+*/
+
 class LoteController extends Controller{
+    
     /**
-     * Display a listing of the resource.
-     */
+     * @OA\Get(
+     *     path="/api/lotes",
+     *     summary="Obtener todos los lotes",
+     *     tags={"Lotes"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+    */
     public function index(){
         return response()->json(Lote::all());
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request){
-
-        $request->validate([
-            'valorBase' => 'required|numeric',
-            'pujaMinima' => 'required|numeric',
-             
-        ]);
-
-        $lote = Lote::create([
-            'valorBase' => $request->valorBase,
-            'pujaMinima' => $request->pujaMinima,
-        ]);
-
-        return response()->json($lote, 201);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+     * @OA\Post(
+     *     path="/api/lotes",
+     *     summary="Crear un nuevo lote",
+     *     tags={"Lotes"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"valorBase", "pujaMinima"},
+     *             @OA\Property(property="valorBase", type="float"),
+     *             @OA\Property(property="pujaMinima", type="float"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Lote creado exitosamente"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     )
+     * )
+    */
     public function store(Request $request){
         $request->validate([
             'valorBase' => 'required|numeric',
@@ -50,50 +64,26 @@ class LoteController extends Controller{
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id){
-        $lote = Lote::find($id);
-
-        if (!$lote) {
-            return response()->json(['Error' => 'Lote no encontrado. id:', $id], 404);
-        }
-
-        return response()->json($lote);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id){
-        return response()->json(['message' => 'Método no implementado'], 501);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id){
-       $lote = Lote::find($id);
-
-        if (!$lote) {
-            return response()->json(['Error' => 'Lote no encontrado. id:', $id], 404);
-        }
-
-        $request->validate([
-            'valorBase' => 'required|numeric',
-            'pujaMinima' => 'required|numeric',
-        ]);
-
-        $lote->valorBase = $request->valorBase;
-        $lote->pujaMinima = $request->pujaMinima;
-        
-        $lote->save();
-
-        return response()->json($lote);
-    }
-
-    /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/lotes/{id}",
+     *     summary="Eliminar un lote por ID",
+     *     tags={"Lotes"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del lote a eliminar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lote eliminado correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Categoria no encontrado"
+     *     )
+     * )
      */
     public function destroy(string $id){
         $lote = Lote::find($id);

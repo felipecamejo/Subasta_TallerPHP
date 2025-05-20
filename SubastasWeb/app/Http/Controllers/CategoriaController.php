@@ -5,39 +5,54 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Categorias",
+ *     description="API para gestionar categoria"
+ * )
+*/
+
 class CategoriaController extends Controller{
+    
     /**
-     * Display a listing of the resource.
-     */
+     * @OA\Get(
+     *     path="/api/categorias",
+     *     summary="Obtener todas las categoria",
+     *     tags={"Categorias"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+    */
     public function index(){
         return response()->json(Categoria::all());
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request){
-
-        $request->validate([
-            'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
-        ]);
-
-        $categoria = Categoria::create([
-            'nombre' => $request->nombre,
-            'categoria_padre_id' => $request->categoria_padre_id,
-        ]);
-
-        return response()->json($categoria, 201);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+     * @OA\Post(
+     *     path="/api/categorias",
+     *     summary="Crear una nueva categoria",
+     *     tags={"Categorias"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"nombre", "categoria_padre_id"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="categoria_padre_id", type="integer"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Categoria creada exitosamente"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     )
+     * )
+    */
     public function store(Request $request){
         $request->validate([
             'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
+            'categoria_padre_id' => 'nullable|exists:categorias,id',
         ]);
 
         $categoria = Categoria::create([
@@ -50,50 +65,26 @@ class CategoriaController extends Controller{
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id){
-        $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['Error' => 'Categoria no encontrado. id:', $id], 404);
-        }
-
-        return response()->json($categoria);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id){
-        return response()->json(['message' => 'Método no implementado'], 501);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id){
-       $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['Error' => 'Categoria no encontrado. id:', $id], 404);
-        }
-
-        $request->validate([
-            'nombre' => 'required|string', 
-            'categoria_padre_id' => 'required|exists:categorias,id',
-        ]);
-
-        $categoria->nombre = $request->nombre;
-        $categoria->categoria_padre_id = $request->categoria_padre_id;
-
-        $categoria->save();
-
-        return response()->json($categoria);
-    }
-
-    /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/categorias/{id}",
+     *     summary="Eliminar una categoria por ID",
+     *     tags={"Categorias"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la categoria a eliminar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Categoria eliminada correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Categoria no encontrada"
+     *     )
+     * )
      */
     public function destroy(string $id){
         $categoria = Categoria::find($id);

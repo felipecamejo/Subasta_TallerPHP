@@ -16,6 +16,9 @@ return new class extends Migration
         
             $table->integer('duracionMinutos');
             $table->dateTime('fecha');
+            $table->decimal('latitud', 10, 7);
+            $table->decimal('longitud', 10, 7);
+
         
             $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
             $table->foreignId('rematador_id')->nullable()->constrained('rematadores')->onDelete('cascade');
