@@ -194,6 +194,248 @@
                 }
             }
         },
+        "/api/casa-remates": {
+            "get": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Obtener todas las casas de remate",
+                "operationId": "a4047afdf0b75fad619b63b3d348c406",
+                "responses": {
+                    "200": {
+                        "description": "Lista de casas de remate"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Crear una nueva casa de remate",
+                "operationId": "52d5f60b97188f7b0cf41bc1e3e7fd2e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "idFiscal",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "idFiscal": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Casa de remate creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/casa-remates/{id}": {
+            "get": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Obtener una casa de remate por ID",
+                "operationId": "3689d7ffc718cbf8c0aee6fa939a15cf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate encontrada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Actualizar una casa de remate",
+                "operationId": "b4325daa9bbc8ff8b8796044e775c30a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "idFiscal": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "rematadores": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate actualizada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Eliminar una casa de remate por ID",
+                "operationId": "8b9010f5226c720e0ed6e8b2f67e8c88",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate eliminada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/casa-remates/{id}/asociar-rematadores": {
+            "post": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Asociar rematadores a una casa de remate",
+                "operationId": "3321857dd7575a252662b102c4f00afd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rematadores"
+                                ],
+                                "properties": {
+                                    "rematadores": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rematadores asociados exitosamente"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            }
+        },
         "/api/categorias": {
             "get": {
                 "tags": [
@@ -250,7 +492,7 @@
                 "tags": [
                     "Categorias"
                 ],
-                "summary": "Eliminar una categorias por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
@@ -353,6 +595,324 @@
                     }
                 }
             }
+        },
+        "/api/subastas": {
+            "get": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Obtener todas las subastas",
+                "operationId": "9e5756191155cc53466a54fdf7206531",
+                "responses": {
+                    "200": {
+                        "description": "Lista de subastas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "duracionMinutos": {
+                                                "type": "integer"
+                                            },
+                                            "fecha": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "casaremate_id": {
+                                                "type": "integer"
+                                            },
+                                            "rematador_id": {
+                                                "type": "integer"
+                                            },
+                                            "latitud": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "longitud": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "casaremate": {
+                                                "type": "object"
+                                            },
+                                            "rematador": {
+                                                "type": "object"
+                                            },
+                                            "direccion": {
+                                                "type": "object"
+                                            },
+                                            "lotes": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Crear una nueva subasta",
+                "operationId": "97f89b25cddf0cd0d6276702da232475",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "duracionMinutos",
+                                    "fecha"
+                                ],
+                                "properties": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "casaremate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subasta creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/subastas/{id}": {
+            "get": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Obtener una subasta por ID",
+                "operationId": "e64135c72ea7e8b7f07170d4b14cab69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subasta encontrada"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Actualizar una subasta",
+                "operationId": "5980b5b15bdfa8004ee31d5802d3492f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "casaremate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "type": "object"
+                                    },
+                                    "lotes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subasta actualizada"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Eliminar una subasta por ID",
+                "operationId": "94a4b3909295b2e53e146229ffa7d6c2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subasta eliminada correctamente"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/subastas/{id}/lotes": {
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Asociar lotes a una subasta",
+                "operationId": "8931c862071ed28dacf37560b8480e58",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "lotes"
+                                ],
+                                "properties": {
+                                    "lotes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lotes asociados exitosamente"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
         }
     },
     "tags": [
@@ -361,12 +921,20 @@
             "description": "API para gestionar artículos"
         },
         {
+            "name": "CasaRemates",
+            "description": "API para gestionar casas de remate"
+        },
+        {
             "name": "Categorias",
             "description": "API para gestionar categoria"
         },
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Subastas",
+            "description": "API para gestionar subastas"
         }
     ]
 }

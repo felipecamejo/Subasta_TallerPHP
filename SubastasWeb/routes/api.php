@@ -7,9 +7,9 @@ use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ArticuloController;
 use App\Http\Controllers\CategoriaController;
 
-//Route::apiResource('casaremates', CasaRemateController::class);
+Route::apiResource('casa-remates', CasaRemateController::class);
 
-//Route::apiResource('subasta', SubastaController::class);
+Route::apiResource('subastas', SubastaController::class);
 
 Route::apiResource('articulos', ArticuloController::class);
 
