@@ -16,7 +16,9 @@ class Subasta extends Model
         'duracionMinutos', 
         'fecha',
         'casaremate_id',
-        'rematador_id'
+        'rematador_id',
+        'latitud',
+        'longitud',
     ]; 
 
     protected $hidden = [];
