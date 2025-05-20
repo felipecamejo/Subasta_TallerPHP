@@ -5,11 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+
+/**
+ * @OA\Tag(
+ *     name="Cliente",
+ *     description="API para gestionar clientes"
+ * )
+*/
 class ClienteController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+     /**
+     * @OA\Get(
+     *     path="/api/clientes",
+     *     summary="Obtener todos los clientes",
+     *     tags={"Cliente"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+    */
     public function index()
     {
          $clientes = Cliente::with('direccion')->get();
@@ -25,8 +37,33 @@ class ClienteController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+     * @OA\Post(
+     *     path="/api/clientes",
+     *     summary="Crear un nuevo cliente",
+     *     tags={"Cliente"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"nombre", "cedula", "email"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="cedula", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="telefono", type="string"),
+     *             @OA\Property(property="imagen", type="string"),
+     *             @OA\Property(property="calificacion", type="number"),
+     *             @OA\Property(property="notificaciones", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Cliente creado exitosamente"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     )
+     * )
+    */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -43,9 +80,28 @@ class ClienteController extends Controller
         return response()->json($cliente, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
+     /**
+     * @OA\Get(
+     *     path="/api/clientes/{id}",
+     *     summary="Obtener un cliente por ID",
+     *     tags={"Cliente"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del cliente",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cliente encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Cliente no encontrado"
+     *     )
+     * )
+    */
     public function show(string $id)
     {
        $cliente = Cliente::with(['direccion', 'pujas', 'notificaciones'])->find($id); // el with es para cargar las relaciones
@@ -67,8 +123,31 @@ class ClienteController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+     * @OA\Put(
+     *     path="/api/clientes/{cliente}",
+     *     summary="Actualizar un cliente",
+     *     tags={"Cliente"},
+     *     @OA\Parameter(
+     *         name="cliente",
+     *         in="path",
+     *         description="ID del cliente a actualizar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"telefono", "imagen", "calificacion", "notificaciones"},
+     *             @OA\Property(property="telefono", type="string"),
+     *             @OA\Property(property="imagen", type="string"),
+     *             @OA\Property(property="calificacion", type="number"),
+     *             @OA\Property(property="notificaciones", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Cliente actualizado correctamente"),
+     *     @OA\Response(response=404, description="Cliente no encontrado")
+     * )
+    */
     public function update(Request $request, string $id)
     {
          $cliente = Cliente::find($id);
@@ -93,7 +172,26 @@ class ClienteController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/clientes/{id}",
+     *     summary="Eliminar un cliente por ID",
+     *     tags={"Clientes"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del cliente a eliminar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cliente eliminado correctamente"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Cliente no encontrado"
+     *     )
+     * )
      */
     public function destroy(string $id)
     {
