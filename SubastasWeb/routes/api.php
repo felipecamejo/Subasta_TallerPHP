@@ -10,9 +10,9 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\VendedorController;
 
-//Route::apiResource('casaremates', CasaRemateController::class);
+Route::apiResource('casaremates', CasaRemateController::class);
 
-//Route::apiResource('subasta', SubastaController::class);
+Route::apiResource('subasta', SubastaController::class);
 
 Route::apiResource('articulos', ArticuloController::class);
 

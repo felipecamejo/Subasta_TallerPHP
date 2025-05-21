@@ -373,6 +373,240 @@
                 }
             }
         },
+        "/api/facturas/{id}": {
+            "get": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Obtener una factura por ID",
+                "description": "Recupera una factura junto con su vendedor y pujas asociadas.",
+                "operationId": "getFacturaById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Factura encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "montoTotal": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 2500
+                                        },
+                                        "condicionesDePago": {
+                                            "type": "string",
+                                            "example": "30 días neto"
+                                        },
+                                        "entrega": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2025-06-15"
+                                        },
+                                        "vendedor_id": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "Vendedor": {
+                                            "$ref": "#/components/schemas/Vendedor"
+                                        },
+                                        "Puja": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Puja"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Factura no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Actualizar una factura existente",
+                "description": "Permite modificar uno o varios campos de una factura. Sólo los campos enviados se validan y actualizan.",
+                "operationId": "updateFactura",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "montoTotal": {
+                                        "description": "Nuevo monto total (si se envía)",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 3000.5
+                                    },
+                                    "condicionesDePago": {
+                                        "description": "Nuevas condiciones de pago (si se envía)",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Pago a 60 días"
+                                    },
+                                    "entrega": {
+                                        "description": "Nueva fecha de entrega (si se envía)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-07-01"
+                                    },
+                                    "vendedor_id": {
+                                        "description": "ID del vendedor (si se envía)",
+                                        "type": "integer",
+                                        "example": 10
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Factura actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Factura"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Factura no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Eliminar una factura",
+                "description": "Borra la factura especificada por su ID.",
+                "operationId": "deleteFactura",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Factura eliminada correctamente (sin contenido)"
+                    },
+                    "404": {
+                        "description": "Factura no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/lotes": {
             "get": {
                 "tags": [
@@ -453,6 +687,156 @@
                     }
                 }
             }
+        },
+        "/api/vendedores": {
+            "get": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Obtener lista de vendedores",
+                "description": "Retorna todos los vendedores con sus facturas, artículos y casas de remate.",
+                "operationId": "getVendedores",
+                "responses": {
+                    "200": {
+                        "description": "Lista de vendedores obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Vendedor"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Factura": {
+                "required": [
+                    "montoTotal",
+                    "condicionesDePago",
+                    "entrega",
+                    "vendedor_id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "montoTotal": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2500
+                    },
+                    "condicionesDePago": {
+                        "type": "string",
+                        "example": "30 días neto"
+                    },
+                    "entrega": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-06-15"
+                    },
+                    "vendedor_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "Vendedor": {
+                        "$ref": "#/components/schemas/Vendedor"
+                    },
+                    "Puja": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Puja"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Puja": {
+                "required": [
+                    "fechaHora",
+                    "monto",
+                    "lote_id",
+                    "cliente_id",
+                    "facturas_id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "fechaHora": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-06-01T14:30:00Z"
+                    },
+                    "monto": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 500
+                    },
+                    "lote_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "cliente_id": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "facturas_id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Vendedor": {
+                "title": "Vendedor",
+                "required": [
+                    "id",
+                    "nombre"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "juan@example.com"
+                    }
+                },
+                "type": "object"
+            }
         }
     },
     "tags": [
@@ -471,6 +855,10 @@
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Vendedores",
+            "description": "API para gestionar vendedores"
         }
     ]
 }

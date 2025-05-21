@@ -242,7 +242,7 @@ class FacturaController extends Controller
             'montoTotal' => 'sometimes|required|numeric',
             'condicionesDePago' => 'sometimes|required|string|max:255',
             'entrega' => 'sometimes|required|date',
-            'vendedor_id' => 'sometimes|required|exists:vendedors,id',
+            'vendedor_id' => 'sometimes|required|exists:vendedores,id',
         ]);
 
         $factura->update($request->all());

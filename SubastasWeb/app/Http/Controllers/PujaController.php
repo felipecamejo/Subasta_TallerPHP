@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Puja;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class PujaController extends Controller
 {
