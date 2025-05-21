@@ -4,14 +4,45 @@ namespace App\Http\Controllers;
 
 use App\Models\Vendedor;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
-class VendedorController extends Controller
-{
 
-    // GET /vendedores
+/**
+ * @OA\Tag(
+ *     name="Vendedores",
+ *     description="API para gestionar vendedores"
+ * )
+*/
+
+class VendedorController extends Controller{
+
+    /**
+ * @OA\Get(
+ *     path="/api/vendedores",
+ *     summary="Obtener lista de vendedores",
+ *     description="Retorna todos los vendedores con sus facturas, artículos y casas de remate.",
+ *     operationId="getVendedores",
+ *     tags={"Vendedores"},
+ *     
+ *     @OA\Response(
+ *         response=200,
+ *         description="Lista de vendedores obtenida exitosamente",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="#/components/schemas/Vendedor")
+ *         )
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor"
+ *     )
+ * )
+ */
+   
     public function index()
     {
-        // Devuelve todos los vendedores con sus relaciones
+     
         return response()->json(
             Vendedor::with(['Facturas', 'Articulos', 'CasaRemate'])->get()
         );

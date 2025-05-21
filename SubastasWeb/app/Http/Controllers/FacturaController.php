@@ -17,7 +17,7 @@ use OpenApi\Annotations as OA;
 
 class FacturaController extends Controller
 {
-        /**
+    /**
      * @OA\Get(
      *     path="/api/facturas",
      *     summary="Obtener todas las facturas",
@@ -101,15 +101,14 @@ class FacturaController extends Controller
             'montoTotal' => 'required|numeric',
             'condicionesDePago' => 'required|string|max:255',
             'entrega' => 'required|date',
-            'vendedor_id' => 'required|exists:vendedors,id',
+            'vendedor_id' => 'required|exists:vendedores,id',
         ]);
 
         $factura = Factura::create(attributes: $request->all());
         return response()->json($factura, 201);
     }
 
-    public function show($id)    {
-        /**
+     /**
          * @OA\Get(
          *     path="/api/facturas/{id}",
          *     operationId="getFacturaById",
@@ -156,14 +155,15 @@ class FacturaController extends Controller
         *     )
         * )
         */
+
+    public function show($id)    {
+       
       
         $factura = Factura::with(['Vendedor', 'Puja'])->findOrFail($id);
         return response()->json($factura);
     }
 
-
-    public function update(Request $request, $id)    {
-         /**
+       /**
          * @OA\Put(
          *     path="/api/facturas/{id}",
          *     operationId="updateFactura",
@@ -233,6 +233,10 @@ class FacturaController extends Controller
         */
 
 
+    public function update(Request $request, $id)    {
+      
+
+
         $factura = Factura::findOrFail($id);
         $request->validate([
             'montoTotal' => 'sometimes|required|numeric',
@@ -245,9 +249,7 @@ class FacturaController extends Controller
         return response()->json($factura);
     }
 
-
-    public function destroy($id)    {
-        /**
+     /**
         * @OA\Delete(
         *     path="/api/facturas/{id}",
         *     operationId="deleteFactura",
@@ -274,8 +276,14 @@ class FacturaController extends Controller
         *     )
         * )
         */
+
+
+    public function destroy($id)    {
+       
         $factura = Factura::findOrFail($id);
         $factura->delete();
         return response()->json(null, 204);
     }
 }
+
+
