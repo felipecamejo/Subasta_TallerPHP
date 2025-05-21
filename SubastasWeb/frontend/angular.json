@@ -32,7 +32,10 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "primeicons/primeicons.css",
+              "primeng/themes/lara-light-blue.css",
+              "primeng/resources/primeng.css"
             ],
             "scripts": [],
             "server": "src/main.server.ts",
