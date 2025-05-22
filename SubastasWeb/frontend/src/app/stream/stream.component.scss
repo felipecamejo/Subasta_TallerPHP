@@ -4,6 +4,7 @@ main {
     padding-right: 5vw;
     margin-top: 40px;
     display: flex;
+    color:#242424
 }
 
 .article-1 {
@@ -29,7 +30,7 @@ main {
 .padreTituloReloj {
     display: flex;
     align-items: center;   
-    gap: 2vw;
+    gap: 1.7vw;
 }
 
 .titulo {
@@ -39,4 +40,58 @@ main {
 
 .icono {
     font-size: 1.2rem;
+}
+
+.text-input{
+	width: 6vw;
+	height: 38px;
+	padding-left: 0.2vw;
+    padding-top: 5px;
+    padding-bottom: 5px;
+	background: #FFFFFF;
+	color: #444444;
+	border-color: #EBEBEB;
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 6px 6px 6px 6px;
+	font-weight: 500;
+	font-size: 2rem;
+	text-align: left;
+}
+
+hr {
+    border: none;
+    height: 2px;
+    background-color: rgba(65, 61, 61, 0.418);
+    margin: 20px 0;
+    display: block;
+}
+
+.subDiv {
+    padding-left: 1vw;
+}
+
+.subtitulo {
+    margin-top: 5px;
+    font-size: 1.7rem;
+}
+
+.padrePujas {
+    gap: 1.3vw;
+    margin-bottom: 20px
+}
+
+.boton {
+    width: 8vw;
+    height: 38px;
+    padding: 0px 0.5vw 0px 0.5vw;
+    background: #444444;
+    color: #FFFFFF;
+    border-color: #444444;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 6px 6px 6px 6px;
+    font-weight: 500;
+    font-size: 1.8rem;
+    text-align: center;
 }

@@ -4,13 +4,34 @@
             
         </div>
     </article>
-    <article class="article-1 col-12 md:col-6 flex paddingArticle">
+    <article class="article-1 col-12 md:col-6 paddingArticle">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo">Nombre Puja</h1>
             <span class="pi pi-clock"></span>
-            <input type="text" pInputText [(ngModel)]="value" />
+            <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
         </div>
-        <hr>
-        
+
+        <hr class="w-full" />
+        <div class="w-full subDiv">
+            <div class="w-full flex padrePujas">
+                <span class="subtitulo">Puja Actual:</span>
+                <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+            </div>
+
+            <div class="w-full flex">
+                <div class="w-full flex padrePujas">
+                    <p-button label="Puja Rapida" class="boton" severity="secondary"/>
+                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                </div>
+
+                <div class="w-full flex padrePujas">
+                    <p-button label="Puja" class="boton" severity="secondary"/>
+                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    
+                </div>
+            </div>
+           
+        </div>
     </article>
 </main>
+
