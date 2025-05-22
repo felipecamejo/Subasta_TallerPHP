@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [InputTextModule, FormsModule, ButtonModule],
+  imports: [InputTextModule, FormsModule, ButtonModule, FooterComponent],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
