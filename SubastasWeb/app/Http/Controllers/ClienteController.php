@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Cliente;
 use OpenApi\Annotations as OA;
 
 
@@ -52,7 +53,6 @@ class ClienteController extends Controller
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
      *             @OA\Property(property="calificacion", type="number"),
-     *             @OA\Property(property="notificaciones", type="array", @OA\Items(type="string"))
      *         )
      *     ),
      *     @OA\Response(
@@ -74,10 +74,28 @@ class ClienteController extends Controller
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
             'calificacion' => 'nullable|numeric',
-            'notificaciones' => 'nullable|array', // el array de notificaciones lo habiamos eliminado no?
+            // otros campos de usuario si los tienes
         ]);
 
-        $cliente = Cliente::create($validated);
+        // 1. Crear el usuario
+        $usuario = \App\Models\Usuario::create([
+            'nombre' => $validated['nombre'],
+            'cedula' => $validated['cedula'],
+            'email' => $validated['email'],
+            'telefono' => $validated['telefono'] ?? null,
+            'imagen' => $validated['imagen'] ?? null,
+            'contrasenia' => bcrypt('password123'), // O usa un valor real
+            'direccionFiscal' => '', // O el valor correspondiente
+        ]);
+
+        // 2. Crear el cliente asociado
+        $cliente = \App\Models\Cliente::create([
+            'usuario_id' => $usuario->id,
+            'calificacion' => $validated['calificacion'] ?? null,
+        ]);
+
+        // 3. Puedes retornar el cliente con los datos del usuario
+        $cliente->load('usuario');
         return response()->json($cliente, 201);
     }
 

@@ -71,11 +71,29 @@ class RematadorController extends Controller
             'email' => 'required|email|unique:usuarios,email',
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
-            'matricula' => 'required|string|unique:rematadores,matricula',
+            'matricula' => 'required|string',
+            // otros campos de usuario si los tienes
         ]);
 
-        $rematador = Rematador::create($validated);
+        // 1. Crear el usuario
+        $usuario = \App\Models\Usuario::create([
+            'nombre' => $validated['nombre'],
+            'cedula' => $validated['cedula'],
+            'email' => $validated['email'],
+            'telefono' => $validated['telefono'] ?? null,
+            'imagen' => $validated['imagen'] ?? null,
+            'contrasenia' => bcrypt('password123'), // O usa un valor real
+            'direccionFiscal' => '', // O el valor correspondiente
+        ]);
 
+        // 2. Crear el rematador asociado
+        $rematador = \App\Models\Rematador::create([
+            'usuario_id' => $usuario->id,
+            'matricula' => $validated['matricula'],
+        ]);
+
+        // 3. Puedes retornar el rematador con los datos del usuario
+        $rematador->load('usuario');
         return response()->json($rematador, 201);
     }
 

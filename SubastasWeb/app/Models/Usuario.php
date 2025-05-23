@@ -24,6 +24,15 @@
             'contrasenia'
         ]; // Columnas ocultas en las respuestas JSON
 
+
+        public function cliente(){
+            return $this->hasOne(Cliente::class, 'usuario_id');
+        }
+
+        public function rematador(){
+            return $this->hasOne(Rematador::class, 'usuario_id');
+        }
+
         public function direccion() {
             return $this->morphOne(DtoDireccion::class, 'direccionable');
         }

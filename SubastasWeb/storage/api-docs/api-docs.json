@@ -320,12 +320,6 @@
                                     },
                                     "calificacion": {
                                         "type": "number"
-                                    },
-                                    "notificaciones": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
                                     }
                                 },
                                 "type": "object"
