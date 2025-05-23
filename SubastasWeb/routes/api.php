@@ -6,6 +6,9 @@ use App\Http\Controllers\SubastaController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ArticuloController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\MensajeController;
+
+Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
 //Route::apiResource('casaremates', CasaRemateController::class);
 
