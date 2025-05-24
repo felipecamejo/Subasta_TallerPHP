@@ -14,8 +14,8 @@ class DtoUsuario {
     public $latitud;
     public $longitud;
 
-    public function __construct($nombre, $cedula, $email, $telefono, $imagen, $contrasenia, $direccionFiscal, $latitud, $longitud) {
-        $this->id = null;
+    public function __construct($id, $nombre, $cedula, $email, $telefono, $imagen, $contrasenia, $direccionFiscal, $latitud, $longitud) {
+        $this->id = $id;
         $this->nombre = $nombre;
         $this->cedula = $cedula;
         $this->email = $email;

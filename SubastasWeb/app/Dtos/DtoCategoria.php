@@ -16,8 +16,8 @@ class DtoCategoria
     /** @var DtoArticulo[] */
     public array $articulos = [];
 
-    public function __construct($nombre, $categoria_padre_id, $categoriasHijas, $articulos) {
-        $this->id = null;
+    public function __construct($id, $nombre, $categoria_padre_id, $categoriasHijas, $articulos) {
+        $this->id = $id;
         $this->nombre = $nombre;
         $this->categoria_padre_id = $categoria_padre_id;
         $this->categoriasHijas = $categoriasHijas;

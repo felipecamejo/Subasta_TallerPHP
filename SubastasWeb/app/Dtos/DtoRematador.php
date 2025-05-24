@@ -13,8 +13,8 @@ class DtoRematador {
     /** @var DtoCasaRemate[] */
     public array $casasRemate;
 
-    public function __construct($matricula, $usuario_id, $subastas, $casasRemate) {
-        $this->id = null;
+    public function __construct($id, $matricula, $usuario_id, $subastas, $casasRemate) {
+        $this->id = $id;
         $this->matricula = $matricula;
         $this->usuario_id = $usuario_id;
         $this->subastas = $subastas;

@@ -9,8 +9,8 @@ class DtoLote{
     public $valorBase;
     public $pujaMinima;
 
-    public function __construct($valorBase, $pujaMinima){
-        $this->id = null;
+    public function __construct($id, $valorBase, $pujaMinima){
+        $this->id = $id;
         $this->valorBase = $valorBase;
         $this->pujaMinima = $pujaMinima;
     }
