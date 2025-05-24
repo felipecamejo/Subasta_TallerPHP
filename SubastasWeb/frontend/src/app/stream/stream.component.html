@@ -1,0 +1,74 @@
+<main class="w-full flex flex-wrap">
+    <article class="article-1 col-12 md:col-6 flex">
+        <div class="video-player-1">
+            
+        </div>
+    </article>
+    <article class="article-1 col-12 md:col-6 paddingArticle">
+        <div class="w-full flex padreTituloReloj">
+            <h1 class="titulo">Nombre Puja</h1>
+            <span class="pi pi-clock"></span>
+            <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
+        </div>
+
+        <hr class="w-full" />
+        <div class="w-full subDiv">
+            <div class="w-full flex padrePujas">
+                <span class="subtitulo">Puja Actual:</span>
+                <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+            </div>
+
+            <div class="w-full flex">
+                <div class="w-full flex padrePujas">
+                    <p-button label="Puja Rapida" class="boton" severity="secondary"/>
+                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                </div>
+
+                <div class="w-full flex padrePujas">
+                    <p-button label="Puja" class="boton" severity="secondary"/>
+                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    
+                </div>
+            </div>
+        </div>
+    </article>
+    
+</main>
+
+<hr>
+
+<main class="w-full flex flex-wrap">
+    <article class="w-full ">
+        <span class="w-full subtitulo-2">Subastas Similares</span>
+        
+        <div class="flex padreSubastas">
+            <div class="subastas">
+                <img src="" alt="" class="w-full imagenSubasta">
+                <span class="w-full tituloSubasta">holis</span>
+            </div>
+            <div class="subastas">
+                <img src="" alt="" class="w-full imagenSubasta">
+                <span class="w-full tituloSubasta">holis</span>
+            </div>
+
+            <div class="subastas">
+                <img src="" alt="" class="w-full imagenSubasta">
+                <span class="w-full tituloSubasta">holis</span>
+            </div>
+
+            <div class="subastas">
+                <img src="" alt="" class="w-full imagenSubasta">
+                <span class="w-full tituloSubasta">holis</span>
+            </div>
+
+            <div class="subastas">
+                <img src="" alt="" class="w-full imagenSubasta">
+                <span class="w-full tituloSubasta">holis</span>
+            </div>
+        </div>
+    </article>
+</main>
+
+<app-footer></app-footer>
+
+

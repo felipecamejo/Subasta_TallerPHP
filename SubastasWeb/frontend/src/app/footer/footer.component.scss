@@ -1,0 +1,30 @@
+footer {
+    background: #F6F6F6;
+    margin-top: 35px;
+    padding-left: 5vw;
+    height: 300px;
+    padding-right: 5vw;
+    padding-top: 50px;
+    font-family: 'Source Sans 3', sans-serif;
+}
+
+.padres {
+    width: 14vw;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.titulo {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.textos {
+    flex-direction: column;
+    gap: 15px;
+}
+
+.texto {
+    padding-left: 0.5vw;
+}
