@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CasaRemate;
 use App\Models\Rematador;
-use App\Models\DtoDireccion;
 use App\Models\Lote;
+use App\DTOs\DtoDireccion;
 
 class Subasta extends Model
 {

@@ -7,9 +7,13 @@ use App\Http\Controllers\SubastaController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ArticuloController;
 use App\Http\Controllers\CategoriaController;
+
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MensajeController;
+
+Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
 // Ruta pública para login
 Route::post('/login', [AuthController::class, 'login']);
