@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('idFiscal');
             $table->string('email');
             $table->string('telefono');
+            $table->string('calle');
+            $table->string('ciudad');
+            $table->string('pais');
+
             $table->float('calificacion');
 
             $table->timestamps();

@@ -15,7 +15,10 @@
             'idFiscal', 
             'email', 
             'telefono', 
-            'calificacion'
+            'calificacion',
+            'calle',
+            'ciudad',
+            'pais',
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
