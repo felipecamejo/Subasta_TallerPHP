@@ -9,23 +9,14 @@
     class Cliente extends Model {
         protected $table = 'clientes';
 
-<<<<<<< HEAD
-       protected $fillable = [ 
-        'usuario_id',
-        'calificacion',
-    ];  
-=======
         protected $fillable = [ 
-            'notificaciones', 
+            'usuario_id',
             'calificacion',
-            'latitud',
-            'longitud',
-        ]; 
+        ];  
 
         protected $casts = [
             'notificaciones' => 'array',
         ];
->>>>>>> feli
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
