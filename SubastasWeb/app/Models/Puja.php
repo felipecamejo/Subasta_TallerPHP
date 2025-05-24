@@ -26,7 +26,7 @@
         return $this->belongsTo(Lote::class);
     }
 
-    public function Facturas(){
+    public function Factura(){
         return $this->belongsTo(Factura::class);
     }
 
