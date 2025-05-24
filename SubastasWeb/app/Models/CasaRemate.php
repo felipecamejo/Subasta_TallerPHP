@@ -1,6 +1,6 @@
 <?php
     namespace App\Models;
-    use App\Models\DtoDireccion;
+    use App\DTOs\DtoDireccion;
     use App\Models\Rematador;
     use App\Models\Subasta;
     use Illuminate\Database\Eloquent\Model;
