@@ -10,7 +10,8 @@
 
         protected $fillable = [ 
             'valorBase', 
-            'pujaMinima'
+            'pujaMinima',
+            'subasta_id'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON

@@ -85,7 +85,7 @@ class LoteController extends Controller{
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Categoria no encontrado"
+     *         description="Lote no encontrado"
      *     )
      * )
      */

@@ -136,14 +136,16 @@ class Mapper {
         return new DtoLote(
             $lote->id,
             $lote->valorBase,
-            $lote->pujaMinima
+            $lote->pujaMinima,
+            $lote->subasta_id
         );
     }
 
     public static function toModelLote(DtoLote $dto): Lote{
         return new Lote([
             'valorBase' => $dto->valorBase,
-            'pujaMinima' => $dto->pujaMinima
+            'pujaMinima' => $dto->pujaMinima,
+            'subasta_id' => $dto->subasta_id
         ]);
     }
 

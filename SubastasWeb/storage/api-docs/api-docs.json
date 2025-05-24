@@ -806,6 +806,9 @@
                                     "pujaMinima": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "subasta_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -846,7 +849,7 @@
                         "description": "Lote eliminado correctamente"
                     },
                     "404": {
-                        "description": "Categoria no encontrado"
+                        "description": "Lote no encontrado"
                     }
                 }
             }
