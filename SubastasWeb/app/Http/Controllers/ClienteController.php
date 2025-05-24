@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Usuario;
+use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -29,7 +30,9 @@ class ClienteController extends Controller
     {
         // Listar todos los clientes con datos de usuario
         $clientes = Cliente::with('usuario')->get();
-        $dto = Mapper::fromModelCliente($clientes);
+        $dto = $clientes->map(function($cliente) {
+            return Mapper::fromModelCliente($cliente);
+        });
         return response()->json($dto, 200);
     }
 
