@@ -300,7 +300,8 @@
                                 "required": [
                                     "nombre",
                                     "cedula",
-                                    "email"
+                                    "email",
+                                    "contrasenia"
                                 ],
                                 "properties": {
                                     "nombre": {
@@ -320,6 +321,12 @@
                                     },
                                     "calificacion": {
                                         "type": "number"
+                                    },
+                                    "direccionFiscal": {
+                                        "type": "string"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"
@@ -329,7 +336,59 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Cliente creado exitosamente"
+                        "description": "Cliente creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer"
+                                        },
+                                        "calificacion": {
+                                            "type": "number"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "telefono": {
+                                                    "type": "string"
+                                                },
+                                                "imagen": {
+                                                    "type": "string"
+                                                },
+                                                "direccionFiscal": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Error de validación"
@@ -366,7 +425,7 @@
             },
             "delete": {
                 "tags": [
-                    "Clientes"
+                    "Cliente"
                 ],
                 "summary": "Eliminar un cliente por ID",
                 "operationId": "d15e304c609752c9f409ab81072fb52e",
@@ -560,7 +619,8 @@
                                 "required": [
                                     "nombre",
                                     "cedula",
-                                    "email"
+                                    "email",
+                                    "matricula"
                                 ],
                                 "properties": {
                                     "nombre": {
@@ -736,10 +796,6 @@
         {
             "name": "Rematador",
             "description": "API para gestionar rematadores"
-        },
-        {
-            "name": "Clientes",
-            "description": "Clientes"
         }
     ]
 }

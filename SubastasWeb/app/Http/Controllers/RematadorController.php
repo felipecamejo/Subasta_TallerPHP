@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use App\Models\Rematador;
+use App\Models\Usuario;
+use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(
@@ -24,7 +26,8 @@ class RematadorController extends Controller
     */
     public function index()
     {
-        $rematadores = Rematador::with('direccion')->get();
+        // Listar todos los rematadores con datos de usuario
+        $rematadores = Rematador::with('usuario')->get();
         return response()->json($rematadores, 200);
     }
 
@@ -44,12 +47,14 @@ class RematadorController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "cedula", "email"},
+     *             required={"nombre", "cedula", "email", "matricula"},
      *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="cedula", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
+     *             @OA\Property(property="direccionFiscal", type="string"),
+     *             @OA\Property(property="contrasenia", type="string"),
      *             @OA\Property(property="matricula", type="string"),
      *         )
      *     ),
@@ -72,27 +77,27 @@ class RematadorController extends Controller
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
             'matricula' => 'required|string',
-            // otros campos de usuario si los tienes
+            'contrasenia' => 'required|string',
+            'direccionFiscal' => 'nullable|string',
         ]);
 
         // 1. Crear el usuario
-        $usuario = \App\Models\Usuario::create([
+        $usuario = Usuario::create([
             'nombre' => $validated['nombre'],
             'cedula' => $validated['cedula'],
             'email' => $validated['email'],
-            'telefono' => $validated['telefono'] ?? null,
+            'telefono' => $validated['telefono'] ?? '',
             'imagen' => $validated['imagen'] ?? null,
-            'contrasenia' => bcrypt('password123'), // O usa un valor real
-            'direccionFiscal' => '', // O el valor correspondiente
+            'contrasenia' => bcrypt($validated['contrasenia']),
+            'direccionFiscal' => $validated['direccionFiscal'] ?? '',
         ]);
 
         // 2. Crear el rematador asociado
-        $rematador = \App\Models\Rematador::create([
+        $rematador = Rematador::create([
             'usuario_id' => $usuario->id,
             'matricula' => $validated['matricula'],
         ]);
 
-        // 3. Puedes retornar el rematador con los datos del usuario
         $rematador->load('usuario');
         return response()->json($rematador, 201);
     }
@@ -119,15 +124,12 @@ class RematadorController extends Controller
      *     )
      * )
     */
-    public function show(string $id)
+    public function show($id)
     {
-        $rematador = Rematador::with(['direccion', 'subastas', 'casasRemate'])->find($id); // el with es para cargar las relaciones
-        // $rematador = Rematador::find($id); // sin relaciones
-
+        $rematador = Rematador::with('usuario')->find($id);
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
-
         return response()->json($rematador, 200);
     }
 
@@ -175,17 +177,36 @@ class RematadorController extends Controller
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
 
+        $usuario = $rematador->usuario;
+
         $validated = $request->validate([
             'nombre' => 'sometimes|string|max:255',
-            'cedula' => 'sometimes|string|unique:usuarios,cedula,' . $id,
-            'email' => 'sometimes|email|unique:usuarios,email,' . $id,
+            'cedula' => 'sometimes|string|unique:usuarios,cedula,' . $usuario->id,
+            'email' => 'sometimes|email|unique:usuarios,email,' . $usuario->id,
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
             'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $id,
+            'contrasenia' => 'sometimes|string|min:6',
+            'direccionFiscal' => 'nullable|string',
         ]);
 
-        $rematador->update($validated);
+        // Actualizar usuario
+        $usuario->update([
+            'nombre' => $validated['nombre'] ?? $usuario->nombre,
+            'cedula' => $validated['cedula'] ?? $usuario->cedula,
+            'email' => $validated['email'] ?? $usuario->email,
+            'telefono' => $validated['telefono'] ?? $usuario->telefono,
+            'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
+            'direccionFiscal' => $validated['direccionFiscal'] ?? $usuario->direccionFiscal,
+            'contrasenia' => isset($validated['contrasenia']) ? bcrypt($validated['contrasenia']) : $usuario->contrasenia,
+        ]);
 
+        // Actualizar rematador
+        $rematador->update([
+            'matricula' => $validated['matricula'] ?? $rematador->matricula,
+        ]);
+
+        $rematador->load('usuario');
         return response()->json($rematador, 200);
     }
 
@@ -214,12 +235,15 @@ class RematadorController extends Controller
     public function destroy(string $id)
     {
         $rematador = Rematador::find($id);
+        $usuario = Usuario::find($id);
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
 
+        // Elimina primero el usuario (cascade eliminará el rematador)
         $rematador->delete();
+        $usuario->delete();
 
         return response()->json(['message' => 'Rematador eliminado con éxito'], 200);
     }
