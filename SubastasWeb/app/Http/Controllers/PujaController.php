@@ -6,14 +6,59 @@ use App\Models\Puja;
 use Illuminate\Http\Request;
 use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Tag(
+ *     name="Pujas",
+ *     description="API para gestionar Pujas"
+ * )
+*/
+
 class PujaController extends Controller
 {
-   // Mostrar todas las pujas
+ /**
+     * @OA\Post(
+     *     path="/api/pujas",
+     *     summary="Crear una nueva casa de remate",
+     *     tags={"Pujas"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"fechaHora", "monto"},
+     *             @OA\Property(property="fechaHora", type="time"),
+     *             @OA\Property(property="monto", type="string"),
+     *             @OA\Property(property="cliente", type="object",
+     *                 @OA\Property(property="nombre", type="string"),
+     *                 @OA\Property(property="cedula", type="string"),
+     *                 @OA\Property(property="email", type="string"),
+     *                 @OA\Property(property="telefono", type="string"),
+     *                       @OA\Property(property="direccionFiscal", type="object",
+     *                              @OA\Property(property="calle1", type="string"),
+     *                              @OA\Property(property="calle2", type="string"),
+     *                              @OA\Property(property="numero", type="string"),
+     *                              @OA\Property(property="ciudad", type="string"),
+     *                              @OA\Property(property="pais", type="string"),
+     *                 @OA\Property(property="imagen", type="string"),
+     *                 @OA\Property(property="contraseña", type="string"),
+     *                 @OA\Property(property="monto", type="string"),
+     *                
+     * 
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Casa de remate creada exitosamente"),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
+     */
     public function index()
     {
         $pujas = Puja::with(['Clientes', 'Lote', 'Facturas'])->get();
         return response()->json($pujas);
     }
+
+
+
+ 
+
 
     // Crear una nueva puja
     public function store(Request $request)

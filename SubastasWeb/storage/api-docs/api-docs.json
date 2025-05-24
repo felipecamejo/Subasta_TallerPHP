@@ -251,6 +251,7 @@
                     "Categorias"
                 ],
                 "summary": "Eliminar una categoria por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
@@ -855,6 +856,10 @@
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Vendedores",
+            "description": "API para gestionar vendedores"
         },
         {
             "name": "Vendedores",
