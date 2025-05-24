@@ -28,8 +28,7 @@ class ClienteController extends Controller
     */
     public function index()
     {
-        // Listar todos los clientes con datos de usuario
-        $clientes = Cliente::with('usuario')->get();
+        $clientes = Cliente::with('usuario')->get() ?? collect(); // Siempre colección
         $dto = $clientes->map(function($cliente) {
             return Mapper::fromModelCliente($cliente);
         });
