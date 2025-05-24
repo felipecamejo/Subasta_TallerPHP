@@ -250,7 +250,7 @@
                 "tags": [
                     "Categorias"
                 ],
-                "summary": "Eliminar una categorias por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
