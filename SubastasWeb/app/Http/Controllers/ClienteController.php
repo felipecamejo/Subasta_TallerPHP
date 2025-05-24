@@ -189,24 +189,42 @@ class ClienteController extends Controller
     */
     public function update(Request $request, string $id)
     {
-         $cliente = Cliente::find($id);
+       $cliente = Cliente::find($id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
 
+        $usuario = $cliente->usuario;
+
         $validated = $request->validate([
             'nombre' => 'sometimes|string|max:255',
-            'cedula' => 'sometimes|string|unique:usuarios,cedula,' . $id,
-            'email' => 'sometimes|email|unique:usuarios,email,' . $id,
+            'cedula' => 'sometimes|string|unique:usuarios,cedula,' . $usuario->id,
+            'email' => 'sometimes|email|unique:usuarios,email,' . $usuario->id,
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
-            'calificacion' => 'nullable|numeric',
-            'notificaciones' => 'nullable|array', // el array de notificaciones lo habiamos eliminado no?
+            'calificacion' => 'sometimes|numeric',
+            'contrasenia' => 'sometimes|string|min:6',
+            'direccionFiscal' => 'nullable|string',
         ]);
 
-        $cliente->update($validated);
+        // Actualizar usuario
+        $usuario->update([
+            'nombre' => $validated['nombre'] ?? $usuario->nombre,
+            'cedula' => $validated['cedula'] ?? $usuario->cedula,
+            'email' => $validated['email'] ?? $usuario->email,
+            'telefono' => $validated['telefono'] ?? $usuario->telefono,
+            'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
+            'direccionFiscal' => $validated['direccionFiscal'] ?? $usuario->direccionFiscal,
+            'contrasenia' => isset($validated['contrasenia']) ? bcrypt($validated['contrasenia']) : $usuario->contrasenia,
+        ]);
 
+        // Actualizar cliente
+        $cliente->update([
+            'calificacion' => $validated['calificacion'] ?? $cliente->calificacion,
+        ]);
+
+        $cliente->load('usuario');
         return response()->json($cliente, 200);
     }
  /**
