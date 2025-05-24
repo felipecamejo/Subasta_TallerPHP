@@ -1,32 +1,18 @@
 <?php
 
-    namespace App\Models;
+    namespace App\Dtos;
 
-    use Illuminate\Database\Eloquent\Model;
+    class DtoDireccion {
+        public $latitud;
+        public $longitud;
+        public $direccionable_id;
+        public $direccionable_type;
 
-    class DtoDireccion extends Model{
-
-        protected $table = 'dto_direccion'; 
-
-        protected $fillable = [ 
-            'calle1', 
-            'calle2', 
-            'numero', 
-            'ciudad', 
-            'pais',
-            'direccionable_id',
-            'direccionable_type'
-        ]; 
-
-        protected $hidden = []; // Columnas ocultas en las respuestas JSON
-
-        // funcion polimorfica
-        public function direccionable()
-        {
-            return $this->morphTo();
+        public function __construct($latitud, $longitud, $direccionable_id = null, $direccionable_type = null) {
+            $this->latitud = $latitud;
+            $this->longitud = $longitud;
+            $this->direccionable_id = $direccionable_id;
+            $this->direccionable_type = $direccionable_type;
         }
-
     }
-
-
 ?>
