@@ -8,10 +8,10 @@ class DtoNOtificacion {
     /** @var DtoCliente[] */
     public array $clientes;
     
-    public function __construct($mensaje) {
+    public function __construct($mensaje, $clientes) {
         $this->id = null;
         $this->mensaje = $mensaje;
-        $this->clientes = [];
+        $this->clientes = $clientes;
     }
 
     public function toArray(): array {

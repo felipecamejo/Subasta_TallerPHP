@@ -14,12 +14,12 @@ class DtoVendedor {
     /** @var DtoCasaRemate[] */
     public array $casaRemates;
 
-    public function __construct($nombre) {
+    public function __construct($nombre, $facturas, $articulos, $casaRemates) {
         $this->id = null;
         $this->nombre = $nombre;
-        $this->facturas = [];
-        $this->articulos = [];
-        $this->casaRemates = [];
+        $this->facturas = $facturas;
+        $this->articulos = $articulos;
+        $this->casaRemates = $casaRemates;
     }
 
     public function toArray(): array

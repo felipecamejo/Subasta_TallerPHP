@@ -11,6 +11,7 @@ use App\DTOs\DtoNotificacion;
 use App\DTOs\DtoPuja;
 use App\DTOs\DtoVendedor;
 use App\DTOs\DtoSubasta;
+use App\DTOs\DtoRematador;
 
 use App\Models\Articulo;
 use App\Models\Lote;
@@ -21,6 +22,7 @@ use App\Models\Notificacion;
 use App\Models\Puja;
 use App\Models\Vendedor;
 use App\Models\Subasta;
+use App\Models\Rematador;
 
 class Mapper {
 
@@ -31,6 +33,9 @@ class Mapper {
             $articulo->disponibilidad,
             $articulo->condicion,
             $articulo->vendedor_id,
+            $articulo->categorias->map(function($categoria) {
+                return Mapper::fromModelCategoria($categoria);
+            })->toArray()
         );
     }
 
@@ -50,7 +55,13 @@ class Mapper {
             $casaRemate->idFiscal,
             $casaRemate->email,
             $casaRemate->telefono,
-            $casaRemate->calificacion
+            $casaRemate->calificacion,
+            $casaRemate->rematadores->map(function($rematador) {
+                return Mapper::fromModelRematador($rematador);
+            })->toArray(),
+            $casaRemate->subastas->map(function($subasta) {
+                return Mapper::fromModelSubasta($subasta);
+            })->toArray()
         );
     }
 
@@ -67,7 +78,13 @@ class Mapper {
     public static function fromModelCategoria($categoria): DtoCategoria {
         return new DtoCategoria(
             $categoria->nombre,
-            $categoria->categoria_padre_id
+            $categoria->categoria_padre_id,
+            $categoria->categoriasHijas->map(function($categoriaHija) {
+                return Mapper::fromModelCategoria($categoriaHija);
+            })->toArray(),
+            $categoria->articulos->map(function($articulo) {
+                return Mapper::fromModelArticulo($articulo);
+            })->toArray()
         );
     }
 
@@ -78,12 +95,28 @@ class Mapper {
         ]);
     }
 
+    public static function fromModelCliente($cliente): DtoVendedor {
+        return new DtoVendedor(
+            $cliente->nombre,
+            $cliente->facturas->map(function($factura) {
+                return Mapper::fromModelFactura($factura);
+            })->toArray(),
+            $cliente->articulos->map(function($articulo) {
+                return Mapper::fromModelArticulo($articulo);
+            })->toArray(),
+            $cliente->casasRemate->map(function($casaRemate) {
+                return Mapper::fromModelCasaRemate($casaRemate);
+            })->toArray()
+        );
+    }
+
     public static function fromModelFactura($factura): DtoFactura {
         return new DtoFactura(
             $factura->montoTotal,
             $factura->condicionesDePago,
             $factura->entrega,
             $factura->vendedorId,
+            $factura->puja
         );
     }
 
@@ -113,6 +146,9 @@ class Mapper {
     public static function fromModelNotificacion($notificacion): DtoNotificacion {
         return new DtoNotificacion(
             $notificacion->mensaje,
+            $notificacion->clienestes->map(function($cliente) {
+                return Mapper::fromModelCliente($cliente);
+            })->toArray()
         );
     }
 
@@ -127,7 +163,10 @@ class Mapper {
             $puja->fechaHora,
             $puja->monto,
             $puja->lote_id,
-            $puja->factura_id
+            $puja->factura_id,
+            $puja->clientes->map(function($cliente) {
+                return Mapper::fromModelCliente($cliente);
+            })->toArray()
         );
     }
 
@@ -147,7 +186,10 @@ class Mapper {
             $subasta->casaremate_id,
             $subasta->rematador_id,
             $subasta->latitud,
-            $subasta->longitud
+            $subasta->longitud,
+            $subasta->lotes->map(function($lote) {
+                return Mapper::fromModelLote($lote);
+            })->toArray()
         );
     }
 
@@ -165,12 +207,59 @@ class Mapper {
     public static function fromModelVendedor($vendedor): DtoVendedor {
         return new DtoVendedor(
             $vendedor->nombre,
+            $vendedor->facturas->map(function($factura) {
+                return Mapper::fromModelFactura($factura);
+            })->toArray(),
+            $vendedor->articulos->map(function($articulo) {
+                return Mapper::fromModelArticulo($articulo);
+            })->toArray(),
+            $vendedor->casasRemate->map(function($casaRemate) {
+                return Mapper::fromModelCasaRemate($casaRemate);
+            })->toArray()
         );
     }
 
     public static function toModelVendedor(DtoVendedor $dto): Vendedor {
         return new Vendedor([
             'nombre' => $dto->nombre,
+        ]);
+    }
+
+    public static function fromModelRematador($rematador) {
+        return new DtoRematador(
+            $rematador->matricula,
+            $rematador->usuario_id,
+            $rematador->subastas->map(function($subasta) {
+                return Mapper::fromModelSubasta($subasta);
+            })->toArray(),
+            $rematador->casasRemate->map(function($casaRemate) {
+                return Mapper::fromModelCasaRemate($casaRemate);
+            })->toArray()
+        );
+    }
+
+    public static function toModelRematador(DtoRematador $dto): Rematador {
+        return new Rematador([
+            'matricula' => $dto->matricula,
+        ]);
+    }
+
+    public static function fromModelUsuario($usuario): DtoRematador {
+        return new DtoRematador(
+            $usuario->matricula,
+            $usuario->usuario_id,
+            $usuario->subastas->map(function($subasta) {
+                return Mapper::fromModelSubasta($subasta);
+            })->toArray(),
+            $usuario->casasRemate->map(function($casaRemate) {
+                return Mapper::fromModelCasaRemate($casaRemate);
+            })->toArray()
+        );
+    }
+
+    public static function toModelUsuario(DtoRematador $dto): Rematador {
+        return new Rematador([
+            'matricula' => $dto->matricula,
         ]);
     }
 }

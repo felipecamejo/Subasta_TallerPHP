@@ -11,15 +11,15 @@ class DtoFactura {
     public $condicionesDePago;
     public $entrega;
     public $vendedorId;
-    public $puja = null;
+    public $puja;
 
-    public function __construct($montoTotal, $condicionesDePago, $entrega, $vendedorId) {
+    public function __construct($montoTotal, $condicionesDePago, $entrega, $vendedorId, $puja) {
         $this->id = null;
         $this->montoTotal = $montoTotal;
         $this->condicionesDePago = $condicionesDePago;
         $this->entrega = $entrega;
         $this->vendedorId = $vendedorId;
-        $this->puja = null;
+        $this->puja;
     }
 
     public function toArray(): array

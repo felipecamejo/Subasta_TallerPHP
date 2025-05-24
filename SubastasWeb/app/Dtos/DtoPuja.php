@@ -15,13 +15,13 @@ class DtoPuja {
     /** @var DtoCliente[] */
     public array $clientes;
 
-    public function __construct($fechaHora, $monto, $lote_id, $factura_id) {
+    public function __construct($fechaHora, $monto, $lote_id, $factura_id, $clientes) {
         $this->id = null;
         $this->fechaHora = $fechaHora;
         $this->monto = $monto;
         $this->lote_id = $lote_id;
         $this->factura_id = $factura_id;
-        $this->clientes = [];
+        $this->clientes = $clientes;
     }
 
     public function toArray(): array
