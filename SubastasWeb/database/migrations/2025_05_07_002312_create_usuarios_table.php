@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('cedula'); // Cédula del usuario
             $table->string('email'); // Correo electrónico del usuario
             $table->string('telefono'); // Teléfono del usuario
-            $table->string('imagen'); // Imagen del usuario 
+            $table->string('imagen')->nullable(); // Imagen del usuario 
             $table->string('direccionFiscal'); // Dirección fiscal del usuario
             
             $table->string('contrasenia');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('usuario');
+        Schema::dropIfExists('usuarios');
     }
 };
