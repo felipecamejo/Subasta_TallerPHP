@@ -250,7 +250,7 @@
                 "tags": [
                     "Categorias"
                 ],
-                "summary": "Eliminar una categorias por ID",
+                "summary": "Eliminar una categoria por ID",
                 "operationId": "a37893cb60d6b5ca9b1d6d23dbe83041",
                 "parameters": [
                     {
@@ -353,6 +353,177 @@
                     }
                 }
             }
+        },
+        "/api/vendedores": {
+            "get": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Obtener lista de vendedores",
+                "description": "Retorna todos los vendedores con sus facturas, artículos y casas de remate.",
+                "operationId": "getVendedores",
+                "responses": {
+                    "200": {
+                        "description": "Lista de vendedores obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "nombre",
+                                        "vendedor_id"
+                                    ],
+                                    "properties": {
+                                        "nombre": {
+                                            "type": "string"
+                                        },
+                                        "vendedor_id": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Crear un nuevo vendedor",
+                "operationId": "f601a5062fab7f6e7de896f0242a1e8d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "vendedor_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Vendedor creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/vendedores/{id}": {
+            "get": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Obtener un vendedor por ID",
+                "operationId": "be2e919cd0edea7d0320b8f3f32fffa8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del vendedor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Vendedor encontrado"
+                    },
+                    "404": {
+                        "description": "Vendedor no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Eliminar un vendedor por ID",
+                "operationId": "3da7a0c29ca30047bd6ef689de011d0f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del vendedor a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Vendedor eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Artículo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/vendedores/{vendedor}": {
+            "put": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Actualizar un vendedor",
+                "operationId": "2c4cf29b040e03897d7f77e70bdcbdfe",
+                "parameters": [
+                    {
+                        "name": "vendedor",
+                        "in": "path",
+                        "description": "ID del vendedor a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vendedor actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Vendedor no encontrado"
+                    }
+                }
+            }
         }
     },
     "tags": [
@@ -367,6 +538,10 @@
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Vendedores",
+            "description": "API para gestionar vendedores"
         }
     ]
 }

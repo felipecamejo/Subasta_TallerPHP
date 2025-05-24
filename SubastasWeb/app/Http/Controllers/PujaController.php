@@ -4,10 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Models\Puja;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Tag(
+ *     name="Pujas",
+ *     description="API para gestionar Pujas"
+ * )
+*/
 
 class PujaController extends Controller
 {
-   // Mostrar todas las pujas
+     /**
+ * @OA\Get(
+ *     path="/api/pujas",
+ *     summary="Obtener lista de pujas",
+ *     description="Retorna todas las pujas con sus facturas, artículos y casas de remate.",
+ *     operationId="getVendedores",
+ *     tags={"Vendedores"},
+ *     
+ *     @OA\Response(
+ *         response=200,
+ *         description="Lista de vendedores obtenida exitosamente",
+ *         @OA\JsonContent(
+ *              required={"nombre","vendedor_id"},
+ *              @OA\Property(property="nombre", type="string"),
+ *              @OA\Property(property="vendedor_id", type="integer")
+ *         
+ *           
+ *         )
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error interno del servidor"
+ *     )
+ * )
+ */
     public function index()
     {
         $pujas = Puja::with(['Clientes', 'Lote', 'Facturas'])->get();
