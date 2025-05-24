@@ -59,7 +59,7 @@ class SubastaController extends Controller
      *             required={"duracionMinutos", "fecha"},
      *             @OA\Property(property="duracionMinutos", type="integer"),
      *             @OA\Property(property="fecha", type="string", format="date-time"),
-     *             @OA\Property(property="casaremate_id", type="integer"),
+     *             @OA\Property(property="casa_remate_id", type="integer"),
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
      *             @OA\Property(property="longitud", type="number", format="float"),
@@ -81,7 +81,7 @@ class SubastaController extends Controller
         $validator = Validator::make($request->all(), [
             'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
-            'casaremate_id'   => 'sometimes|exists:casa_remates,id',
+            'casa_remate_id'   => 'sometimes|exists:casa_remates,id',
             'rematador_id'    => 'sometimes|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
@@ -98,7 +98,7 @@ class SubastaController extends Controller
         $subasta = Subasta::create($request->only([
             'duracionMinutos',
             'fecha',
-            'casaremate_id',
+            'casa_remate_id',
             'rematador_id',
             'latitud',
             'longitud'
@@ -108,7 +108,7 @@ class SubastaController extends Controller
             $subasta->direccion()->create($request->input('direccion'));
         }
 
-        return response()->json($subasta->load(['casaremate', 'rematador', 'direccion']), 201);
+        return response()->json($subasta->load(['casaRemate', 'rematador', 'direccion']), 201);
     }
 
     /**
@@ -158,7 +158,6 @@ class SubastaController extends Controller
      *             @OA\Property(property="latitud", type="number", format="float"),
      *             @OA\Property(property="longitud", type="number", format="float"),
      *             @OA\Property(property="direccion", type="object"),
-     *             @OA\Property(property="lotes", type="array", @OA\Items(type="integer"))
      *         )
      *     ),
      *     @OA\Response(response=200, description="Subasta actualizada"),
@@ -207,11 +206,7 @@ class SubastaController extends Controller
             }
         }
 
-        if ($request->has('lotes')) {
-            $subasta->lotes()->sync($request->input('lotes'));
-        }
-
-        return response()->json($subasta->load(['casaremate', 'rematador', 'direccion', 'lotes']));
+        return response()->json($subasta->load(['casaremate', 'rematador', 'direccion']));
     }
 
     /**

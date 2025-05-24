@@ -134,7 +134,13 @@ class CasaRemateController extends Controller
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="calificacion", type="number", format="float"),
-     *             @OA\Property(property="rematadores", type="array", @OA\Items(type="integer"))
+     *             @OA\Property(property="direccion", type="object",
+     *                 @OA\Property(property="calle1", type="string"),
+     *                 @OA\Property(property="calle2", type="string"),
+     *                 @OA\Property(property="numero", type="string"),
+     *                 @OA\Property(property="ciudad", type="string"),
+     *                 @OA\Property(property="pais", type="string")
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=200, description="Casa de remate actualizada"),
@@ -160,12 +166,6 @@ class CasaRemateController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $casaRemate->update($request->except('rematadores'));
-
-        if ($request->has('rematadores')) {
-            $casaRemate->rematadores()->sync($request->rematadores);
         }
 
         return response()->json($casaRemate);
@@ -198,7 +198,6 @@ class CasaRemateController extends Controller
 
         return response()->json(['message' => 'Casa de remate eliminada']);
     }
-
     /**
      * @OA\Post(
      *     path="/api/casa-remates/{id}/asociar-rematadores",
@@ -218,7 +217,8 @@ class CasaRemateController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=200, description="Rematadores asociados exitosamente"),
-     *     @OA\Response(response=404, description="Casa de remate no encontrada")
+     *     @OA\Response(response=404, description="Casa de remate no encontrada"),
+     *     @OA\Response(response=422, description="Validación fallida")
      * )
      */
     public function asociarRematadores(Request $request, string $id)
@@ -245,4 +245,5 @@ class CasaRemateController extends Controller
             'casa_remate' => $casaRemate->load('rematadores')
         ]);
     }
+
 }

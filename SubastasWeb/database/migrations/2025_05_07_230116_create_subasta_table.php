@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('longitud', 10, 7);
 
         
-            $table->foreignId('casaremate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
+            $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
             $table->foreignId('rematador_id')->nullable()->constrained('rematadores')->onDelete('cascade');
         
             $table->timestamps();

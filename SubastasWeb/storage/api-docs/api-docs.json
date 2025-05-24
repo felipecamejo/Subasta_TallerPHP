@@ -341,11 +341,25 @@
                                         "type": "number",
                                         "format": "float"
                                     },
-                                    "rematadores": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
                                     }
                                 },
                                 "type": "object"
@@ -432,6 +446,9 @@
                     },
                     "404": {
                         "description": "Casa de remate no encontrada"
+                    },
+                    "422": {
+                        "description": "Validación fallida"
                     }
                 }
             }
@@ -691,7 +708,7 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "casaremate_id": {
+                                    "casa_remate_id": {
                                         "type": "integer"
                                     },
                                     "rematador_id": {
@@ -812,12 +829,6 @@
                                     },
                                     "direccion": {
                                         "type": "object"
-                                    },
-                                    "lotes": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
                                     }
                                 },
                                 "type": "object"

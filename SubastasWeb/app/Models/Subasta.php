@@ -15,7 +15,7 @@ class Subasta extends Model
     protected $fillable = [ 
         'duracionMinutos', 
         'fecha',
-        'casaremate_id',
+        'casa_remate_id',
         'rematador_id',
         'latitud',
         'longitud',
@@ -23,8 +23,8 @@ class Subasta extends Model
 
     protected $hidden = [];
 
-    public function casaremate() {
-        return $this->belongsTo(CasaRemate::class, 'casaremate_id');
+    public function casaRemate() {
+        return $this->belongsTo(CasaRemate::class, 'casa_remate_id');
     }
 
     public function rematador() {
