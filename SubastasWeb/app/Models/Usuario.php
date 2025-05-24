@@ -1,7 +1,7 @@
 <?php
     namespace App\Models;
     use Illuminate\Database\Eloquent\Model;
-    use App\Models\DtoDireccion;
+    use App\DTOs\DtoDireccion;
 
     class Usuario extends Model{
         protected $table = 'usuarios';
