@@ -9,10 +9,14 @@
     class Cliente extends Model {
         protected $table = 'clientes';
 
-       protected $fillable = [ 
-        'usuario_id',
-        'calificacion',
-    ];  
+        protected $fillable = [ 
+            'usuario_id',
+            'calificacion',
+        ];  
+
+        protected $casts = [
+            'notificaciones' => 'array',
+        ];
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
@@ -21,7 +25,7 @@
         }
 
         public function pujas() {
-            return $this->hasMany(Puja::class);
+            return $this->belongsToMany(Puja::class, 'puja_cliente', 'cliente_id', 'puja_id');
         }
 
         public function notificaciones() {

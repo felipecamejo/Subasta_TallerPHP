@@ -1,0 +1,26 @@
+<?php
+
+namespace App\DTOs;
+
+class DtoNOtificacion {
+    public $id;
+    public $mensaje;
+    /** @var DtoCliente[] */
+    public array $clientes;
+    
+    public function __construct($mensaje) {
+        $this->id = null;
+        $this->mensaje = $mensaje;
+        $this->clientes = [];
+    }
+
+    public function toArray(): array {
+        return [
+            'id' => $this->id,
+            'mensaje' => $this->mensaje,
+            'clientes' => array_map(function($cliente) {
+                return $cliente->toArray();
+            }, $this->clientes)
+        ];
+    }
+}
