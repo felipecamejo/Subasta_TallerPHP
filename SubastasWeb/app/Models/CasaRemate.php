@@ -31,10 +31,5 @@
             return $this->hasMany(Subasta::class);
         }
 
-        public function direccion(){
-            return $this->morphOne(DtoDireccion::class, 'direccionable');
-        }
-
     }
-
 ?>
