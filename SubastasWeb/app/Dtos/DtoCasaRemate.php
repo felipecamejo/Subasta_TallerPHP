@@ -21,15 +21,15 @@ class DtoCasaRemate {
     public array $subastas;
 
 
-    public function __construct($nombre, $idFiscal, $email, $telefono, $calificacion) {
+    public function __construct($nombre, $idFiscal, $email, $telefono, $calificacion, $rematadores, $subastas) {
         $this->id = null;
         $this->nombre = $nombre;
         $this->idFiscal = $idFiscal;
         $this->email = $email;
         $this->telefono = $telefono;
         $this->calificacion = $calificacion;
-        $this->rematadores = [];
-        $this->subastas = [];
+        $this->rematadores = $rematadores;
+        $this->subastas = $subastas;
     }
 
     public function toArray(): array

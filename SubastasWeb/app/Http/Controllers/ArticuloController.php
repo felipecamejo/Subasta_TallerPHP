@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Articulo;
+use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -14,6 +15,8 @@ use OpenApi\Annotations as OA;
  * )
 */
 class ArticuloController extends Controller{
+
+
     /**
      * @OA\Get(
      *     path="/api/articulos",
@@ -23,7 +26,10 @@ class ArticuloController extends Controller{
      * )
     */
     public function index(){
-        return response()->json(Articulo::all());
+        $dtos = Articulo::all()->map(function ($articulo) {
+            return Mapper::fromModelArticulo($articulo);
+        });
+        return response()->json($dtos);
     }
 
     /**
@@ -69,7 +75,7 @@ class ArticuloController extends Controller{
             'vendedor_id' => $request->vendedor_id,
         ]);
 
-        return response()->json($articulo, 201);
+        return response()->json(Mapper::fromModelArticulo($articulo), 201);
     }
 
     /**
@@ -101,7 +107,7 @@ class ArticuloController extends Controller{
             return response()->json(['Error' => 'Articulo no encontrado. id:', $id], 404);
         }
 
-        return response()->json($articulo);
+        return response()->json(Mapper::fromModelArticulo($articulo));
     }
 
     /**
@@ -149,7 +155,7 @@ class ArticuloController extends Controller{
         
         $articulo->save();
 
-        return response()->json($articulo);
+        return response()->json(mapper::fromModelArticulo($articulo), 200);
     }
 
     /**

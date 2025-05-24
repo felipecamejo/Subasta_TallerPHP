@@ -17,7 +17,7 @@ class DtoSubasta {
     /** @var DtoLote[] */
     public array $lotes;
 
-    public function __construct($duracionMinutos, $fecha, $casaremate_id, $rematador_id, $latitud, $longitud) {
+    public function __construct($duracionMinutos, $fecha, $casaremate_id, $rematador_id, $latitud, $longitud, $lotes) {
         $this->id = null;
         $this->duracionMinutos = $duracionMinutos;
         $this->fecha = $fecha;
@@ -25,7 +25,7 @@ class DtoSubasta {
         $this->rematador_id = $rematador_id;
         $this->latitud = $latitud;
         $this->longitud = $longitud;
-        $this->lotes = [];
+        $this->lotes = $lotes;
     }
 
     public function toArray(): array {

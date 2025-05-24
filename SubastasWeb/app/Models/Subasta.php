@@ -30,11 +30,6 @@ class Subasta extends Model
     public function rematador() {
         return $this->belongsTo(Rematador::class, 'rematador_id');
     }
-
-    public function direccion() {
-        return $this->morphOne(DtoDireccion::class, 'direccionable');
-    }
-
     public function lotes() {
         return $this->hasMany(Lote::class);
     }
