@@ -146,7 +146,7 @@ class Mapper {
     public static function fromModelNotificacion($notificacion): DtoNotificacion {
         return new DtoNotificacion(
             $notificacion->mensaje,
-            $notificacion->clienestes->map(function($cliente) {
+            $notificacion->clientes->map(function($cliente) { // corregido 'clienestes' -> 'clientes'
                 return Mapper::fromModelCliente($cliente);
             })->toArray()
         );
