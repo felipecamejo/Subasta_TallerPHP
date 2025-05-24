@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Lote;
 use Illuminate\Http\Request;
+use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -23,7 +24,10 @@ class LoteController extends Controller{
      * )
     */
     public function index(){
-        return response()->json(Lote::all());
+        $dtos = Lote::all()->map(function ($lote) {
+            return Mapper::fromModelLote($lote);
+        });
+        return response()->json($dtos);
     }
 
     /**
@@ -60,7 +64,7 @@ class LoteController extends Controller{
             'pujaMinima' => $request->pujaMinima,
         ]);
 
-        return response()->json($lote, 201);
+        return response()->json(Mapper::fromModelLote($lote), 201);
     }
 
     /**
