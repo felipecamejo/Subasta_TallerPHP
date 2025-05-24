@@ -13,8 +13,8 @@ class DtoFactura {
     public $vendedorId;
     public $puja;
 
-    public function __construct($montoTotal, $condicionesDePago, $entrega, $vendedorId, $puja) {
-        $this->id = null;
+    public function __construct($id, $montoTotal, $condicionesDePago, $entrega, $vendedorId, $puja) {
+        $this->id = $id;
         $this->montoTotal = $montoTotal;
         $this->condicionesDePago = $condicionesDePago;
         $this->entrega = $entrega;

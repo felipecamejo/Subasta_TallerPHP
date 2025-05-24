@@ -17,8 +17,8 @@ class DtoSubasta {
     /** @var DtoLote[] */
     public array $lotes;
 
-    public function __construct($duracionMinutos, $fecha, $casaremate_id, $rematador_id, $latitud, $longitud, $lotes) {
-        $this->id = null;
+    public function __construct($id, $duracionMinutos, $fecha, $casaremate_id, $rematador_id, $latitud, $longitud, $lotes) {
+        $this->id = $id;
         $this->duracionMinutos = $duracionMinutos;
         $this->fecha = $fecha;
         $this->casaremate_id = $casaremate_id;

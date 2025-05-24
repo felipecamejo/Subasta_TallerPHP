@@ -15,9 +15,8 @@ class DtoArticulo {
     /** @var DtoCategoria[] */
     public array $categorias;
 
-    public function __construct($imagenes, $especificacion, $disponibilidad, $condicion, $vendedor_id, $categorias)
-    {
-        $this->id = null;
+    public function __construct($id, $imagenes, $especificacion, $disponibilidad, $condicion, $vendedor_id, $categorias){
+        $this->id = $id;
         $this->imagenes = $imagenes;
         $this->especificacion = $especificacion;
         $this->disponibilidad = $disponibilidad;

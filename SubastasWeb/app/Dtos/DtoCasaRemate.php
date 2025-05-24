@@ -21,8 +21,8 @@ class DtoCasaRemate {
     public array $subastas;
 
 
-    public function __construct($nombre, $idFiscal, $email, $telefono, $calificacion, $rematadores, $subastas) {
-        $this->id = null;
+    public function __construct($id, $nombre, $idFiscal, $email, $telefono, $calificacion, $rematadores, $subastas) {
+        $this->id = $id;
         $this->nombre = $nombre;
         $this->idFiscal = $idFiscal;
         $this->email = $email;

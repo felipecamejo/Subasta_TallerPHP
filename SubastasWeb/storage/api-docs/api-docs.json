@@ -903,6 +903,12 @@
                                     "imagen": {
                                         "type": "string"
                                     },
+                                    "direccionFiscal": {
+                                        "type": "string"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string"
+                                    },
                                     "matricula": {
                                         "type": "string"
                                     },

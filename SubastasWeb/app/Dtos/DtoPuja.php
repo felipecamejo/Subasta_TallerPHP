@@ -15,8 +15,8 @@ class DtoPuja {
     /** @var DtoCliente[] */
     public array $clientes;
 
-    public function __construct($fechaHora, $monto, $lote_id, $factura_id, $clientes) {
-        $this->id = null;
+    public function __construct($id, $fechaHora, $monto, $lote_id, $factura_id, $clientes) {
+        $this->id = $id;
         $this->fechaHora = $fechaHora;
         $this->monto = $monto;
         $this->lote_id = $lote_id;
