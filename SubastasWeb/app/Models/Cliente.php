@@ -12,6 +12,8 @@
         protected $fillable = [ 
             'notificaciones', 
             'calificacion',
+            'latitud',
+            'longitud',
         ]; 
 
         protected $casts = [
