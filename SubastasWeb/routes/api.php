@@ -36,9 +36,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Route::apiResource('casaremates', CasaRemateController::class);
+// no estaba funcionando la asociacion de rematadores a casa de remate.
+Route::post('casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
+Route::apiResource('casa-remates', CasaRemateController::class);
 
-//Route::apiResource('subasta', SubastaController::class);
+Route::apiResource('subastas', SubastaController::class);
 
 Route::apiResource('articulos', ArticuloController::class);
 
