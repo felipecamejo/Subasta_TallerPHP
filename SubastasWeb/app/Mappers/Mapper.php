@@ -3,6 +3,7 @@
 namespace App\Mappers;
 
 use App\DTOs\DtoArticulo;
+use App\DTOs\DtoCliente;
 use App\DTOs\DtoLote;
 use App\DTOs\DtoCasaRemate;
 use App\DTOs\DtoCategoria;
@@ -98,19 +99,10 @@ class Mapper {
         ]);
     }
 
-    public static function fromModelCliente($cliente): DtoVendedor {
-        return new DtoVendedor(
-            $cliente->id,
-            $cliente->nombre,
-            $cliente->facturas->map(function($factura) {
-                return Mapper::fromModelFactura($factura);
-            })->toArray(),
-            $cliente->articulos->map(function($articulo) {
-                return Mapper::fromModelArticulo($articulo);
-            })->toArray(),
-            $cliente->casasRemate->map(function($casaRemate) {
-                return Mapper::fromModelCasaRemate($casaRemate);
-            })->toArray()
+    public static function fromModelCliente($cliente): DtoCliente {
+        return new DtoCliente(
+            $cliente->usuario_id,
+            $cliente->calificacion,
         );
     }
 
