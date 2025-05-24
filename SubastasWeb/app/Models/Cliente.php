@@ -21,7 +21,7 @@
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
         public function pujas() {
-            return $this->hasMany(Puja::class);
+            return $this->belongsToMany(Puja::class, 'puja_cliente', 'cliente_id', 'puja_id');
         }
 
         public function notificaciones() {
