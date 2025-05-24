@@ -581,11 +581,14 @@
                                     "calificacion": {
                                         "type": "number"
                                     },
-                                    "direccionFiscal": {
-                                        "type": "string"
-                                    },
                                     "contrasenia": {
                                         "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
@@ -637,8 +640,11 @@
                                                 "imagen": {
                                                     "type": "string"
                                                 },
-                                                "direccionFiscal": {
-                                                    "type": "string"
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "type": "object"
@@ -879,7 +885,7 @@
                                     "nombre",
                                     "cedula",
                                     "email",
-                                    "matricula"
+                                    "contrasenia"
                                 ],
                                 "properties": {
                                     "nombre": {
@@ -899,6 +905,15 @@
                                     },
                                     "matricula": {
                                         "type": "string"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
@@ -908,7 +923,62 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Rematador creado exitosamente"
+                        "description": "Rematador creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer"
+                                        },
+                                        "matricula": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "telefono": {
+                                                    "type": "string"
+                                                },
+                                                "imagen": {
+                                                    "type": "string"
+                                                },
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Error de validación"
@@ -1033,6 +1103,318 @@
                     }
                 }
             }
+        },
+        "/api/subastas": {
+            "get": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Obtener todas las subastas",
+                "operationId": "9e5756191155cc53466a54fdf7206531",
+                "responses": {
+                    "200": {
+                        "description": "Lista de subastas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "duracionMinutos": {
+                                                "type": "integer"
+                                            },
+                                            "fecha": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "casaremate_id": {
+                                                "type": "integer"
+                                            },
+                                            "rematador_id": {
+                                                "type": "integer"
+                                            },
+                                            "latitud": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "longitud": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "casaremate": {
+                                                "type": "object"
+                                            },
+                                            "rematador": {
+                                                "type": "object"
+                                            },
+                                            "direccion": {
+                                                "type": "object"
+                                            },
+                                            "lotes": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Crear una nueva subasta",
+                "operationId": "97f89b25cddf0cd0d6276702da232475",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "duracionMinutos",
+                                    "fecha"
+                                ],
+                                "properties": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "casa_remate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subasta creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/subastas/{id}": {
+            "get": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Obtener una subasta por ID",
+                "operationId": "e64135c72ea7e8b7f07170d4b14cab69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subasta encontrada"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Actualizar una subasta",
+                "operationId": "5980b5b15bdfa8004ee31d5802d3492f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "casaremate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subasta actualizada"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Eliminar una subasta por ID",
+                "operationId": "94a4b3909295b2e53e146229ffa7d6c2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subasta eliminada correctamente"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/subastas/{id}/lotes": {
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Asociar lotes a una subasta",
+                "operationId": "8931c862071ed28dacf37560b8480e58",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "lotes"
+                                ],
+                                "properties": {
+                                    "lotes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lotes asociados exitosamente"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
         }
     },
     "tags": [
@@ -1059,6 +1441,10 @@
         {
             "name": "Rematador",
             "description": "API para gestionar rematadores"
+        },
+        {
+            "name": "Subastas",
+            "description": "API para gestionar subastas"
         }
     ]
 }

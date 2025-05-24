@@ -19,7 +19,8 @@
             'telefono',
             'imagen',
             'contrasenia',
-            'direccionFiscal'
+            'latitud',
+            'longitud',
         ]; 
 
         protected $hidden = [
@@ -34,9 +35,4 @@
         public function rematador(){
             return $this->hasOne(Rematador::class, 'usuario_id');
         }
-
-        public function direccion() {
-            return $this->morphOne(DtoDireccion::class, 'direccionable');
-        }
-
 }

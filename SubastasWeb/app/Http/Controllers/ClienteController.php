@@ -29,7 +29,8 @@ class ClienteController extends Controller
     {
         // Listar todos los clientes con datos de usuario
         $clientes = Cliente::with('usuario')->get();
-        return response()->json($clientes, 200);
+        $dto = Mapper::fromModelCliente($clientes);
+        return response()->json($dto, 200);
     }
 
     /**
@@ -55,8 +56,9 @@ class ClienteController extends Controller
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
      *             @OA\Property(property="calificacion", type="number"),
-     *             @OA\Property(property="direccionFiscal", type="string"),
      *             @OA\Property(property="contrasenia", type="string"),
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(
@@ -77,7 +79,8 @@ class ClienteController extends Controller
      *                 @OA\Property(property="email", type="string"),
      *                 @OA\Property(property="telefono", type="string"),
      *                 @OA\Property(property="imagen", type="string"),
-     *                 @OA\Property(property="direccionFiscal", type="string"),
+     *                 @OA\Property(property="latitud", type="number"),
+     *                 @OA\Property(property="longitud", type="number"),
      *             )
      *         )
      *     ),
@@ -98,7 +101,8 @@ class ClienteController extends Controller
             'imagen' => 'nullable|string',
             'calificacion' => 'nullable|numeric',
             'contrasenia' => 'required|string',
-            'direccionFiscal' => 'nullable|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         // 1. Crear el usuario
@@ -109,7 +113,8 @@ class ClienteController extends Controller
             'telefono' => $validated['telefono'] ?? '',
             'imagen' => $validated['imagen'] ?? null,
             'contrasenia' => bcrypt($validated['contrasenia']),
-            'direccionFiscal' => $validated['direccionFiscal'] ?? '',
+            'latitud' => $validated['latitud'] ?? null,
+            'longitud' => $validated['longitud'] ?? null,
         ]);
 
         // 2. Crear el cliente asociado
