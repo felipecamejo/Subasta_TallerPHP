@@ -103,6 +103,12 @@ class Mapper {
         return new DtoCliente(
             $cliente->usuario_id,
             $cliente->calificacion,
+            $cliente->pujas->map(function($puja) {
+                return Mapper::fromModelPuja($puja);
+            })->toArray(),
+            $cliente->notificaciones->map(function($notificacion) {
+                return Mapper::fromModelNotificacion($notificacion);
+            })->toArray(),
         );
     }
 
