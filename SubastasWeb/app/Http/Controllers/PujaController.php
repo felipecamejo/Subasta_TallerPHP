@@ -44,7 +44,7 @@ class PujaController extends Controller
  *                     type="object",
  *                     nullable=true,
  *                     @OA\Property(property="id", type="integer", example=10),
- *                     @OA\Property(property="numero", type="string", example="FAC-00123")
+ *                     
  *                 ),
  *                 @OA\Property(
  *                     property="usuario",
@@ -177,7 +177,6 @@ class PujaController extends Controller
  *             ),
  *             @OA\Property(property="factura", type="object", nullable=true,
  *                 @OA\Property(property="id", type="integer", example=10),
- *                 @OA\Property(property="numero", type="string", example="FAC-00123")
  *             )
  *         )
  *     ),
