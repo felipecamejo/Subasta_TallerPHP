@@ -16,51 +16,123 @@ use OpenApi\Annotations as OA;
 class PujaController extends Controller
 {
  /**
-     * @OA\Post(
-     *     path="/api/pujas",
-     *     summary="Crear una nueva casa de remate",
-     *     tags={"Pujas"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"fechaHora", "monto"},
-     *             @OA\Property(property="fechaHora", type="time"),
-     *             @OA\Property(property="monto", type="string"),
-     *             @OA\Property(property="cliente", type="object",
-     *                 @OA\Property(property="nombre", type="string"),
-     *                 @OA\Property(property="cedula", type="string"),
-     *                 @OA\Property(property="email", type="string"),
-     *                 @OA\Property(property="telefono", type="string"),
-     *                       @OA\Property(property="direccionFiscal", type="object",
-     *                              @OA\Property(property="calle1", type="string"),
-     *                              @OA\Property(property="calle2", type="string"),
-     *                              @OA\Property(property="numero", type="string"),
-     *                              @OA\Property(property="ciudad", type="string"),
-     *                              @OA\Property(property="pais", type="string"),
-     *                 @OA\Property(property="imagen", type="string"),
-     *                 @OA\Property(property="contraseña", type="string"),
-     *                 @OA\Property(property="monto", type="string"),
-     *                
-     * 
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Casa de remate creada exitosamente"),
-     *     @OA\Response(response=422, description="Error de validación")
-     * )
-     */
+ * @OA\Get(
+ *     path="/api/pujas",
+ *     summary="Listar todas las pujas",
+ *     tags={"Pujas"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Lista de pujas",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="fechaHora",
+ *                     type="string",
+ *                     format="date-time",
+ *                     example="2025-05-25T15:30:00Z"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="monto",
+ *                     type="number",
+ *                     format="float",
+ *                     example=1500.75
+ *                 ),
+ *                 @OA\Property(
+ *                     property="factura",
+ *                     type="object",
+ *                     nullable=true,
+ *                     @OA\Property(property="id", type="integer", example=10),
+ *                     @OA\Property(property="numero", type="string", example="FAC-00123")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="usuario",
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=3),
+ *                     @OA\Property(property="nombre", type="string", example="Ana Gómez")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="lote",
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=7),
+ *                     @OA\Property(property="descripcion", type="string", example="Lote de maderas nativas")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+ 
     public function index()
     {
-        $pujas = Puja::with(['Clientes', 'Lote', 'Facturas'])->get();
-        return response()->json($pujas);
+            return response()->json(Puja::all());
     }
+    /**
+ * @OA\Post(
+ *     path="/api/pujas",
+ *     summary="Crear una nueva puja",
+ *     tags={"Pujas"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         description="Datos para crear una nueva puja",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"fechaHora", "monto", "lote_id", "cliente_id"},
+ *             @OA\Property(
+ *                 property="fechaHora",
+ *                 type="string",
+ *                 format="date-time",
+ *                 example="2025-05-25T15:30:00Z"
+ *             ),
+ *             @OA\Property(
+ *                 property="monto",
+ *                 type="number",
+ *                 format="float",
+ *                 example=1500.75
+ *             ),
+ *             @OA\Property(
+ *                 property="lote_id",
+ *                 type="integer",
+ *                 example=2,
+ *                 description="ID del lote relacionado"
+ *             ),
+ *             @OA\Property(
+ *                 property="cliente_id",
+ *                 type="integer",
+ *                 example=5,
+ *                 description="ID del cliente que realiza la puja"
+ *             ),
+ *             @OA\Property(
+ *                 property="facturas_id",
+ *                 type="integer",
+ *                 nullable=true,
+ *                 example=10,
+ *                 description="ID de la factura (opcional)"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Puja creada exitosamente",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-05-25T15:30:00Z"),
+ *             @OA\Property(property="monto", type="number", format="float", example=1500.75),
+ *             @OA\Property(property="lote_id", type="integer", example=2),
+ *             @OA\Property(property="cliente_id", type="integer", example=5),
+ *             @OA\Property(property="facturas_id", type="integer", nullable=true, example=10)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Datos inválidos"
+ *     )
+ * )
+ */
 
-
-
- 
-
-
-    // Crear una nueva puja
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -75,14 +147,104 @@ class PujaController extends Controller
         return response()->json($puja, 201);
     }
 
-    // Mostrar una puja específica
+    /**
+ * @OA\Get(
+ *     path="/api/pujas/{id}",
+ *     summary="Obtener una puja por ID",
+ *     tags={"Pujas"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la puja",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Puja encontrada",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-05-25T15:30:00Z"),
+ *             @OA\Property(property="monto", type="number", format="float", example=1500.75),
+ *             @OA\Property(property="lote", type="object",
+ *                 @OA\Property(property="id", type="integer", example=2),
+ *                 @OA\Property(property="descripcion", type="string", example="Lote de madera dura")
+ *             ),
+ *             @OA\Property(property="usuario", type="object",
+ *                 @OA\Property(property="id", type="integer", example=5),
+ *                 @OA\Property(property="nombre", type="string", example="Ana Gómez")
+ *             ),
+ *             @OA\Property(property="factura", type="object", nullable=true,
+ *                 @OA\Property(property="id", type="integer", example=10),
+ *                 @OA\Property(property="numero", type="string", example="FAC-00123")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Puja no encontrada"
+ *     )
+ * )
+ */
     public function show($id)
     {
-        $puja = Puja::with(['Clientes', 'Lote', 'Facturas'])->findOrFail($id);
-        return response()->json($puja);
+        $puja = Puja::find($id);
+
+        if (!$puja) {
+            return response()->json(['Error' => 'Puja no encontrada. id:', $id], 404);
+        }
+
+        return response()->json($puja , 200);
     }
 
-    // Actualizar una puja
+   /**
+ * @OA\Put(
+ *     path="/api/pujas/{id}",
+ *     summary="Actualizar una puja existente",
+ *     tags={"Pujas"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la puja a actualizar",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         description="Datos actualizados de la puja",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
+ *             @OA\Property(property="monto", type="number", format="float", example=1800.00),
+ *             @OA\Property(property="lote_id", type="integer", example=2),
+ *             @OA\Property(property="cliente_id", type="integer", example=5),
+ *             @OA\Property(property="facturas_id", type="integer", nullable=true, example=10)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Puja actualizada correctamente",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
+ *             @OA\Property(property="monto", type="number", format="float", example=1800.00),
+ *             @OA\Property(property="lote_id", type="integer", example=2),
+ *             @OA\Property(property="cliente_id", type="integer", example=5),
+ *             @OA\Property(property="facturas_id", type="integer", nullable=true, example=10)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Puja no encontrada"
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Datos inválidos"
+ *     )
+ * )
+ */
     public function update(Request $request, $id)
     {
         $puja = Puja::findOrFail($id);
@@ -99,12 +261,39 @@ class PujaController extends Controller
         return response()->json($puja);
     }
 
-    // Eliminar una puja
+    /**
+ * @OA\Delete(
+ *     path="/api/pujas/{id}",
+ *     summary="Eliminar una puja",
+ *     tags={"Pujas"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la puja a eliminar",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Puja eliminada correctamente (sin contenido)"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Puja no encontrada"
+ *     )
+ * )
+ */
     public function destroy($id)
     {
-        $puja = Puja::findOrFail($id);
+         $puja = Puja::find($id);
+
+        if (!$puja) {
+            return response()->json(['Error' => "Puja no encontrada. id: $id"], 404);
+        }
+
         $puja->delete();
-        return response()->json(null, 204);
+
+        return response()->json(['Mensaje' => "Puja eliminado correctamente. id: $id"], 200);
     }
     
 }
