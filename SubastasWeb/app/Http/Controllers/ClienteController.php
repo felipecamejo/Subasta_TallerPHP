@@ -28,11 +28,18 @@ class ClienteController extends Controller
     */
     public function index()
     {
-        $clientes = Cliente::with('usuario')->get() ?? collect(); // Siempre colección
-        $dto = $clientes->map(function($cliente) {
-            return Mapper::fromModelCliente($cliente);
-        });
-        return response()->json($dto, 200);
+        try {
+            $clientes = Cliente::with('usuario')->get() ?? collect();
+           $dtos = $clientes->map(function ($cliente) {
+               return Mapper::fromModelCliente($cliente);
+           });
+            return response()->json($dtos, 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**

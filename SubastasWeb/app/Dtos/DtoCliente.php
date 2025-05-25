@@ -7,6 +7,7 @@ use App\DTOs\DtoUsuario;
 class DtoCliente{
     public $usuario_id;
     public $calificacion;
+    public $usuario;
 
     /** @var DtoPuja[] */
     public array $pujas;
@@ -14,8 +15,9 @@ class DtoCliente{
     /** @var DtoNotificacion[] */
     public array $notificaciones;
 
-    public function __construct($usuario_id, $calificacion, $pujas, $notificaciones){ 
+    public function __construct($usuario_id, $calificacion, $pujas, $usuario, $notificaciones){ 
         $this->usuario_id = $usuario_id;
+        $this->usuario = $usuario;
         $this->calificacion = $calificacion;
         $this->pujas = $pujas;
         $this->notificaciones = $notificaciones;
@@ -24,6 +26,7 @@ class DtoCliente{
     public function toArray(): array {
         return [
             'usuario_id' => $this->usuario_id,
+            'usuario' => $this->usuario,
             'calificacion' => $this->calificacion,
             'pujas' => array_map(function($puja) {
                 return $puja->toArray();
