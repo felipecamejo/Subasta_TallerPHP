@@ -41,7 +41,8 @@ class Mapper {
 
         $categorias = [];
         if ($depth === null || $depth > 0) {
-            $categorias = $articulo->categorias->map(function($categoria) use (&$visited, $depth) {
+            $categoriasCollection = $articulo->categorias ?? collect();
+            $categorias = $categoriasCollection->map(function($categoria) use (&$visited, $depth) {
                 return Mapper::fromModelCategoria($categoria, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -77,10 +78,12 @@ class Mapper {
         $rematadores = [];
         $subastas = [];
         if ($depth === null || $depth > 0) {
-            $rematadores = $casaRemate->rematadores->map(function($rematador) use (&$visited, $depth) {
+            $rematadoresCollection = $casaRemate->rematadores ?? collect();
+            $rematadores = $rematadoresCollection->map(function($rematador) use (&$visited, $depth) {
                 return Mapper::fromModelRematador($rematador, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $subastas = $casaRemate->subastas->map(function($subasta) use (&$visited, $depth) {
+            $subastasCollection = $casaRemate->subastas ?? collect();
+            $subastas = $subastasCollection->map(function($subasta) use (&$visited, $depth) {
                 return Mapper::fromModelSubasta($subasta, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -122,10 +125,12 @@ class Mapper {
         $categoriasHijas = [];
         $articulos = [];
         if ($depth === null || $depth > 0) {
-            $categoriasHijas = $categoria->categoriasHijas->map(function($categoriaHija) use (&$visited, $depth) {
+            $categoriasHijasCollection = $categoria->categoriasHijas ?? collect();
+            $categoriasHijas = $categoriasHijasCollection->map(function($categoriaHija) use (&$visited, $depth) {
                 return Mapper::fromModelCategoria($categoriaHija, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $articulos = $categoria->articulos->map(function($articulo) use (&$visited) {
+            $articulosCollection = $categoria->articulos ?? collect();
+            $articulos = $articulosCollection->map(function($articulo) use (&$visited) {
                 return Mapper::fromModelArticulo($articulo, $visited);
             })->toArray();
         }
@@ -162,10 +167,12 @@ class Mapper {
         $pujas = [];
         $notificaciones = [];
         if ($depth === null || $depth > 0) {
-            $pujas = ($cliente->pujas ?? collect())->map(function($puja) use (&$visited, $depth) {
+            $pujasCollection = $cliente->pujas ?? collect();
+            $pujas = $pujasCollection->map(function($puja) use (&$visited, $depth) {
                 return Mapper::fromModelPuja($puja, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $notificaciones = ($cliente->notificaciones ?? collect())->map(function($notificacion) use (&$visited, $depth) {
+            $notificacionesCollection = $cliente->notificaciones ?? collect();
+            $notificaciones = $notificacionesCollection->map(function($notificacion) use (&$visited, $depth) {
                 return Mapper::fromModelNotificacion($notificacion, $visited);
             })->toArray();
         }
@@ -258,10 +265,11 @@ class Mapper {
             return $visited['notificacion'][$notificacion->id];
         }
 
+        $clientesCollection = $notificacion->clientes ?? collect();
         $dto = new DtoNotificacion(
             $notificacion->id,
             $notificacion->mensaje,
-            $notificacion->clientes->map(function($cliente) use (&$visited) {
+            $clientesCollection->map(function($cliente) use (&$visited) {
                 return Mapper::fromModelCliente($cliente, $visited);
             })->toArray()
         );
@@ -293,7 +301,8 @@ class Mapper {
 
         $clientes = [];
         if ($depth === null || $depth > 0) {
-            $clientes = $puja->clientes->map(function($cliente) use (&$visited, $depth) {
+            $clientesCollection = $puja->clientes ?? collect();
+            $clientes = $clientesCollection->map(function($cliente) use (&$visited, $depth) {
                 return Mapper::fromModelCliente($cliente, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -337,7 +346,8 @@ class Mapper {
 
         $lotes = [];
         if ($depth === null || $depth > 0) {
-            $lotes = $subasta->lotes->map(function($lote) use (&$visited, $depth) {
+            $lotesCollection = $subasta->lotes ?? collect();
+            $lotes = $lotesCollection->map(function($lote) use (&$visited, $depth) {
                 return Mapper::fromModelLote($lote, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -375,14 +385,20 @@ class Mapper {
         $facturas = [];
         $articulos = [];
         $casasRemate = [];
+        
         if ($depth === null || $depth > 0) {
-            $facturas = $vendedor->facturas->map(function($factura) use (&$visited, $depth) {
+            $facturasCollection = $vendedor->facturas ?? collect();
+            $facturas = $facturasCollection->map(function($factura) use (&$visited, $depth) {
                 return Mapper::fromModelFactura($factura, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $articulos = $vendedor->articulos->map(function($articulo) use (&$visited, $depth) {
+
+            $articulosCollection = $vendedor->articulos ?? collect();
+            $articulos = $articulosCollection->map(function($articulo) use (&$visited, $depth) {
                 return Mapper::fromModelArticulo($articulo, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $casasRemate = $vendedor->casasRemate->map(function($casaRemate) use (&$visited, $depth) {
+
+            $casasRemateCollection = $vendedor->casasRemate ?? collect();
+            $casasRemate = $casasRemateCollection->map(function($casaRemate) use (&$visited, $depth) {
                 return Mapper::fromModelCasaRemate($casaRemate, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -417,10 +433,12 @@ class Mapper {
         $subastas = [];
         $casasRemate = [];
         if ($depth === null || $depth > 0) {
-            $subastas = $rematador->subastas->map(function($subasta) use (&$visited, $depth) {
+            $subastasCollection = $rematador->subastas ?? collect();
+            $subastas = $subastasCollection->map(function($subasta) use (&$visited, $depth) {
                 return Mapper::fromModelSubasta($subasta, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $casasRemate = $rematador->casasRemate->map(function($casaRemate) use (&$visited, $depth) {
+            $casasRemateCollection = $rematador->casasRemate ?? collect();
+            $casasRemate = $casasRemateCollection->map(function($casaRemate) use (&$visited, $depth) {
                 return Mapper::fromModelCasaRemate($casaRemate, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }
@@ -449,10 +467,12 @@ class Mapper {
         $subastas = [];
         $casasRemate = [];
         if ($depth === null || $depth > 0) {
-            $subastas = $usuario->subastas->map(function($subasta) use (&$visited, $depth) {
+            $subastasCollection = $usuario->subastas ?? collect();
+            $subastas = $subastasCollection->map(function($subasta) use (&$visited, $depth) {
                 return Mapper::fromModelSubasta($subasta, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
-            $casasRemate = $usuario->casasRemate->map(function($casaRemate) use (&$visited, $depth) {
+            $casasRemateCollection = $usuario->casasRemate ?? collect();
+            $casasRemate = $casasRemateCollection->map(function($casaRemate) use (&$visited, $depth) {
                 return Mapper::fromModelCasaRemate($casaRemate, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
         }

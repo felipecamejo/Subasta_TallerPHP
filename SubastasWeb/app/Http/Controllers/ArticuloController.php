@@ -26,10 +26,21 @@ class ArticuloController extends Controller{
      * )
     */
     public function index(){
-        $dtos = Articulo::all()->map(function ($articulo) {
-            return Mapper::fromModelArticulo($articulo);
-        });
-        return response()->json($dtos);
+        try {
+            $articulo = Articulo::with(['categorias', 'vendedor'])->get();
+            $visited = [];
+            $maxDepth = 2;
+
+            $dtos = $articulo->map(function ($articulo) use (&$visited, $maxDepth) {
+                return Mapper::fromModelArticulo($articulo, $visited, $maxDepth);
+            });
+            return response()->json($dtos);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**
@@ -101,13 +112,15 @@ class ArticuloController extends Controller{
      * )
     */
     public function show(string $id){
-        $articulo = Articulo::find($id);
+        $articulo = Articulo::with(['categorias', 'vendedor'])->find($id);
 
         if (!$articulo) {
-            return response()->json(['Error' => 'Articulo no encontrado. id:', $id], 404);
+            return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);
         }
 
-        return response()->json(Mapper::fromModelArticulo($articulo));
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth));
     }
 
     /**
@@ -155,7 +168,9 @@ class ArticuloController extends Controller{
         
         $articulo->save();
 
-        return response()->json(mapper::fromModelArticulo($articulo), 200);
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 200);
     }
 
     /**

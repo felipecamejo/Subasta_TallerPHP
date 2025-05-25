@@ -21,7 +21,7 @@ class DtoArticulo {
         $this->especificacion = $especificacion;
         $this->disponibilidad = $disponibilidad;
         $this->condicion = $condicion;
-        $this->vendedor_id = $vendedor;
+        $this->vendedor = $vendedor;
         $this->categorias = $categorias;
     }
 
@@ -37,7 +37,6 @@ class DtoArticulo {
             'categorias' => array_map(function($categoria) {
                 return $categoria->toArray();
             }, $this->categorias)
-
         ];
     }
 }
