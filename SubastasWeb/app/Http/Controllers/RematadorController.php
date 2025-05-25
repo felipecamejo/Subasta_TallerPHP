@@ -27,10 +27,18 @@ class RematadorController extends Controller
     */
     public function index()
     {
-        // Listar todos los rematadores con datos de usuario
-        $rematadores = Rematador::with('usuario')->get();
-        $dto = mapper.fromModelRematador($rematadores);
-        return response()->json($dto, 200);
+         try {
+            $rematadores = Rematador::with('usuario')->get() ?? collect();
+           $dtos = $rematadores->map(function ($rematador) {
+               return Mapper::fromModelRematador($rematador);
+           });
+            return response()->json($dtos, 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**
@@ -123,7 +131,8 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-        return response()->json($rematador, 201);
+        $dto = Mapper::fromModelRematador($rematador);
+        return response()->json($dto, 201);
     }
 
     /**
@@ -154,7 +163,8 @@ class RematadorController extends Controller
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
-        return response()->json($rematador, 200);
+        $dto = Mapper::fromModelRematador($rematador);
+        return response()->json($dto, 200);
     }
 
     /**
@@ -231,7 +241,8 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-        return response()->json($rematador, 200);
+        $dto = Mapper::fromModelRematador($rematador);
+        return response()->json($dto, 200);
     }
 
     /**

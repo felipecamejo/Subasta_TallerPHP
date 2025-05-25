@@ -133,7 +133,8 @@ class ClienteController extends Controller
         ]);
 
         $cliente->load('usuario');
-        return response()->json($cliente, 201);
+        $dto = Mapper::fromModelCliente($cliente);
+        return response()->json($dto, 201);
     }
 
      /**
@@ -164,7 +165,8 @@ class ClienteController extends Controller
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
-        return response()->json($cliente, 200);
+        $dto = Mapper::fromModelCliente($cliente);
+        return response()->json($dto, 200);
     }
 
     /**
@@ -239,7 +241,8 @@ class ClienteController extends Controller
         ]);
 
         $cliente->load('usuario');
-        return response()->json($cliente, 200);
+        $dto = Mapper::fromModelCliente($cliente);
+        return response()->json($dto, 200);
     }
  /**
      * @OA\Delete(
