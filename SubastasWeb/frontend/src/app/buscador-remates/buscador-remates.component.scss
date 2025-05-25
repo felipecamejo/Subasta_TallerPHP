@@ -3,7 +3,7 @@ main {
     padding-left: 10vw;
     padding-right: 10vw;
     margin-top: 80px;
-    display: flex;
+    display: block; 
     color:#242424
 }
 
@@ -36,9 +36,31 @@ main {
     border-color: #ece5e5;
 }
 
-p-dropdown {
+select {
     background: #444444;
     color: #FFFFFF;
     border-color: #444444;
+}
+
+.rectangle {
+	width: 335px;
+	height: 332px;
+	padding: 8px 8px 8px 8px;
+	background: #F6F6F6;
+	border-radius: 16px 16px 16px 16px;
+    margin-bottom: 24px; // agrega separación entre rectángulos
+}
+
+.article-1 {
+    gap: 2vw;
+    margin-bottom: 50px;
+}
+
+.article-subastas {
+    gap: 4vw;
+}
+
+img {
+    height: 30px
 }
 

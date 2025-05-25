@@ -1,13 +1,19 @@
-<main class="w-full ">
-    <article class="w-full flex flex-wrap">
+<main class="w-full">
+    <article class="w-full flex flex-wrap article-1">
         <span class="titulo">Subastas</span>
         <p-button label="" class="boton pi pi-map-marker" severity="secondary"/>
-        <p-dropdown name="city" [options]="cities" [(ngModel)]="selectedCity" optionLabel="name" placeholder="Select a City" class="" />
-    
+        <select name="city" [(ngModel)]="selectedCity" class="">
+            <option [ngValue]="null" disabled>Seleccione una ciudad</option>
+            <option *ngFor="let city of cities" [ngValue]="city">{{ city.name }}</option>
+        </select>
     </article>
-    <article class="w-full">
-
-    </article>
-
-    
+    <ng-container *ngFor="let grupo of subastasPorGrupo">
+        <article class="w-full flex flex-wrap article-subastas">
+            <div *ngFor="let subasta of grupo" class="rectangle mb-4">
+                <img [src]="subastas[0].imagen" alt="" class="w-full">
+                <span> {{ subasta.name }} </span>
+                <span> {{ subasta.informacion }} </span>
+            </div>
+        </article>
+    </ng-container>
 </main>
