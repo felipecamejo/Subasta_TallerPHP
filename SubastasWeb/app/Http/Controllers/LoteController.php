@@ -30,8 +30,8 @@ class LoteController extends Controller{
         try {
             $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
 
-            $dtos = $lote->map(function ($lote) use (&$visited, $maxDepth) {
-                return Mapper::fromModelLote($lote, $visited, $maxDepth);
+            $dtos = $lote->map(function ($lote) {
+                return Mapper::fromModelLote($lote, $this->visited, $this->maxDepth);
             });
 
             return response()->json($dtos);
