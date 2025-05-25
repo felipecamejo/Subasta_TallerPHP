@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CasaRemate;
 use App\Models\Rematador;
-use App\Models\DtoDireccion;
 use App\Models\Lote;
+use App\DTOs\DtoDireccion;
 
 class Subasta extends Model
 {
@@ -15,7 +15,7 @@ class Subasta extends Model
     protected $fillable = [ 
         'duracionMinutos', 
         'fecha',
-        'casaremate_id',
+        'casa_remate_id',
         'rematador_id',
         'latitud',
         'longitud',
@@ -23,18 +23,13 @@ class Subasta extends Model
 
     protected $hidden = [];
 
-    public function casaremate() {
-        return $this->belongsTo(CasaRemate::class, 'casaremate_id');
+    public function casaRemate() {
+        return $this->belongsTo(CasaRemate::class, 'casa_remate_id');
     }
 
     public function rematador() {
         return $this->belongsTo(Rematador::class, 'rematador_id');
     }
-
-    public function direccion() {
-        return $this->morphOne(DtoDireccion::class, 'direccionable');
-    }
-
     public function lotes() {
         return $this->hasMany(Lote::class);
     }

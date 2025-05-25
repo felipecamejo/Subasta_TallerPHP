@@ -1,6 +1,6 @@
 <?php
     namespace App\Models;
-    use App\Models\DtoDireccion;
+    use App\DTOs\DtoDireccion;
     use App\Models\Rematador;
     use App\Models\Subasta;
     use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,10 @@
             'idFiscal', 
             'email', 
             'telefono', 
-            'calificacion'
+            'calificacion',
+            'calle',
+            'ciudad',
+            'pais',
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
@@ -28,10 +31,5 @@
             return $this->hasMany(Subasta::class);
         }
 
-        public function direccion(){
-            return $this->morphOne(DtoDireccion::class, 'direccionable');
-        }
-
     }
-
 ?>

@@ -6,14 +6,19 @@
     use App\Models\Subasta;
     use App\Models\CasaRemate;
 
-    class Rematador extends Usuario {
+    class Rematador extends Model {
         protected $table = 'rematadores';
 
         protected $fillable = [ 
-            'matricula', 
+        'usuario_id',
+        'matricula'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        public function usuario(){
+            return $this->belongsTo(Usuario::class, 'usuario_id');
+        }
 
         public function subastas() {
             return $this->hasMany(Subasta::class);

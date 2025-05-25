@@ -61,6 +61,9 @@
                                     },
                                     "vendedor_id": {
                                         "type": "integer"
+                                    },
+                                    "lote_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -177,6 +180,9 @@
                                     },
                                     "vendedor_id": {
                                         "type": "integer"
+                                    },
+                                    "lote_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -190,6 +196,265 @@
                     },
                     "404": {
                         "description": "Artículo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/casa-remates": {
+            "get": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Obtener todas las casas de remate",
+                "operationId": "a4047afdf0b75fad619b63b3d348c406",
+                "responses": {
+                    "200": {
+                        "description": "Lista de casas de remate"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Crear una nueva casa de remate",
+                "operationId": "52d5f60b97188f7b0cf41bc1e3e7fd2e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "idFiscal",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "idFiscal": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Casa de remate creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/casa-remates/{id}": {
+            "get": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Obtener una casa de remate por ID",
+                "operationId": "3689d7ffc718cbf8c0aee6fa939a15cf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate encontrada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Actualizar una casa de remate",
+                "operationId": "b4325daa9bbc8ff8b8796044e775c30a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "idFiscal": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate actualizada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Eliminar una casa de remate por ID",
+                "operationId": "8b9010f5226c720e0ed6e8b2f67e8c88",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Casa de remate eliminada"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/casa-remates/{id}/asociar-rematadores": {
+            "post": {
+                "tags": [
+                    "CasaRemates"
+                ],
+                "summary": "Asociar rematadores a una casa de remate",
+                "operationId": "3321857dd7575a252662b102c4f00afd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rematadores"
+                                ],
+                                "properties": {
+                                    "rematadores": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rematadores asociados exitosamente"
+                    },
+                    "404": {
+                        "description": "Casa de remate no encontrada"
+                    },
+                    "422": {
+                        "description": "Validación fallida"
                     }
                 }
             }
@@ -273,13 +538,13 @@
                 }
             }
         },
-        "/api/facturas": {
+        "/api/clientes": {
             "get": {
                 "tags": [
-                    "Facturas"
+                    "Cliente"
                 ],
-                "summary": "Obtener todas las facturas",
-                "operationId": "bbbe5c66d08b31e895bcb4daf020827f",
+                "summary": "Obtener todos los clientes",
+                "operationId": "de55d50d1b708d9e5c63ee3f8fe8f54a",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -288,45 +553,48 @@
             },
             "post": {
                 "tags": [
-                    "Facturas"
+                    "Cliente"
                 ],
-                "summary": "Crear una nueva factura",
-                "description": "Registra una factura con monto, condiciones de pago, fecha de entrega y referencia a un vendedor.",
-                "operationId": "storeFactura",
+                "summary": "Crear un nuevo cliente",
+                "operationId": "4ac6cdfa8d6c188fa2cb4f3263d4318a",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "montoTotal",
-                                    "condicionesDePago",
-                                    "entrega",
-                                    "vendedor_id"
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "contrasenia"
                                 ],
                                 "properties": {
-                                    "montoTotal": {
-                                        "description": "Monto total de la venta",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 1500.75
+                                    "nombre": {
+                                        "type": "string"
                                     },
-                                    "condicionesDePago": {
-                                        "description": "Condiciones de pago acordadas",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "30 días neto"
+                                    "cedula": {
+                                        "type": "string"
                                     },
-                                    "entrega": {
-                                        "description": "Fecha de entrega pactada",
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-06-01"
+                                    "email": {
+                                        "type": "string"
                                     },
-                                    "vendedor_id": {
-                                        "description": "ID del vendedor existente",
-                                        "type": "integer",
-                                        "example": 42
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
@@ -336,91 +604,19 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Venta creada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Los datos no son válidos"
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/facturas/{id}": {
-            "get": {
-                "tags": [
-                    "Facturas"
-                ],
-                "summary": "Obtener una factura por ID",
-                "description": "Recupera una factura junto con su vendedor y pujas asociadas.",
-                "operationId": "getFacturaById",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la factura",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Factura encontrada",
+                        "description": "Cliente creado exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "id": {
-                                            "type": "integer",
-                                            "example": 1
+                                            "type": "integer"
                                         },
-                                        "montoTotal": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 2500
+                                        "usuario_id": {
+                                            "type": "integer"
                                         },
-                                        "condicionesDePago": {
-                                            "type": "string",
-                                            "example": "30 días neto"
-                                        },
-                                        "entrega": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2025-06-15"
-                                        },
-                                        "vendedor_id": {
-                                            "type": "integer",
-                                            "example": 5
+                                        "calificacion": {
+                                            "type": "number"
                                         },
                                         "created_at": {
                                             "type": "string",
@@ -430,14 +626,34 @@
                                             "type": "string",
                                             "format": "date-time"
                                         },
-                                        "Vendedor": {
-                                            "$ref": "#/components/schemas/Vendedor"
-                                        },
-                                        "Puja": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Puja"
-                                            }
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "telefono": {
+                                                    "type": "string"
+                                                },
+                                                "imagen": {
+                                                    "type": "string"
+                                                },
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -445,40 +661,81 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Factura no encontrada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "422": {
+                        "description": "Error de validación"
                     }
                 }
-            },
-            "put": {
+            }
+        },
+        "/api/clientes/{id}": {
+            "get": {
                 "tags": [
-                    "Facturas"
+                    "Cliente"
                 ],
-                "summary": "Actualizar una factura existente",
-                "description": "Permite modificar uno o varios campos de una factura. Sólo los campos enviados se validan y actualizan.",
-                "operationId": "updateFactura",
+                "summary": "Obtener un cliente por ID",
+                "operationId": "0d3826d79390929601421b5810b61231",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID de la factura a actualizar",
+                        "description": "ID del cliente",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente encontrado"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Eliminar un cliente por ID",
+                "operationId": "d15e304c609752c9f409ab81072fb52e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del cliente a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/clientes/{cliente}": {
+            "put": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Actualizar un cliente",
+                "operationId": "dfaf60e73f35810fb160b2946330b76d",
+                "parameters": [
+                    {
+                        "name": "cliente",
+                        "in": "path",
+                        "description": "ID del cliente a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -487,29 +744,27 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "telefono",
+                                    "imagen",
+                                    "calificacion",
+                                    "notificaciones"
+                                ],
                                 "properties": {
-                                    "montoTotal": {
-                                        "description": "Nuevo monto total (si se envía)",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 3000.5
+                                    "telefono": {
+                                        "type": "string"
                                     },
-                                    "condicionesDePago": {
-                                        "description": "Nuevas condiciones de pago (si se envía)",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "Pago a 60 días"
+                                    "imagen": {
+                                        "type": "string"
                                     },
-                                    "entrega": {
-                                        "description": "Nueva fecha de entrega (si se envía)",
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-07-01"
+                                    "calificacion": {
+                                        "type": "number"
                                     },
-                                    "vendedor_id": {
-                                        "description": "ID del vendedor (si se envía)",
-                                        "type": "integer",
-                                        "example": 10
+                                    "notificaciones": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -519,90 +774,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Factura actualizada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Factura"
-                                }
-                            }
-                        }
+                        "description": "Cliente actualizado correctamente"
                     },
                     "404": {
-                        "description": "Factura no encontrada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "Facturas"
-                ],
-                "summary": "Eliminar una factura",
-                "description": "Borra la factura especificada por su ID.",
-                "operationId": "deleteFactura",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la factura a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Factura eliminada correctamente (sin contenido)"
-                    },
-                    "404": {
-                        "description": "Factura no encontrada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Factura] 999"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Cliente no encontrado"
                     }
                 }
             }
@@ -643,6 +818,9 @@
                                     "pujaMinima": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "subasta_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -683,76 +861,320 @@
                         "description": "Lote eliminado correctamente"
                     },
                     "404": {
-                        "description": "Categoria no encontrado"
+                        "description": "Lote no encontrado"
                     }
                 }
             }
         },
-        "/api/pujas": {
+        "/api/rematadores": {
             "get": {
                 "tags": [
-                    "Pujas"
+                    "Rematador"
                 ],
-                "summary": "Listar todas las pujas",
-                "operationId": "75965d77da9368f5833d47a80926c84b",
+                "summary": "Obtener todos los rematadores",
+                "operationId": "2b3d8f6bf5b9050bbf0b945f358ce847",
                 "responses": {
                     "200": {
-                        "description": "Lista de pujas",
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Crear un nuevo rematador",
+                "operationId": "edd6c45d9363bbe0393b3197ab2e9ce0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "contrasenia"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "matricula": {
+                                        "type": "string"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rematador creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer"
+                                        },
+                                        "matricula": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "telefono": {
+                                                    "type": "string"
+                                                },
+                                                "imagen": {
+                                                    "type": "string"
+                                                },
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/rematadores/{id}": {
+            "get": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Obtener un rematador por ID",
+                "operationId": "e162cda2fa5e49a5a37a0688370060a0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rematador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rematador encontrado"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Eliminar un rematador por ID",
+                "operationId": "035569f192e025a7dfd4bd7447ba7c4b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rematador a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rematador eliminado correctamente"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/rematadores/{rematador}": {
+            "put": {
+                "tags": [
+                    "Rematador"
+                ],
+                "summary": "Actualizar un rematador",
+                "operationId": "b22f78ccac6989b3aabe837d9d518070",
+                "parameters": [
+                    {
+                        "name": "rematador",
+                        "in": "path",
+                        "description": "ID del rematador a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "matricula"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "matricula": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rematador actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Rematador no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/subastas": {
+            "get": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Obtener todas las subastas",
+                "operationId": "9e5756191155cc53466a54fdf7206531",
+                "responses": {
+                    "200": {
+                        "description": "Lista de subastas",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
                                     "items": {
                                         "properties": {
-                                            "fechaHora": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "duracionMinutos": {
+                                                "type": "integer"
+                                            },
+                                            "fecha": {
                                                 "type": "string",
-                                                "format": "date-time",
-                                                "example": "2025-05-25T15:30:00Z"
+                                                "format": "date-time"
                                             },
-                                            "monto": {
+                                            "casaremate_id": {
+                                                "type": "integer"
+                                            },
+                                            "rematador_id": {
+                                                "type": "integer"
+                                            },
+                                            "latitud": {
                                                 "type": "number",
-                                                "format": "float",
-                                                "example": 1500.75
+                                                "format": "float"
                                             },
-                                            "factura": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 10
-                                                    },
-                                                    "numero": {
-                                                        "type": "string",
-                                                        "example": "FAC-00123"
-                                                    }
-                                                },
-                                                "type": "object",
-                                                "nullable": true
+                                            "longitud": {
+                                                "type": "number",
+                                                "format": "float"
                                             },
-                                            "usuario": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 3
-                                                    },
-                                                    "nombre": {
-                                                        "type": "string",
-                                                        "example": "Ana Gómez"
-                                                    }
-                                                },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "casaremate": {
                                                 "type": "object"
                                             },
-                                            "lote": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 7
-                                                    },
-                                                    "descripcion": {
-                                                        "type": "string",
-                                                        "example": "Lote de maderas nativas"
-                                                    }
-                                                },
+                                            "rematador": {
                                                 "type": "object"
+                                            },
+                                            "direccion": {
+                                                "type": "object"
+                                            },
+                                            "lotes": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
                                             }
                                         },
                                         "type": "object"
@@ -765,48 +1187,60 @@
             },
             "post": {
                 "tags": [
-                    "Pujas"
+                    "Subastas"
                 ],
-                "summary": "Crear una nueva puja",
-                "operationId": "35811a8ab052eb5092b9c3e34e1c87eb",
+                "summary": "Crear una nueva subasta",
+                "operationId": "97f89b25cddf0cd0d6276702da232475",
                 "requestBody": {
-                    "description": "Datos para crear una nueva puja",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "fechaHora",
-                                    "monto",
-                                    "lote_id",
-                                    "cliente_id"
+                                    "duracionMinutos",
+                                    "fecha"
                                 ],
                                 "properties": {
-                                    "fechaHora": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "2025-05-25T15:30:00Z"
+                                        "format": "date-time"
                                     },
-                                    "monto": {
+                                    "casa_remate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
                                         "type": "number",
-                                        "format": "float",
-                                        "example": 1500.75
+                                        "format": "float"
                                     },
-                                    "lote_id": {
-                                        "description": "ID del lote relacionado",
-                                        "type": "integer",
-                                        "example": 2
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
                                     },
-                                    "cliente_id": {
-                                        "description": "ID del cliente que realiza la puja",
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "facturas_id": {
-                                        "description": "ID de la factura (opcional)",
-                                        "type": "integer",
-                                        "example": 10,
-                                        "nullable": true
+                                    "direccion": {
+                                        "properties": {
+                                            "calle1": {
+                                                "type": "string"
+                                            },
+                                            "calle2": {
+                                                "type": "string"
+                                            },
+                                            "numero": {
+                                                "type": "string"
+                                            },
+                                            "ciudad": {
+                                                "type": "string"
+                                            },
+                                            "pais": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
                                     }
                                 },
                                 "type": "object"
@@ -816,335 +1250,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Puja creada exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "fechaHora": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-25T15:30:00Z"
-                                        },
-                                        "monto": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 1500.75
-                                        },
-                                        "lote_id": {
-                                            "type": "integer",
-                                            "example": 2
-                                        },
-                                        "cliente_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "facturas_id": {
-                                            "type": "integer",
-                                            "example": 10,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Datos inválidos"
-                    }
-                }
-            }
-        },
-        "/api/pujas/{id}": {
-            "get": {
-                "tags": [
-                    "Pujas"
-                ],
-                "summary": "Obtener una puja por ID",
-                "operationId": "df449c42f1da650d3ee47e71988ff5b0",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la puja",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Puja encontrada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "fechaHora": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-25T15:30:00Z"
-                                        },
-                                        "monto": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 1500.75
-                                        },
-                                        "lote": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "descripcion": {
-                                                    "type": "string",
-                                                    "example": "Lote de madera dura"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "usuario": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 5
-                                                },
-                                                "nombre": {
-                                                    "type": "string",
-                                                    "example": "Ana Gómez"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "factura": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "numero": {
-                                                    "type": "string",
-                                                    "example": "FAC-00123"
-                                                }
-                                            },
-                                            "type": "object",
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Puja no encontrada"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "Pujas"
-                ],
-                "summary": "Actualizar una puja existente",
-                "operationId": "019d73f548f85841c484c7e55c2a6619",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la puja a actualizar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "description": "Datos actualizados de la puja",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "fechaHora": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "example": "2025-06-01T14:00:00Z"
-                                    },
-                                    "monto": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 1800
-                                    },
-                                    "lote_id": {
-                                        "type": "integer",
-                                        "example": 2
-                                    },
-                                    "cliente_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "facturas_id": {
-                                        "type": "integer",
-                                        "example": 10,
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Puja actualizada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "fechaHora": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-06-01T14:00:00Z"
-                                        },
-                                        "monto": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 1800
-                                        },
-                                        "lote_id": {
-                                            "type": "integer",
-                                            "example": 2
-                                        },
-                                        "cliente_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "facturas_id": {
-                                            "type": "integer",
-                                            "example": 10,
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Puja no encontrada"
-                    },
-                    "422": {
-                        "description": "Datos inválidos"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "Pujas"
-                ],
-                "summary": "Eliminar una puja",
-                "operationId": "67ed5a5a966e65cc050255f2ba79602e",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la puja a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Puja eliminada correctamente (sin contenido)"
-                    },
-                    "404": {
-                        "description": "Puja no encontrada"
-                    }
-                }
-            }
-        },
-        "/api/vendedores": {
-            "get": {
-                "tags": [
-                    "Vendedores"
-                ],
-                "summary": "Obtener lista de vendedores",
-                "description": "Retorna todos los vendedores con sus facturas, artículos y casas de remate.",
-                "operationId": "getVendedores",
-                "responses": {
-                    "200": {
-                        "description": "Lista de vendedores obtenida exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "required": [
-                                        "nombre",
-                                        "vendedor_id"
-                                    ],
-                                    "properties": {
-                                        "nombre": {
-                                            "type": "string"
-                                        },
-                                        "vendedor_id": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor"
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Vendedores"
-                ],
-                "summary": "Crear un nuevo vendedor",
-                "operationId": "f601a5062fab7f6e7de896f0242a1e8d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "nombre",
-                                    "vendedor_id"
-                                ],
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Vendedor creado exitosamente"
+                        "description": "Subasta creada exitosamente"
                     },
                     "422": {
                         "description": "Error de validación"
@@ -1152,18 +1258,17 @@
                 }
             }
         },
-        "/api/vendedores/{id}": {
+        "/api/subastas/{id}": {
             "get": {
                 "tags": [
-                    "Vendedores"
+                    "Subastas"
                 ],
-                "summary": "Obtener un vendedor por ID",
-                "operationId": "be2e919cd0edea7d0320b8f3f32fffa8",
+                "summary": "Obtener una subasta por ID",
+                "operationId": "e64135c72ea7e8b7f07170d4b14cab69",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del vendedor",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1172,24 +1277,87 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Vendedor encontrado"
+                        "description": "Subasta encontrada"
                     },
                     "404": {
-                        "description": "Vendedor no encontrado"
+                        "description": "Subasta no encontrada"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Actualizar una subasta",
+                "operationId": "5980b5b15bdfa8004ee31d5802d3492f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duracionMinutos": {
+                                        "type": "integer"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "casaremate_id": {
+                                        "type": "integer"
+                                    },
+                                    "rematador_id": {
+                                        "type": "integer"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "direccion": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subasta actualizada"
+                    },
+                    "404": {
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
                     }
                 }
             },
             "delete": {
                 "tags": [
-                    "Vendedores"
+                    "Subastas"
                 ],
-                "summary": "Eliminar un vendedor por ID",
-                "operationId": "3da7a0c29ca30047bd6ef689de011d0f",
+                "summary": "Eliminar una subasta por ID",
+                "operationId": "94a4b3909295b2e53e146229ffa7d6c2",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del vendedor a eliminar",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1198,26 +1366,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Vendedor eliminado correctamente"
+                        "description": "Subasta eliminada correctamente"
                     },
                     "404": {
-                        "description": "Artículo no encontrado"
+                        "description": "Subasta no encontrada"
                     }
                 }
             }
         },
-        "/api/vendedores/{vendedor}": {
-            "put": {
+        "/api/subastas/{id}/lotes": {
+            "post": {
                 "tags": [
-                    "Vendedores"
+                    "Subastas"
                 ],
-                "summary": "Actualizar un vendedor",
-                "operationId": "2c4cf29b040e03897d7f77e70bdcbdfe",
+                "summary": "Asociar lotes a una subasta",
+                "operationId": "8931c862071ed28dacf37560b8480e58",
                 "parameters": [
                     {
-                        "name": "vendedor",
+                        "name": "id",
                         "in": "path",
-                        "description": "ID del vendedor a actualizar",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1230,11 +1397,14 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "nombre"
+                                    "lotes"
                                 ],
                                 "properties": {
-                                    "nombre": {
-                                        "type": "string"
+                                    "lotes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -1244,134 +1414,15 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Vendedor actualizado correctamente"
+                        "description": "Lotes asociados exitosamente"
                     },
                     "404": {
-                        "description": "Vendedor no encontrado"
+                        "description": "Subasta no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
                     }
                 }
-            }
-        }
-    },
-    "components": {
-        "schemas": {
-            "Factura": {
-                "required": [
-                    "montoTotal",
-                    "condicionesDePago",
-                    "entrega",
-                    "vendedor_id"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "montoTotal": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 2500
-                    },
-                    "condicionesDePago": {
-                        "type": "string",
-                        "example": "30 días neto"
-                    },
-                    "entrega": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-06-15"
-                    },
-                    "vendedor_id": {
-                        "type": "integer",
-                        "example": 5
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "Vendedor": {
-                        "$ref": "#/components/schemas/Vendedor"
-                    },
-                    "Puja": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Puja"
-                        }
-                    }
-                },
-                "type": "object"
-            },
-            "Puja": {
-                "required": [
-                    "fechaHora",
-                    "monto",
-                    "lote_id",
-                    "cliente_id",
-                    "facturas_id"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "fechaHora": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2025-06-01T14:30:00Z"
-                    },
-                    "monto": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 500
-                    },
-                    "lote_id": {
-                        "type": "integer",
-                        "example": 3
-                    },
-                    "cliente_id": {
-                        "type": "integer",
-                        "example": 7
-                    },
-                    "facturas_id": {
-                        "type": "integer",
-                        "example": 10
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
-            "Vendedor": {
-                "title": "Vendedor",
-                "required": [
-                    "id",
-                    "nombre"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "nombre": {
-                        "type": "string",
-                        "example": "Juan Pérez"
-                    },
-                    "email": {
-                        "type": "string",
-                        "example": "juan@example.com"
-                    }
-                },
-                "type": "object"
             }
         }
     },
@@ -1381,24 +1432,28 @@
             "description": "API para gestionar artículos"
         },
         {
+            "name": "CasaRemates",
+            "description": "API para gestionar casas de remate"
+        },
+        {
             "name": "Categorias",
             "description": "API para gestionar categoria"
         },
         {
-            "name": "Facturas",
-            "description": "API para gestionar Facturas"
+            "name": "Cliente",
+            "description": "API para gestionar clientes"
         },
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
         },
         {
-            "name": "Pujas",
-            "description": "API para gestionar Pujas"
+            "name": "Rematador",
+            "description": "API para gestionar rematadores"
         },
         {
-            "name": "Vendedores",
-            "description": "API para gestionar vendedores"
+            "name": "Subastas",
+            "description": "API para gestionar subastas"
         }
     ]
 }

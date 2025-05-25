@@ -10,7 +10,8 @@
 
         protected $fillable = [ 
             'valorBase', 
-            'pujaMinima'
+            'pujaMinima',
+            'subasta_id'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
@@ -22,6 +23,12 @@
         public function articulos() {
             return $this->hasMany(Articulo::class);
         }
+
+        public function subasta(){
+            return $this->belongsTo(Subasta::class);
+        }
+
+    
 
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Articulo;
+use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -14,6 +15,8 @@ use OpenApi\Annotations as OA;
  * )
 */
 class ArticuloController extends Controller{
+
+
     /**
      * @OA\Get(
      *     path="/api/articulos",
@@ -23,7 +26,21 @@ class ArticuloController extends Controller{
      * )
     */
     public function index(){
-        return response()->json(Articulo::all());
+        try {
+            $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->get();
+            $visited = [];
+            $maxDepth = 2;
+
+            $dtos = $articulo->map(function ($articulo) use (&$visited, $maxDepth) {
+                return Mapper::fromModelArticulo($articulo, $visited, $maxDepth);
+            });
+            return response()->json($dtos);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**
@@ -39,7 +56,8 @@ class ArticuloController extends Controller{
      *             @OA\Property(property="especificacion", type="string"),
      *             @OA\Property(property="disponibilidad", type="boolean"),
      *             @OA\Property(property="condicion", type="string"),
-     *             @OA\Property(property="vendedor_id", type="integer")
+     *             @OA\Property(property="vendedor_id", type="integer"),
+     *             @OA\Property(property="lote_id", type="integer")
      *         )
      *     ),
      *     @OA\Response(
@@ -59,6 +77,7 @@ class ArticuloController extends Controller{
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
             'vendedor_id' => 'nullable|exists:vendedores,id',
+            'lote_id' => 'nullable|exists:lotes,id',
         ]);
 
         $articulo = Articulo::create([
@@ -67,9 +86,14 @@ class ArticuloController extends Controller{
             'disponibilidad' => $request->disponibilidad,
             'condicion' => $request->condicion,
             'vendedor_id' => $request->vendedor_id,
+            'lote_id' => $request->lote_id,
         ]);
 
-        return response()->json($articulo, 201);
+        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($articulo->id);
+
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 201);
     }
 
     /**
@@ -95,13 +119,15 @@ class ArticuloController extends Controller{
      * )
     */
     public function show(string $id){
-        $articulo = Articulo::find($id);
+        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($id);
 
         if (!$articulo) {
-            return response()->json(['Error' => 'Articulo no encontrado. id:', $id], 404);
+            return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);
         }
 
-        return response()->json($articulo);
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth));
     }
 
     /**
@@ -124,7 +150,8 @@ class ArticuloController extends Controller{
      *             @OA\Property(property="especificacion", type="string"),
      *             @OA\Property(property="disponibilidad", type="boolean"),
      *             @OA\Property(property="condicion", type="string"),
-     *             @OA\Property(property="vendedor_id", type="integer")
+     *             @OA\Property(property="vendedor_id", type="integer"),
+     *             @OA\Property(property="lote_id", type="integer")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Artículo actualizado correctamente"),
@@ -139,6 +166,7 @@ class ArticuloController extends Controller{
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
             'vendedor_id' => 'nullable|exists:vendedores,id',
+            'lote_id' => 'nullable|exists:lotes,id',
         ]);
 
         $articulo->imagenes = $request->imagenes;
@@ -146,10 +174,12 @@ class ArticuloController extends Controller{
         $articulo->disponibilidad = $request->disponibilidad;
         $articulo->condicion = $request->condicion;
         $articulo->vendedor_id = $request->vendedor_id;
-        
+        $articulo->lote_id = $request->lote_id;
         $articulo->save();
 
-        return response()->json($articulo);
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 200);
     }
 
     /**
