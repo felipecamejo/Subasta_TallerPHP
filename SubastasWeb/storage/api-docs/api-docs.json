@@ -61,6 +61,9 @@
                                     },
                                     "vendedor_id": {
                                         "type": "integer"
+                                    },
+                                    "lote_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -176,6 +179,9 @@
                                         "type": "string"
                                     },
                                     "vendedor_id": {
+                                        "type": "integer"
+                                    },
+                                    "lote_id": {
                                         "type": "integer"
                                     }
                                 },
@@ -812,6 +818,9 @@
                                     "pujaMinima": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "subasta_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -852,7 +861,7 @@
                         "description": "Lote eliminado correctamente"
                     },
                     "404": {
-                        "description": "Categoria no encontrado"
+                        "description": "Lote no encontrado"
                     }
                 }
             }

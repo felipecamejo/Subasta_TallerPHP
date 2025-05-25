@@ -16,7 +16,7 @@ return new class extends Migration
             
             $table->float('valorBase');
             $table->float('pujaMinima');
-            $table->foreignId('subasta_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subasta_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->timestamps();
         });
