@@ -5,7 +5,7 @@ namespace App\DTOs;
 use App\DTOs\DtoUsuario;
 
 class DtoCliente{
-    public $usuario_id;
+    public $usuario;
     public $calificacion;
 
     /** @var DtoPuja[] */
@@ -14,8 +14,8 @@ class DtoCliente{
     /** @var DtoNotificacion[] */
     public array $notificaciones;
 
-    public function __construct($usuario_id, $calificacion, $pujas, $notificaciones){ 
-        $this->usuario_id = $usuario_id;
+    public function __construct($usuario, $calificacion, $pujas, $notificaciones){ 
+        $this->usuario = $usuario;
         $this->calificacion = $calificacion;
         $this->pujas = $pujas;
         $this->notificaciones = $notificaciones;

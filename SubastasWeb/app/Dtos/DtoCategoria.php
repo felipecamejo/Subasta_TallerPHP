@@ -8,7 +8,7 @@ class DtoCategoria
 {
     public $id = null;
     public $nombre;
-    public $categoria_padre_id;
+    public $categoria_padre;
 
     /** @var DtoCategoria[] */
     public array $categoriasHijas = [];
@@ -29,7 +29,7 @@ class DtoCategoria
         return [
             'id' => $this->id,
             'nombre' => $this->nombre,
-            'categoria_padre_id' => $this->categoria_padre_id,
+            'categoria_padre_id' => $this->categoria_padre,
             'categoriasHijas' => array_map(fn($categoria) => $categoria->toArray(), $this->categoriasHijas),
             'articulos' => array_map(fn($articulo) => $articulo->toArray(), $this->articulos)
         ];
