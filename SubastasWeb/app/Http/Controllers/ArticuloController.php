@@ -27,7 +27,7 @@ class ArticuloController extends Controller{
     */
     public function index(){
         try {
-            $articulo = Articulo::with(['categorias', 'vendedor'])->get();
+            $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->get();
             $visited = [];
             $maxDepth = 2;
 
@@ -89,7 +89,7 @@ class ArticuloController extends Controller{
             'lote_id' => $request->lote_id,
         ]);
 
-        $articulo = Articulo::with(['categorias', 'vendedor'])->find($articulo->id);
+        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($articulo->id);
 
         $visited = [];
         $maxDepth = 2;
@@ -119,7 +119,7 @@ class ArticuloController extends Controller{
      * )
     */
     public function show(string $id){
-        $articulo = Articulo::with(['categorias', 'vendedor'])->find($id);
+        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($id);
 
         if (!$articulo) {
             return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);
@@ -150,7 +150,7 @@ class ArticuloController extends Controller{
      *             @OA\Property(property="especificacion", type="string"),
      *             @OA\Property(property="disponibilidad", type="boolean"),
      *             @OA\Property(property="condicion", type="string"),
-     *             @OA\Property(property="vendedor_id", type="integer")
+     *             @OA\Property(property="vendedor_id", type="integer"),
      *             @OA\Property(property="lote_id", type="integer")
      *         )
      *     ),

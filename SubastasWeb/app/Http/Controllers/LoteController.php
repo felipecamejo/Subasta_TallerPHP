@@ -25,7 +25,7 @@ class LoteController extends Controller{
     */
     public function index(){
         try {
-            $lote = Lote::with(['pujas', 'articulos'])->get();
+            $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
             $visited = [];
             $maxDepth = 2;
 
@@ -72,28 +72,19 @@ class LoteController extends Controller{
             'pujaMinima' => 'required|numeric',
             'subasta_id' => 'nullable|exists:subastas,id',
         ]);
-
+        
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
             'subasta_id' => $request->subasta_id,
         ]);
+        
+        $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);
 
+        $visited = [];
+        $maxDepth = 2;
 
-        try {
-            $lote = Lote::with(['pujas', 'articulos'])->find($lote->id);
-
-            $visited = [];
-            $maxDepth = 2;
-
-            return response()->json(Mapper::fromModelLote($lote, $visited, $maxDepth), 201);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-
+        return response()->json(Mapper::fromModelLote($lote, $visited, $maxDepth), 201);
     }
 
     /**

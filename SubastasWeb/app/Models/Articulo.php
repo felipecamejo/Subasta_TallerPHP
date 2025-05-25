@@ -29,6 +29,10 @@
             return $this->belongsTo(Vendedor::class);
         }
 
+        public function lote() {
+            return $this->belongsTo(Lote::class);
+        }
+
     }
 
 ?>

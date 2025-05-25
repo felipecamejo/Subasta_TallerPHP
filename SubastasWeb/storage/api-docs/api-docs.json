@@ -61,6 +61,9 @@
                                     },
                                     "vendedor_id": {
                                         "type": "integer"
+                                    },
+                                    "lote_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -176,6 +179,9 @@
                                         "type": "string"
                                     },
                                     "vendedor_id": {
+                                        "type": "integer"
+                                    },
+                                    "lote_id": {
                                         "type": "integer"
                                     }
                                 },

@@ -24,8 +24,7 @@
             return $this->hasMany(Articulo::class);
         }
 
-        public function subasta()
-        {
+        public function subasta(){
             return $this->belongsTo(Subasta::class);
         }
 
