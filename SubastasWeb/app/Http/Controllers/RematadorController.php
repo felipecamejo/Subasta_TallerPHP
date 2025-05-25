@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rematador;
 use App\Models\Usuario;
+use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 /**
@@ -28,7 +29,8 @@ class RematadorController extends Controller
     {
         // Listar todos los rematadores con datos de usuario
         $rematadores = Rematador::with('usuario')->get();
-        return response()->json($rematadores, 200);
+        $dto = mapper.fromModelRematador($rematadores);
+        return response()->json($dto, 200);
     }
 
     /**
@@ -47,20 +49,40 @@ class RematadorController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "cedula", "email", "matricula"},
+     *             required={"nombre", "cedula", "email", "contrasenia"},
      *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="cedula", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
-     *             @OA\Property(property="direccionFiscal", type="string"),
-     *             @OA\Property(property="contrasenia", type="string"),
      *             @OA\Property(property="matricula", type="string"),
+     *             @OA\Property(property="contrasenia", type="string"),
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Rematador creado exitosamente"
+     *         description="Rematador creado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="usuario_id", type="integer"),
+     *             @OA\Property(property="matricula", type="string"),
+     *             @OA\Property(property="created_at", type="string", format="date-time"),
+     *             @OA\Property(property="updated_at", type="string", format="date-time"),
+     *             @OA\Property(
+     *                 property="usuario",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="nombre", type="string"),
+     *                 @OA\Property(property="cedula", type="string"),
+     *                 @OA\Property(property="email", type="string"),
+     *                 @OA\Property(property="telefono", type="string"),
+     *                 @OA\Property(property="imagen", type="string"),
+     *                 @OA\Property(property="latitud", type="number"),
+     *                 @OA\Property(property="longitud", type="number"),
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=422,
@@ -78,7 +100,8 @@ class RematadorController extends Controller
             'imagen' => 'nullable|string',
             'matricula' => 'required|string',
             'contrasenia' => 'required|string',
-            'direccionFiscal' => 'nullable|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         // 1. Crear el usuario
@@ -89,7 +112,8 @@ class RematadorController extends Controller
             'telefono' => $validated['telefono'] ?? '',
             'imagen' => $validated['imagen'] ?? null,
             'contrasenia' => bcrypt($validated['contrasenia']),
-            'direccionFiscal' => $validated['direccionFiscal'] ?? '',
+            'latitud' => $validated['latitud'] ?? null,
+            'longitud' => $validated['longitud'] ?? null,
         ]);
 
         // 2. Crear el rematador asociado

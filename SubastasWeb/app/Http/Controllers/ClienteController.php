@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Usuario;
+use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -27,9 +28,18 @@ class ClienteController extends Controller
     */
     public function index()
     {
-        // Listar todos los clientes con datos de usuario
-        $clientes = Cliente::with('usuario')->get();
-        return response()->json($clientes, 200);
+        try {
+            $clientes = Cliente::with('usuario')->get() ?? collect();
+           $dtos = $clientes->map(function ($cliente) {
+               return Mapper::fromModelCliente($cliente);
+           });
+            return response()->json($dtos, 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**
@@ -55,8 +65,9 @@ class ClienteController extends Controller
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
      *             @OA\Property(property="calificacion", type="number"),
-     *             @OA\Property(property="direccionFiscal", type="string"),
      *             @OA\Property(property="contrasenia", type="string"),
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(
@@ -77,7 +88,8 @@ class ClienteController extends Controller
      *                 @OA\Property(property="email", type="string"),
      *                 @OA\Property(property="telefono", type="string"),
      *                 @OA\Property(property="imagen", type="string"),
-     *                 @OA\Property(property="direccionFiscal", type="string"),
+     *                 @OA\Property(property="latitud", type="number"),
+     *                 @OA\Property(property="longitud", type="number"),
      *             )
      *         )
      *     ),
@@ -98,7 +110,8 @@ class ClienteController extends Controller
             'imagen' => 'nullable|string',
             'calificacion' => 'nullable|numeric',
             'contrasenia' => 'required|string',
-            'direccionFiscal' => 'nullable|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         // 1. Crear el usuario
@@ -109,7 +122,8 @@ class ClienteController extends Controller
             'telefono' => $validated['telefono'] ?? '',
             'imagen' => $validated['imagen'] ?? null,
             'contrasenia' => bcrypt($validated['contrasenia']),
-            'direccionFiscal' => $validated['direccionFiscal'] ?? '',
+            'latitud' => $validated['latitud'] ?? null,
+            'longitud' => $validated['longitud'] ?? null,
         ]);
 
         // 2. Crear el cliente asociado

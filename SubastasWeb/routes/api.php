@@ -53,3 +53,5 @@ Route::apiResource('lotes', LoteController::class);
 Route::apiResource('categorias', CategoriaController::class);
 
 Route::apiResource('clientes', ClienteController::class);
+
+Route::apiResource('rematadores', RematadorController::class);

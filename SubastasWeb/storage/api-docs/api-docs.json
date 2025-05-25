@@ -581,11 +581,14 @@
                                     "calificacion": {
                                         "type": "number"
                                     },
-                                    "direccionFiscal": {
-                                        "type": "string"
-                                    },
                                     "contrasenia": {
                                         "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
@@ -637,8 +640,11 @@
                                                 "imagen": {
                                                     "type": "string"
                                                 },
-                                                "direccionFiscal": {
-                                                    "type": "string"
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "type": "object"
@@ -879,7 +885,7 @@
                                     "nombre",
                                     "cedula",
                                     "email",
-                                    "matricula"
+                                    "contrasenia"
                                 ],
                                 "properties": {
                                     "nombre": {
@@ -897,14 +903,17 @@
                                     "imagen": {
                                         "type": "string"
                                     },
-                                    "direccionFiscal": {
+                                    "matricula": {
                                         "type": "string"
                                     },
                                     "contrasenia": {
                                         "type": "string"
                                     },
-                                    "matricula": {
-                                        "type": "string"
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
@@ -914,7 +923,62 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Rematador creado exitosamente"
+                        "description": "Rematador creado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer"
+                                        },
+                                        "matricula": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "telefono": {
+                                                    "type": "string"
+                                                },
+                                                "imagen": {
+                                                    "type": "string"
+                                                },
+                                                "latitud": {
+                                                    "type": "number"
+                                                },
+                                                "longitud": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Error de validación"

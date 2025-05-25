@@ -24,6 +24,7 @@ use App\Models\Puja;
 use App\Models\Vendedor;
 use App\Models\Subasta;
 use App\Models\Rematador;
+use App\Models\Cliente;
 
 class Mapper {
 
@@ -103,13 +104,21 @@ class Mapper {
         return new DtoCliente(
             $cliente->usuario_id,
             $cliente->calificacion,
-            $cliente->pujas->map(function($puja) {
-                return Mapper::fromModelPuja($puja);
+            ($cliente->pujas ?? collect())->map(function($puja) {
+            return Mapper::fromModelPuja($puja);
             })->toArray(),
-            $cliente->notificaciones->map(function($notificacion) {
-                return Mapper::fromModelNotificacion($notificacion);
+            $cliente->usuario,
+            ($cliente->notificaciones ?? collect())->map(function($notificacion) {
+            return Mapper::fromModelNotificacion($notificacion);
             })->toArray(),
         );
+    }
+
+    public static function toModelCliente(DtoCliente $dto): Cliente {
+        return new Cliente([
+            'usuario_id' => $dto->usuario_id,
+            'calificacion' => $dto->calificacion
+        ]);
     }
 
     public static function fromModelFactura($factura): DtoFactura {

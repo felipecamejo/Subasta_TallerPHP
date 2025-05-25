@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('email'); // Correo electrónico del usuario
             $table->string('telefono'); // Teléfono del usuario
             $table->string('imagen')->nullable(); // Imagen del usuario 
-            $table->string('direccionFiscal'); // Dirección fiscal del usuario
-            
+            $table->decimal('latitud', 10, 7)->nullable();
+            $table->decimal('longitud', 10, 7)->nullable();
+
             $table->string('contrasenia');
 
             $table->timestamps();

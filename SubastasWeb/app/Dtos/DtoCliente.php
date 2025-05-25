@@ -13,7 +13,6 @@ class DtoCliente{
 
     /** @var DtoNotificacion[] */
     public array $notificaciones;
-
     public function __construct($usuario, $calificacion, $pujas, $notificaciones){ 
         $this->usuario = $usuario;
         $this->calificacion = $calificacion;
@@ -23,7 +22,7 @@ class DtoCliente{
 
     public function toArray(): array {
         return [
-            'usuario_id' => $this->usuario_id,
+            'usuario' => $this->usuario,
             'calificacion' => $this->calificacion,
             'pujas' => array_map(function($puja) {
                 return $puja->toArray();
