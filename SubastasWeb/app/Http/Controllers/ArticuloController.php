@@ -16,6 +16,8 @@ use OpenApi\Annotations as OA;
 */
 class ArticuloController extends Controller{
 
+    public $maxDepth = 2;
+    public $visited = [];
 
     /**
      * @OA\Get(
@@ -28,11 +30,9 @@ class ArticuloController extends Controller{
     public function index(){
         try {
             $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->get();
-            $visited = [];
-            $maxDepth = 2;
 
-            $dtos = $articulo->map(function ($articulo) use (&$visited, $maxDepth) {
-                return Mapper::fromModelArticulo($articulo, $visited, $maxDepth);
+            $dtos = $articulo->map(function ($articulo) {
+                return Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth);
             });
             return response()->json($dtos);
         } catch (\Throwable $e) {
@@ -91,9 +91,7 @@ class ArticuloController extends Controller{
 
         $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($articulo->id);
 
-        $visited = [];
-        $maxDepth = 2;
-        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 201);
+        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth), 201);
     }
 
     /**
@@ -125,9 +123,7 @@ class ArticuloController extends Controller{
             return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);
         }
 
-        $visited = [];
-        $maxDepth = 2;
-        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth));
+        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -177,9 +173,7 @@ class ArticuloController extends Controller{
         $articulo->lote_id = $request->lote_id;
         $articulo->save();
 
-        $visited = [];
-        $maxDepth = 2;
-        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 200);
+        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth), 200);
     }
 
     /**

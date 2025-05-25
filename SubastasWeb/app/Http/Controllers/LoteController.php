@@ -15,6 +15,9 @@ use App\Mappers\Mapper;
 
 class LoteController extends Controller{
     
+    public $maxDepth = 2;
+    public $visited = [];
+
     /**
      * @OA\Get(
      *     path="/api/lotes",
@@ -26,8 +29,6 @@ class LoteController extends Controller{
     public function index(){
         try {
             $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
-            $visited = [];
-            $maxDepth = 2;
 
             $dtos = $lote->map(function ($lote) use (&$visited, $maxDepth) {
                 return Mapper::fromModelLote($lote, $visited, $maxDepth);
@@ -80,11 +81,8 @@ class LoteController extends Controller{
         ]);
         
         $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);
-
-        $visited = [];
-        $maxDepth = 2;
-
-        return response()->json(Mapper::fromModelLote($lote, $visited, $maxDepth), 201);
+        
+        return response()->json(Mapper::fromModelLote($lote, $this->visited, $this->maxDepth), 201);
     }
 
     /**

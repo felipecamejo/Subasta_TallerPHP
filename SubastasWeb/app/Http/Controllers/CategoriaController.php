@@ -15,6 +15,10 @@ use App\Mappers\Mapper;
 
 class CategoriaController extends Controller{
     
+    public $maxDepth = 2;
+    public $visited = [];
+
+
     /**
      * @OA\Get(
      *     path="/api/categorias",
@@ -25,11 +29,9 @@ class CategoriaController extends Controller{
     */
     public function index(){
         $categorias = Categoria::with(['categoriasHijas', 'articulos'])->get();
-        $visited = [];
-        $maxDepth = 2; 
 
-        $dtos = $categorias->map(function ($categoria) use (&$visited, $maxDepth) {
-            return Mapper::fromModelCategoria($categoria, $visited, $maxDepth);
+        $dtos = $categorias->map(function ($categoria) {
+            return Mapper::fromModelCategoria($categoria, $this->visited, $this->maxDepth);
         });
         return response()->json($dtos);
     }
