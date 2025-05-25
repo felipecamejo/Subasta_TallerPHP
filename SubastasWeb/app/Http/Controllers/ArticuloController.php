@@ -86,7 +86,11 @@ class ArticuloController extends Controller{
             'vendedor_id' => $request->vendedor_id,
         ]);
 
-        return response()->json(Mapper::fromModelArticulo($articulo), 201);
+        $articulo = Articulo::with(['categorias', 'vendedor'])->find($articulo->id);
+
+        $visited = [];
+        $maxDepth = 2;
+        return response()->json(Mapper::fromModelArticulo($articulo, $visited, $maxDepth), 201);
     }
 
     /**
@@ -165,7 +169,6 @@ class ArticuloController extends Controller{
         $articulo->disponibilidad = $request->disponibilidad;
         $articulo->condicion = $request->condicion;
         $articulo->vendedor_id = $request->vendedor_id;
-        
         $articulo->save();
 
         $visited = [];
