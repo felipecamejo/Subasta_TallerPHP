@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use Illuminate\Http\Request;
-use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -24,14 +23,7 @@ class CategoriaController extends Controller{
      * )
     */
     public function index(){
-        $categorias = Categoria::with(['categoriasHijas', 'articulos'])->get();
-        $visited = [];
-        $maxDepth = 2; 
-
-        $dtos = $categorias->map(function ($categoria) use (&$visited, $maxDepth) {
-            return Mapper::fromModelCategoria($categoria, $visited, $maxDepth);
-        });
-        return response()->json($dtos);
+        return response()->json(Categoria::all());
     }
 
     /**
@@ -66,9 +58,10 @@ class CategoriaController extends Controller{
         $categoria = Categoria::create([
             'nombre' => $request->nombre,
             'categoria_padre_id' => $request->categoria_padre_id,
+    
         ]);
 
-        return response()->json(Mapper::fromModelCategoria($categoria), 201);
+        return response()->json($categoria, 201);
     }
 
     /**

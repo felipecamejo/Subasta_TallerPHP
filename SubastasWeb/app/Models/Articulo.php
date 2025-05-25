@@ -15,8 +15,7 @@
             'especificacion', 
             'disponibilidad', 
             'condicion', 
-            'vendedor_id',
-            'lote_id'
+            'vendedor_id'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
@@ -27,10 +26,6 @@
 
         public function vendedor() {
             return $this->belongsTo(Vendedor::class);
-        }
-
-        public function lote() {
-            return $this->belongsTo(Lote::class);
         }
 
     }

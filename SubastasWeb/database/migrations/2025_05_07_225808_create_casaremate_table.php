@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('articulos', function (Blueprint $table) {
+        Schema::create('casa_remates', function (Blueprint $table) {
             $table->id();
             
-            $table->string('imagenes')->nullable(); 
-            $table->string('especificacion');
-            $table->boolean('disponibilidad');
-            $table->string('condicion'); 
-            
-            $table->foreignId('vendedor_id')->nullable()->constrained('vendedores')->onDelete('cascade');
+            $table->string('nombre');
+            $table->string('idFiscal');
+            $table->string('email');
+            $table->string('telefono');
+            $table->float('calificacion');
 
             $table->timestamps();
+            
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('articulos');
+        Schema::dropIfExists('casaremates');
     }
 };

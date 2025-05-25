@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Lote;
 use Illuminate\Http\Request;
-use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -24,22 +23,7 @@ class LoteController extends Controller{
      * )
     */
     public function index(){
-        try {
-            $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
-            $visited = [];
-            $maxDepth = 2;
-
-            $dtos = $lote->map(function ($lote) use (&$visited, $maxDepth) {
-                return Mapper::fromModelLote($lote, $visited, $maxDepth);
-            });
-
-            return response()->json($dtos);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
+        return response()->json(Lote::all());
     }
 
     /**
@@ -53,7 +37,6 @@ class LoteController extends Controller{
      *             required={"valorBase", "pujaMinima"},
      *             @OA\Property(property="valorBase", type="float"),
      *             @OA\Property(property="pujaMinima", type="float"),
-     *             @OA\Property(property="subasta_id", type="integer"),
      *         )
      *     ),
      *     @OA\Response(
@@ -70,21 +53,14 @@ class LoteController extends Controller{
         $request->validate([
             'valorBase' => 'required|numeric',
             'pujaMinima' => 'required|numeric',
-            'subasta_id' => 'nullable|exists:subastas,id',
         ]);
-        
+
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
-            'subasta_id' => $request->subasta_id,
         ]);
-        
-        $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);
 
-        $visited = [];
-        $maxDepth = 2;
-
-        return response()->json(Mapper::fromModelLote($lote, $visited, $maxDepth), 201);
+        return response()->json($lote, 201);
     }
 
     /**
@@ -105,7 +81,7 @@ class LoteController extends Controller{
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Lote no encontrado"
+     *         description="Categoria no encontrado"
      *     )
      * )
      */

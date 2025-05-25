@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('rematadores', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+
             $table->string('matricula');
+            
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rematadores');
+        Schema::dropIfExists('rematador');
     }
 };
