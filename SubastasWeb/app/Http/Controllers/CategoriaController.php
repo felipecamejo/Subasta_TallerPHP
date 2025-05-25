@@ -24,8 +24,12 @@ class CategoriaController extends Controller{
      * )
     */
     public function index(){
-        $dtos = Categoria::all()->map(function ($categoria) {
-            return Mapper::fromModelCategoria($categoria);
+        $categorias = Categoria::with(['categoriasHijas', 'articulos'])->get();
+        $visited = [];
+        $maxDepth = 2; 
+
+        $dtos = $categorias->map(function ($categoria) use (&$visited, $maxDepth) {
+            return Mapper::fromModelCategoria($categoria, $visited, $maxDepth);
         });
         return response()->json($dtos);
     }

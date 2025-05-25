@@ -8,13 +8,13 @@ class DtoLote{
     public $id;
     public $valorBase;
     public $pujaMinima;
-    public $subasta_id;
+    public $subasta;
 
-    public function __construct($id, $valorBase, $pujaMinima, $subasta_id){
+    public function __construct($id, $valorBase, $pujaMinima, $subasta){
         $this->id = $id;
         $this->valorBase = $valorBase;
         $this->pujaMinima = $pujaMinima;
-        $this->subasta_id = $subasta_id;
+        $this->subasta = $subasta;
     }
 
     public function toArray(): array{
@@ -22,7 +22,7 @@ class DtoLote{
             'id' => $this->id,
             'valorBase' => $this->valorBase,
             'pujaMinima' => $this->pujaMinima,
-            'subasta_id' => $this->subasta_id
+            'subasta' => $this->subasta
         ];
     }
 }
