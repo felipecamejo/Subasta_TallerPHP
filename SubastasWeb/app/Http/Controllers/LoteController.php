@@ -15,7 +15,7 @@ use App\Mappers\Mapper;
 
 class LoteController extends Controller{
     
-    public $maxDepth = 2;
+    public $maxDepth = 1;
     public $visited = [];
 
     /**

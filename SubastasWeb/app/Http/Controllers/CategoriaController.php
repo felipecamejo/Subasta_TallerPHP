@@ -70,7 +70,12 @@ class CategoriaController extends Controller{
             'categoria_padre_id' => $request->categoria_padre_id,
         ]);
 
-        return response()->json(Mapper::fromModelCategoria($categoria), 201);
+        $categoria->load(['categoriasHijas', 'articulos']);
+
+        return response()->json(
+            Mapper::fromModelCategoria($categoria, $this->visited, $this->maxDepth), 
+            201
+        );
     }
 
     /**

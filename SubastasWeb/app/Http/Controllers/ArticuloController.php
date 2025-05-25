@@ -16,7 +16,7 @@ use OpenApi\Annotations as OA;
 */
 class ArticuloController extends Controller{
 
-    public $maxDepth = 2;
+    public $maxDepth = 1;
     public $visited = [];
 
     /**
