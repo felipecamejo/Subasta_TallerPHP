@@ -24,10 +24,22 @@ class LoteController extends Controller{
      * )
     */
     public function index(){
-        $dtos = Lote::all()->map(function ($lote) {
-            return Mapper::fromModelLote($lote);
-        });
-        return response()->json($dtos);
+        try {
+            $lote = Lote::with(['pujas', 'articulos'])->get();
+            $visited = [];
+            $maxDepth = 2;
+
+            $dtos = $lote->map(function ($lote) use (&$visited, $maxDepth) {
+                return Mapper::fromModelLote($lote, $visited, $maxDepth);
+            });
+
+            return response()->json($dtos);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     /**
@@ -41,6 +53,7 @@ class LoteController extends Controller{
      *             required={"valorBase", "pujaMinima"},
      *             @OA\Property(property="valorBase", type="float"),
      *             @OA\Property(property="pujaMinima", type="float"),
+     *             @OA\Property(property="subasta_id", type="integer"),
      *         )
      *     ),
      *     @OA\Response(
@@ -57,14 +70,30 @@ class LoteController extends Controller{
         $request->validate([
             'valorBase' => 'required|numeric',
             'pujaMinima' => 'required|numeric',
+            'subasta_id' => 'nullable|exists:subastas,id',
         ]);
 
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
+            'subasta_id' => $request->subasta_id,
         ]);
 
-        return response()->json(Mapper::fromModelLote($lote), 201);
+
+        try {
+            $lote = Lote::with(['pujas', 'articulos'])->find($lote->id);
+
+            $visited = [];
+            $maxDepth = 2;
+
+            return response()->json(Mapper::fromModelLote($lote, $visited, $maxDepth), 201);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+
     }
 
     /**

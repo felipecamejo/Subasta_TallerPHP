@@ -47,6 +47,11 @@ class Mapper {
             })->toArray();
         }
 
+        $loteModel = Lote::find($articulo->lote_id);
+        $dtoLote = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
+            ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+
         $dto = new DtoArticulo(
             $articulo->id,
             $articulo->imagenes,
@@ -54,7 +59,9 @@ class Mapper {
             $articulo->disponibilidad,
             $articulo->condicion,
             $dtoVendedor,
-            $categorias
+            $categorias,
+            $dtoLote
+            
         );
         $visited['articulo'][$articulo->id] = $dto;
         return $dto;
@@ -67,6 +74,7 @@ class Mapper {
             'disponibilidad' => $dto->disponibilidad,
             'condicion' => $dto->condicion,
             'vendedor_id' => $dto->vendedor->id ?? null,
+            'lote_id' => $dto->lote->id ?? null
         ]);
     }
 

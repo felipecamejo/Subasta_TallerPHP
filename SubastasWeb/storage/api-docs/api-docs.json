@@ -812,6 +812,9 @@
                                     "pujaMinima": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "subasta_id": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"

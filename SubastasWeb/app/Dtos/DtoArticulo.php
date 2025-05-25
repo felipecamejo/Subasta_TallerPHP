@@ -12,10 +12,12 @@ class DtoArticulo {
     public $condicion;
     public $vendedor;
 
+    public $lote;
+
     /** @var DtoCategoria[] */
     public array $categorias;
 
-    public function __construct($id, $imagenes, $especificacion, $disponibilidad, $condicion, $vendedor, $categorias){
+    public function __construct($id, $imagenes, $especificacion, $disponibilidad, $condicion, $vendedor, $categorias, $lote) {
         $this->id = $id;
         $this->imagenes = $imagenes;
         $this->especificacion = $especificacion;
@@ -23,6 +25,7 @@ class DtoArticulo {
         $this->condicion = $condicion;
         $this->vendedor = $vendedor;
         $this->categorias = $categorias;
+        $this->lote = $lote;
     }
 
     public function toArray(): array
@@ -36,7 +39,8 @@ class DtoArticulo {
             'vendedor' => $this->vendedor,
             'categorias' => array_map(function($categoria) {
                 return $categoria->toArray();
-            }, $this->categorias)
+            }, $this->categorias),
+            'lote' => $this->lote,
         ];
     }
 }

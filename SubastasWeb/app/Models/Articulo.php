@@ -15,7 +15,8 @@
             'especificacion', 
             'disponibilidad', 
             'condicion', 
-            'vendedor_id'
+            'vendedor_id',
+            'lote_id'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON

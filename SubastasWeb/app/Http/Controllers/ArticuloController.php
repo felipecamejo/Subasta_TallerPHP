@@ -56,7 +56,8 @@ class ArticuloController extends Controller{
      *             @OA\Property(property="especificacion", type="string"),
      *             @OA\Property(property="disponibilidad", type="boolean"),
      *             @OA\Property(property="condicion", type="string"),
-     *             @OA\Property(property="vendedor_id", type="integer")
+     *             @OA\Property(property="vendedor_id", type="integer"),
+     *             @OA\Property(property="lote_id", type="integer")
      *         )
      *     ),
      *     @OA\Response(
@@ -76,6 +77,7 @@ class ArticuloController extends Controller{
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
             'vendedor_id' => 'nullable|exists:vendedores,id',
+            'lote_id' => 'nullable|exists:lotes,id',
         ]);
 
         $articulo = Articulo::create([
@@ -84,6 +86,7 @@ class ArticuloController extends Controller{
             'disponibilidad' => $request->disponibilidad,
             'condicion' => $request->condicion,
             'vendedor_id' => $request->vendedor_id,
+            'lote_id' => $request->lote_id,
         ]);
 
         $articulo = Articulo::with(['categorias', 'vendedor'])->find($articulo->id);
@@ -148,6 +151,7 @@ class ArticuloController extends Controller{
      *             @OA\Property(property="disponibilidad", type="boolean"),
      *             @OA\Property(property="condicion", type="string"),
      *             @OA\Property(property="vendedor_id", type="integer")
+     *             @OA\Property(property="lote_id", type="integer")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Artículo actualizado correctamente"),
@@ -162,6 +166,7 @@ class ArticuloController extends Controller{
             'disponibilidad' => 'required|boolean', 
             'condicion' => 'required|string', 
             'vendedor_id' => 'nullable|exists:vendedores,id',
+            'lote_id' => 'nullable|exists:lotes,id',
         ]);
 
         $articulo->imagenes = $request->imagenes;
@@ -169,6 +174,7 @@ class ArticuloController extends Controller{
         $articulo->disponibilidad = $request->disponibilidad;
         $articulo->condicion = $request->condicion;
         $articulo->vendedor_id = $request->vendedor_id;
+        $articulo->lote_id = $request->lote_id;
         $articulo->save();
 
         $visited = [];

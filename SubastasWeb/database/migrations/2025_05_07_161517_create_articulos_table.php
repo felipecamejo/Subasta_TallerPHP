@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('condicion'); 
             
             $table->foreignId('vendedor_id')->nullable()->constrained('vendedores')->onDelete('cascade');
+            $table->foreignId('lote_id')->nullable()->constrained('lotes')->onDelete('cascade');
 
             $table->timestamps();
         });
