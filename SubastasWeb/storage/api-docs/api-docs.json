@@ -745,12 +745,21 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "telefono",
-                                    "imagen",
-                                    "calificacion",
-                                    "notificaciones"
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "contrasenia"
                                 ],
                                 "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
                                     "telefono": {
                                         "type": "string"
                                     },
@@ -760,11 +769,11 @@
                                     "calificacion": {
                                         "type": "number"
                                     },
-                                    "notificaciones": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"

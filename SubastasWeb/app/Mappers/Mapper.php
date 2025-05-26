@@ -13,6 +13,7 @@ use App\DTOs\DtoPuja;
 use App\DTOs\DtoVendedor;
 use App\DTOs\DtoSubasta;
 use App\DTOs\DtoRematador;
+use App\DTOs\DtoUsuario;
 
 use App\Models\Articulo;
 use App\Models\Lote;
@@ -186,10 +187,11 @@ class Mapper {
         }
 
         $dto = new DtoCliente(
-            $dtoUsuario,
+            $cliente->id,
             $cliente->calificacion,
             $pujas,
-            $notificaciones
+            $notificaciones,
+            $dtoUsuario
         );
         $visited['cliente'][$cliente->id] = $dto;
         return $dto;
@@ -462,7 +464,7 @@ class Mapper {
         return $dto;
     }
 
-    public static function fromModelUsuario(Usuario $usuario, &$visited = [], $depth = null): DtoRematador {
+    public static function fromModelUsuario(Usuario $usuario, &$visited = [], $depth = null): DtoUsuario {
         if (isset($visited['usuario'][$usuario->id])) {
             return $visited['usuario'][$usuario->id];
         }
@@ -470,6 +472,14 @@ class Mapper {
         $usuarioModel = Usuario::find($usuario->id);
         $dtoUsuario = ($usuarioModel instanceof Usuario && ($depth === null || $depth > 0))
             ? Mapper::fromModelUsuario($usuarioModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+        $clienteModel = $usuario ->cliente ?? null;
+        $dtoCliente = ($clienteModel instanceof Cliente && ($depth === null || $depth > 0))
+            ? Mapper::fromModelCliente($clienteModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+        $rematadorModel = $usuario ->rematador ?? null;
+        $dtoRematador = ($rematadorModel instanceof Rematador && ($depth === null || $depth > 0))
+            ? Mapper::fromModelRematador($rematadorModel, $visited, $depth !== null ? $depth - 1 : null)
             : null;
 
         $subastas = [];
@@ -485,12 +495,19 @@ class Mapper {
             })->toArray();
         }
 
-        $dto = new DtoRematador(
+        $dto = new DtoUsuario(
             $usuario->id,
-            $usuario->matricula,
-            $dtoUsuario,
-            $subastas,
-            $casasRemate
+            $usuario->nombre,
+            $usuario->cedula,
+            $usuario->email,
+            $usuario->telefono,
+            $usuario->imagen,
+            $usuario->contrasenia,
+            $usuario->latitud,
+            $usuario->longitud,
+            $dtoRematador,
+            $dtoCliente,
+            
         );
         $visited['usuario'][$usuario->id] = $dto;
         return $dto;

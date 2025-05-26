@@ -17,6 +17,10 @@ use OpenApi\Annotations as OA;
 */
 class RematadorController extends Controller
 {
+
+    public $maxDepth = 1;
+    public $visited = [];
+
     /**
      * @OA\Get(
      *     path="/api/rematadores",
@@ -27,17 +31,22 @@ class RematadorController extends Controller
     */
     public function index()
     {
-         try {
+        try {
+
             $rematadores = Rematador::with('usuario')->get() ?? collect();
-           $dtos = $rematadores->map(function ($rematador) {
-               return Mapper::fromModelRematador($rematador);
-           });
+            $dtos = $rematadores->map(function ($rematador) {
+                return Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth);
+            });
+
             return response()->json($dtos, 200);
+
         } catch (\Throwable $e) {
+
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ], 500);
+
         }
     }
 
@@ -131,8 +140,7 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-        $dto = Mapper::fromModelRematador($rematador);
-        return response()->json($dto, 201);
+        return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth), 201);
     }
 
     /**
@@ -163,8 +171,7 @@ class RematadorController extends Controller
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
-        $dto = Mapper::fromModelRematador($rematador);
-        return response()->json($dto, 200);
+        return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -197,6 +204,8 @@ class RematadorController extends Controller
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
      *             @OA\Property(property="matricula", type="string"),
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(response=200, description="Rematador actualizado correctamente"),
@@ -220,8 +229,8 @@ class RematadorController extends Controller
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
             'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $id,
-            'contrasenia' => 'sometimes|string|min:6',
-            'direccionFiscal' => 'nullable|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         // Actualizar usuario
@@ -231,8 +240,8 @@ class RematadorController extends Controller
             'email' => $validated['email'] ?? $usuario->email,
             'telefono' => $validated['telefono'] ?? $usuario->telefono,
             'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
-            'direccionFiscal' => $validated['direccionFiscal'] ?? $usuario->direccionFiscal,
-            'contrasenia' => isset($validated['contrasenia']) ? bcrypt($validated['contrasenia']) : $usuario->contrasenia,
+            'latitud' => $validated['latitud'] ?? $usuario->latitud,
+            'longitud' => $validated['longitud'] ?? $usuario->longitud,
         ]);
 
         // Actualizar rematador
@@ -241,8 +250,7 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-        $dto = Mapper::fromModelRematador($rematador);
-        return response()->json($dto, 200);
+         return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -269,16 +277,17 @@ class RematadorController extends Controller
      */
     public function destroy(string $id)
     {
-        $rematador = Rematador::find($id);
-        $usuario = Usuario::find($id);
+          $rematador = Rematador::find($id);
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
+        $usuario = $rematador->usuario;
 
-        // Elimina primero el usuario (cascade eliminará el rematador)
         $rematador->delete();
-        $usuario->delete();
+        if ($usuario) {
+            $usuario->delete();
+        }
 
         return response()->json(['message' => 'Rematador eliminado con éxito'], 200);
     }
