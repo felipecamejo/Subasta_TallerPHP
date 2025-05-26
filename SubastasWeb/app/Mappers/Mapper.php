@@ -88,7 +88,7 @@ class Mapper {
         if ($depth === null || $depth > 0) {
             $rematadoresCollection = $casaRemate->rematadores ?? collect();
             $rematadores = $rematadoresCollection->map(function($rematador) use (&$visited, $depth) {
-                return Mapper::fromModelRematador($rematador, $visited, $depth !== null ? $depth - 1 : null);
+                return Mapper::fromModelRematadorSinCasaRemates($rematador, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
             $subastasCollection = $casaRemate->subastas ?? collect();
             $subastas = $subastasCollection->map(function($subasta) use (&$visited, $depth) {
@@ -102,7 +102,7 @@ class Mapper {
             $casaRemate->idFiscal,
             $casaRemate->email,
             $casaRemate->telefono,
-            $casaRemate->calificacion,
+            is_array($casaRemate->calificacion) ? $casaRemate->calificacion : [],
             $rematadores,
             $subastas
         );
@@ -457,6 +457,27 @@ class Mapper {
             $dtoUsuario,
             $subastas,
             $casasRemate
+        );
+        $visited['rematador'][$rematador->id] = $dto;
+        return $dto;
+    }
+
+    public static function fromModelRematadorSinCasaRemates(Rematador $rematador, &$visited = [], $depth = null) {
+        if (isset($visited['rematador'][$rematador->id])) {
+            return $visited['rematador'][$rematador->id];
+        }
+
+        $usuarioModel = Usuario::find($rematador->usuario_id);
+        $dtoUsuario = ($usuarioModel instanceof Usuario && ($depth === null || $depth > 0))
+            ? Mapper::fromModelUsuario($usuarioModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+
+        $dto = new DtoRematador(
+            $rematador->id,
+            $rematador->matricula,
+            $dtoUsuario,
+            [], // No subastas desde CasaRemates
+            []  // No casas de remate desde CasaRemates
         );
         $visited['rematador'][$rematador->id] = $dto;
         return $dto;

@@ -21,8 +21,8 @@ class DtoSubasta {
         $this->id = $id;
         $this->duracionMinutos = $duracionMinutos;
         $this->fecha = $fecha;
-        $this->casaremate_id = $casaremate;
-        $this->rematador_id = $rematador;
+        $this->casaremate = $casaremate;
+        $this->rematador = $rematador;
         $this->latitud = $latitud;
         $this->longitud = $longitud;
         $this->lotes = $lotes;

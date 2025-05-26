@@ -12,7 +12,9 @@ class DtoCasaRemate {
     public $idFiscal;
     public $email;  
     public $telefono;
-    public $calificacion;
+    
+    /** @var int[] */
+    public array $calificacion;
 
     /** @var DtoRematador[] */
     public array $rematadores;
@@ -32,6 +34,15 @@ class DtoCasaRemate {
         $this->subastas = $subastas;
     }
 
+    public function getPromedioCalificacion(): ?float
+    {
+        if (count($this->calificacion) === 0) {
+            return null;
+        }
+
+        return round(array_sum($this->calificacion) / count($this->calificacion), 2);
+    }
+
     public function toArray(): array
     {
         return [
@@ -40,7 +51,7 @@ class DtoCasaRemate {
             'idFiscal' => $this->idFiscal,
             'email' => $this->email,
             'telefono' => $this->telefono,
-            'calificacion' => $this->calificacion
+            'calificacion' => $this->getPromedioCalificacion() ?? 0,
         ];
     }
 }

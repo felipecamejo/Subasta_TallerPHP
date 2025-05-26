@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subasta;
+use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Mappers\Mapper;
+
 
 /**
  * @OA\Tag(
@@ -14,6 +17,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class SubastaController extends Controller
 {
+    public $maxDepth = 2;
+    public $visited = [];
     /**
      * @OA\Get(
      *     path="/api/subastas",
@@ -21,32 +26,19 @@ class SubastaController extends Controller
      *     tags={"Subastas"},
      *     @OA\Response(
      *         response=200,
-     *         description="Lista de subastas",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="duracionMinutos", type="integer"),
-     *                 @OA\Property(property="fecha", type="string", format="date-time"),
-     *                 @OA\Property(property="casaremate_id", type="integer"),
-     *                 @OA\Property(property="rematador_id", type="integer"),
-     *                 @OA\Property(property="latitud", type="number", format="float"),
-     *                 @OA\Property(property="longitud", type="number", format="float"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
-     *                 @OA\Property(property="casaremate", type="object"),
-     *                 @OA\Property(property="rematador", type="object"),
-     *                 @OA\Property(property="direccion", type="object"),
-     *                 @OA\Property(property="lotes", type="array", @OA\Items(type="object"))
-     *             )
-     *         )
+     *         description="Lista de subastas"
      *     )
      * )
      */
     public function index()
     {
-        return Subasta::with(['casaremate', 'rematador', 'direccion', 'lotes'])->get();
+        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->get();
+        $dto = $subasta->map(function ($subasta) {
+            return Mapper::fromModelSubasta($subasta, $this->visited, 1);
+        });
+        return response()->json($dto);
     }
+
 
     /**
      * @OA\Post(
@@ -56,20 +48,13 @@ class SubastaController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"duracionMinutos", "fecha"},
+     *             required={"duracionMinutos", "fecha", "casa_remate_id", "rematador_id"},
      *             @OA\Property(property="duracionMinutos", type="integer"),
-     *             @OA\Property(property="fecha", type="string", format="date-time"),
+     *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
      *             @OA\Property(property="casa_remate_id", type="integer"),
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
-     *             @OA\Property(property="longitud", type="number", format="float"),
-     *             @OA\Property(property="direccion", type="object",
-     *                 @OA\Property(property="calle1", type="string"),
-     *                 @OA\Property(property="calle2", type="string"),
-     *                 @OA\Property(property="numero", type="string"),
-     *                 @OA\Property(property="ciudad", type="string"),
-     *                 @OA\Property(property="pais", type="string")
-     *             )
+     *             @OA\Property(property="longitud", type="number", format="float")
      *         )
      *     ),
      *     @OA\Response(response=201, description="Subasta creada exitosamente"),
@@ -85,10 +70,6 @@ class SubastaController extends Controller
             'rematador_id'    => 'sometimes|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
-            'direccion'       => 'sometimes|array',
-            'direccion.calle1' => 'required_with:direccion|string',
-            'direccion.ciudad' => 'required_with:direccion|string',
-            'direccion.pais'  => 'required_with:direccion|string'
         ]);
 
         if ($validator->fails()) {
@@ -108,7 +89,7 @@ class SubastaController extends Controller
             $subasta->direccion()->create($request->input('direccion'));
         }
 
-        return response()->json($subasta->load(['casaRemate', 'rematador', 'direccion']), 201);
+        return response()->json($subasta->load(['casaRemate', 'rematador']), 201);
     }
 
     /**
@@ -128,13 +109,13 @@ class SubastaController extends Controller
      */
     public function show($id)
     {
-        $subasta = Subasta::with(['casaremate', 'rematador', 'direccion', 'lotes'])->find($id);
+        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json($subasta);
+        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, 1));
     }
 
     /**
@@ -157,7 +138,6 @@ class SubastaController extends Controller
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
      *             @OA\Property(property="longitud", type="number", format="float"),
-     *             @OA\Property(property="direccion", type="object"),
      *         )
      *     ),
      *     @OA\Response(response=200, description="Subasta actualizada"),
@@ -180,7 +160,6 @@ class SubastaController extends Controller
             'rematador_id'    => 'sometimes|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
-            'direccion'       => 'sometimes|array',
             'lotes'           => 'sometimes|array',
             'lotes.*'         => 'exists:lotes,id'
         ]);
@@ -196,17 +175,9 @@ class SubastaController extends Controller
             'rematador_id',
             'latitud',
             'longitud'
-        ]));
+        ])); 
 
-        if ($request->has('direccion')) {
-            if ($subasta->direccion) {
-                $subasta->direccion()->update($request->input('direccion'));
-            } else {
-                $subasta->direccion()->create($request->input('direccion'));
-            }
-        }
-
-        return response()->json($subasta->load(['casaremate', 'rematador', 'direccion']));
+        return response()->json($subasta->load(['casaremate', 'rematador',]));
     }
 
     /**
@@ -232,15 +203,15 @@ class SubastaController extends Controller
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        if ($subasta->direccion) {
-            $subasta->direccion()->delete();
-        }
+        // Elimina los lotes relacionados (si así lo querés)
+        $subasta->lotes()->delete();
 
-        $subasta->lotes()->detach();
+        // Elimina la subasta
         $subasta->delete();
 
         return response()->json(['message' => 'Subasta eliminada correctamente']);
     }
+
 
     /**
      * @OA\Post(
@@ -282,11 +253,18 @@ class SubastaController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $subasta->lotes()->syncWithoutDetaching($request->lotes);
+        foreach ($request->lotes as $loteId) {
+            $lote = Lote::find($loteId);
+            if ($lote) {
+                $lote->subasta_id = $subasta->id;
+                $lote->save();
+            }
+        }
 
         return response()->json([
             'message' => 'Lotes asociados exitosamente',
             'subasta' => $subasta->load('lotes')
         ]);
     }
+
 }
