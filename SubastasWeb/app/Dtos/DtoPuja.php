@@ -4,24 +4,27 @@ namespace App\DTOs;
 
 use App\DTOs\DtoCliente;
 
-class DtoPuja {
+namespace App\DTOs;
 
+use App\DTOs\DtoCliente;
+
+class DtoPuja
+{
     public $id;
     public $fechaHora;
     public $monto;
-    public $lote;   
+    public $lote;
     public $factura;
+    public ?DtoCliente $cliente;
 
-    /** @var DtoCliente[] */
-    public array $clientes;
-
-    public function __construct($id, $fechaHora, $monto, $lote, $factura, $clientes) {
+    public function __construct($id, $fechaHora, $monto, $lote, $factura, $cliente)
+    {
         $this->id = $id;
         $this->fechaHora = $fechaHora;
         $this->monto = $monto;
-        $this->lote_id = $lote;
-        $this->factura_id = $factura;
-        $this->clientes = $clientes;
+        $this->lote = $lote;
+        $this->factura = $factura;
+        $this->cliente = $cliente;
     }
 
     public function toArray(): array
@@ -32,15 +35,7 @@ class DtoPuja {
             'monto' => $this->monto,
             'lote' => $this->lote,
             'factura' => $this->factura,
-            'clientes' => array_map(function($cliente) {
-                return $cliente->toArray();
-            }, $this->clientes)
+            'cliente' => $this->cliente?->toArray()
         ];
     }
-
-
-
-
-
-
 }

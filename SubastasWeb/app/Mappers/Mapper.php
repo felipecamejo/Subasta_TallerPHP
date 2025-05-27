@@ -239,26 +239,34 @@ class Mapper {
         ]);
     }
 
-    public static function fromModelLote(Lote $lote, &$visited = [], $depth = null): DtoLote{
-
-        if (isset($visited['lote'][$lote->id])) {
-            return $visited['lote'][$lote->id];
-        }
-
-        $subastaModel = Subasta::find($lote->subasta_id);
-        $dtoSubasta = ($subastaModel instanceof Subasta && ($depth === null || $depth > 0))
-            ? Mapper::fromModelSubasta($subastaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $dto = new DtoLote(
-            $lote->id,
-            $lote->valorBase,
-            $lote->pujaMinima,
-            $dtoSubasta
-        );
-        $visited['lote'][$lote->id] = $dto;
-        return $dto;
+    public static function fromModelLote(Lote $lote, &$visited = [], $depth = null): DtoLote {
+    if (!$lote instanceof Lote) {
+        throw new \InvalidArgumentException('Se esperaba instancia de Lote');
     }
+
+    if (isset($visited['lote'][$lote->id])) {
+        return $visited['lote'][$lote->id];
+    }
+
+    $dtoSubasta = null;
+    if ($lote->subasta_id && ($depth === null || $depth > 0)) {
+        $subastaModel = Subasta::find($lote->subasta_id);
+        if ($subastaModel) {
+            $dtoSubasta = Mapper::fromModelSubasta($subastaModel, $visited, $depth !== null ? $depth - 1 : null);
+        }
+    }
+
+    $dto = new DtoLote(
+        $lote->id,
+        $lote->valorBase,
+        $lote->pujaMinima,
+        $dtoSubasta
+    );
+
+    $visited['lote'][$lote->id] = $dto;
+
+    return $dto;
+}
 
     public static function toModelLote(DtoLote $dto): Lote{
         return new Lote([
@@ -291,51 +299,87 @@ class Mapper {
         ]);
     }
 
-    public static function fromModelPuja(Puja $puja, &$visited = [], $depth = null): DtoPuja {
+ 
+/**
+ * Convierte una instancia del modelo Puja a su DTO correspondiente.
+ *
+ * @param Puja $puja La instancia del modelo Puja a convertir.
+ * @param array $visited Referencia a array de objetos ya convertidos para evitar ciclos.
+ * @param int|null $depth Profundidad máxima de mapeo (para evitar ciclos recursivos infinitos).
+ * @return DtoPuja
+ */
+public static function fromModelPuja(Puja $puja, &$visited = [], $depth = null): DtoPuja
+{
+    if (isset($visited['puja'][$puja->id])) {
+        return $visited['puja'][$puja->id];
+    }
 
-        if (isset($visited['puja'][$puja->id])) {
-            return $visited['puja'][$puja->id];
-        }
-
-        $facturaModel = Factura::find($puja->factura_id);
-        $dtoFactura = ($facturaModel instanceof Factura && ($depth === null || $depth > 0))
-            ? Mapper::fromModelFactura($facturaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $loteModel = Lote::find($puja->lote_id);
-        $dtoLote = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
-            ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $clientes = [];
-        if ($depth === null || $depth > 0) {
-            $clientesCollection = $puja->clientes ?? collect();
-            $clientes = $clientesCollection->map(function($cliente) use (&$visited, $depth) {
-                return Mapper::fromModelCliente($cliente, $visited, $depth !== null ? $depth - 1 : null);
-            })->toArray();
-        }
-
-        $dto = new DtoPuja(
-            $puja->id,
-            $puja->fechaHora,
-            $puja->monto,
-            $dtoLote,      
-            $dtoFactura,   
-            $clientes
+    // Mapear cliente
+    $dtoCliente = null;
+    if (
+        $puja->relationLoaded('cliente') &&
+        $puja->cliente !== null &&
+        ($depth === null || $depth > 0)
+    ) {
+        $dtoCliente = Mapper::fromModelCliente(
+            $puja->cliente,
+            $visited,
+            $depth !== null ? $depth - 1 : null
         );
-        $visited['puja'][$puja->id] = $dto;
-        return $dto;
     }
 
-    public static function toModelPuja(DtoPuja $dto): Puja {
-        return new Puja([
-            'fechaHora' => $dto->fechaHora,
-            'monto' => $dto->monto,
-            'lote_id' => $dto->lote->id ?? null,
-            'factura_id' => $dto->factura->id ?? null,
-        ]);
+    // Mapear lote
+    $dtoLote = null;
+    if (
+        $puja->relationLoaded('lote') &&
+        $puja->lote !== null &&
+        ($depth === null || $depth > 0)
+    ) {
+        $dtoLote = Mapper::fromModelLote(
+            $puja->lote,
+            $visited,
+            $depth !== null ? $depth - 1 : null
+        );
     }
 
+    // Mapear factura
+    $dtoFactura = null;
+    if (
+        $puja->relationLoaded('factura') &&
+        $puja->factura !== null &&
+        ($depth === null || $depth > 0)
+    ) {
+        $dtoFactura = Mapper::fromModelFactura(
+            $puja->factura,
+            $visited,
+            $depth !== null ? $depth - 1 : null
+        );
+    }
+
+    $dto = new DtoPuja(
+        $puja->id,
+        $puja->fechaHora,
+        $puja->monto,
+        $dtoLote,
+        $dtoFactura,
+        $dtoCliente
+    );
+
+    $visited['puja'][$puja->id] = $dto;
+
+    return $dto;
+}
+
+public static function toModelPuja(DtoPuja $dto): Puja
+{
+    return new Puja([
+        'fechaHora' => $dto->fechaHora,
+        'monto' => $dto->monto,
+        'lote_id' => $dto->lote?->id ?? null,
+        'factura_id' => $dto->factura?->id ?? null,
+        'cliente_id' => $dto->cliente?->id ?? null,
+    ]);
+}
     public static function fromModelSubasta(Subasta $subasta, &$visited = [], $depth = null): DtoSubasta {
 
         if (isset($visited['subasta'][$subasta->id])) {

@@ -1,4 +1,6 @@
 <?php
+use App\Http\Controllers\PujaController;
+use App\Http\Controllers\VendedorController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -62,5 +64,9 @@ Route::apiResource('clientes', ClienteController::class);
 Route::apiResource('rematadores', RematadorController::class);
 
 Route::apiResource('facturas', FacturaController::class);
+
+Route::apiResource('pujas', PujaController::class);
+
+Route::apiResource('vendedores', VendedorController::class);
 
 
