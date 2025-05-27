@@ -18,6 +18,10 @@ use OpenApi\Annotations as OA;
 */
 class ClienteController extends Controller
 {
+
+    public $maxDepth = 1;
+    public $visited = [];
+
      /**
      * @OA\Get(
      *     path="/api/clientes",
@@ -29,16 +33,21 @@ class ClienteController extends Controller
     public function index()
     {
         try {
+
             $clientes = Cliente::with('usuario')->get() ?? collect();
-           $dtos = $clientes->map(function ($cliente) {
-               return Mapper::fromModelCliente($cliente);
-           });
+            $dtos = $clientes->map(function ($cliente) {
+                return Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth);
+            });
+
             return response()->json($dtos, 200);
+
         } catch (\Throwable $e) {
+
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ], 500);
+
         }
     }
 
@@ -133,7 +142,7 @@ class ClienteController extends Controller
         ]);
 
         $cliente->load('usuario');
-        return response()->json($cliente, 201);
+        return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth), 201);
     }
 
      /**
@@ -164,7 +173,7 @@ class ClienteController extends Controller
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
-        return response()->json($cliente, 200);
+        return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -190,11 +199,15 @@ class ClienteController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"telefono", "imagen", "calificacion", "notificaciones"},
+     *             required={"nombre", "cedula", "email", "contrasenia"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="cedula", type="string"),
+     *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
      *             @OA\Property(property="calificacion", type="number"),
-     *             @OA\Property(property="notificaciones", type="array", @OA\Items(type="string"))
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(response=200, description="Cliente actualizado correctamente"),
@@ -218,8 +231,8 @@ class ClienteController extends Controller
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
             'calificacion' => 'sometimes|numeric',
-            'contrasenia' => 'sometimes|string|min:6',
-            'direccionFiscal' => 'nullable|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         // Actualizar usuario
@@ -229,8 +242,8 @@ class ClienteController extends Controller
             'email' => $validated['email'] ?? $usuario->email,
             'telefono' => $validated['telefono'] ?? $usuario->telefono,
             'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
-            'direccionFiscal' => $validated['direccionFiscal'] ?? $usuario->direccionFiscal,
-            'contrasenia' => isset($validated['contrasenia']) ? bcrypt($validated['contrasenia']) : $usuario->contrasenia,
+            'latitud' => $validated['latitud'] ?? $usuario->latitud,
+            'longitud' => $validated['longitud'] ?? $usuario->longitud,
         ]);
 
         // Actualizar cliente
@@ -239,8 +252,10 @@ class ClienteController extends Controller
         ]);
 
         $cliente->load('usuario');
-        return response()->json($cliente, 200);
+         return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth));
     }
+
+
  /**
      * @OA\Delete(
      *     path="/api/clientes/{id}",
@@ -266,14 +281,16 @@ class ClienteController extends Controller
     public function destroy(string $id)
     {
          $cliente = Cliente::find($id);
-         $usuario = Usuario::find($id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
+        $usuario = $cliente->usuario;
 
         $cliente->delete();
-        $usuario->delete();
+        if ($usuario) {
+            $usuario->delete();
+        }
 
         return response()->json(['message' => 'Cliente eliminado con éxito'], 200);
     }

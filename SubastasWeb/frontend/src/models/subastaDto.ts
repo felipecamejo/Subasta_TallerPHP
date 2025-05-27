@@ -1,10 +1,18 @@
 
-//import { CreditoDto } from './credito.dto';
-//import { EntidadDto } from './entidad.dto';
+import { pujaDto } from './pujaDto';
+import { casaRemateDto } from './casaRemateDto';
+import { rematadorDto } from './rematadorDto';
 
 export interface subastaDto {
     id: number;
-    nombre: string;
-    telefono: string;
-    credito: Pick<CreditoDto, 'id' | 'precioTotal' | 'pagoHastaAhora' | 'ventas'>;
+    duracionMinutos: number;
+    fecha: Date;
+    longitud: number;
+
+    puja: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
+
+    casaremate: Pick<casaRemateDto, 'id' | 'nombre'>;
+
+    rematador: Pick<rematadorDto, 'id' | 'nombre'>;
 }
+
