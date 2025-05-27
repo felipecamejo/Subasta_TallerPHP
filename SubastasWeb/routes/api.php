@@ -63,10 +63,10 @@ Route::apiResource('clientes', ClienteController::class);
 
 Route::apiResource('rematadores', RematadorController::class);
 
+
 Route::apiResource('facturas', FacturaController::class);
 
 Route::apiResource('pujas', PujaController::class);
 
 Route::apiResource('vendedores', VendedorController::class);
-
 

@@ -121,17 +121,63 @@ class FacturaController extends Controller
     }
 }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Factura $factura)
-    {
-        //
+/**
+ * @OA\Get(
+ *     path="/api/facturas/{id}",
+ *     summary="Obtener una factura por su ID",
+ *     tags={"Facturas"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID de la factura",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Factura encontrada",
+ *         @OA\JsonContent(type="object")
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Factura no encontrada",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Error del servidor",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string"),
+ *             @OA\Property(property="message", type="string")
+ *         )
+ *     )
+ * )
+ */
+public function show($id)
+{
+    try {
+        // Cargar factura con relaciones necesarias, por ejemplo 'puja' y 'vendedor'
+        $factura = Factura::with(['puja', 'vendedor'])->find($id);
+
+        if (!$factura) {
+            return response()->json(['error' => 'Factura no encontrada'], 404);
+        }
+
+        $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+
+        return response()->json($dto);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => 'Error al obtener la factura',
+            'message' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor'
+        ], 500);
     }
+}
 
 
-
-    /**
+/**
  * @OA\Put(
  *     path="/api/facturas/{id}",
  *     summary="Actualizar una factura existente",

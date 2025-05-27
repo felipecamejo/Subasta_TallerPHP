@@ -920,6 +920,69 @@
             }
         },
         "/api/facturas/{id}": {
+            "get": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Obtener una factura por su ID",
+                "operationId": "7ef1ee65e42a74c662bbb50b3d1f1023",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Factura encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Factura no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "Facturas"
@@ -2013,13 +2076,13 @@
                 }
             }
         },
-        "/vendedores": {
+        "/api/vendedores": {
             "get": {
                 "tags": [
                     "Vendedores"
                 ],
                 "summary": "Lista todos los vendedores",
-                "operationId": "3bc4565a718d01b1cfd1a773ed38e9fe",
+                "operationId": "feb5b4e33f510d21cf40d7957fe5ce8d",
                 "responses": {
                     "200": {
                         "description": "Lista de vendedores",
@@ -2083,15 +2146,48 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Vendedores"
+                ],
+                "summary": "Crear un nuevo vendedor",
+                "operationId": "f601a5062fab7f6e7de896f0242a1e8d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Vendedor creado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
             }
         },
-        "/vendedores/{id}": {
+        "/api/vendedores/{id}": {
             "get": {
                 "tags": [
                     "Vendedores"
                 ],
                 "summary": "Obtener vendedor por ID",
-                "operationId": "3ed621f68362425552f44c18dbf7c498",
+                "operationId": "be2e919cd0edea7d0320b8f3f32fffa8",
                 "parameters": [
                     {
                         "name": "id",
@@ -2215,40 +2311,30 @@
                         }
                     }
                 }
-            }
-        },
-        "/api/vendedores": {
-            "post": {
+            },
+            "delete": {
                 "tags": [
                     "Vendedores"
                 ],
-                "summary": "Crear un nuevo vendedor",
-                "operationId": "f601a5062fab7f6e7de896f0242a1e8d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "nombre",
-                                    "vendedor_id"
-                                ],
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            }
+                "summary": "Eliminar un vendedor por ID",
+                "operationId": "3da7a0c29ca30047bd6ef689de011d0f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del vendedor a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
-                },
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Vendedor creado exitosamente"
+                    "200": {
+                        "description": "Vendedor eliminado correctamente"
                     },
-                    "422": {
-                        "description": "Error de validación"
+                    "404": {
+                        "description": "Vendedor no encontrado"
                     }
                 }
             }
@@ -2295,34 +2381,6 @@
                     },
                     "404": {
                         "description": "Vendedor no encontrado"
-                    }
-                }
-            }
-        },
-        "/api/vendedores/{id}": {
-            "delete": {
-                "tags": [
-                    "Vendedores"
-                ],
-                "summary": "Eliminar un vendedor por ID",
-                "operationId": "3da7a0c29ca30047bd6ef689de011d0f",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del vendedor a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Vendedor eliminado correctamente"
-                    },
-                    "404": {
-                        "description": "Artículo no encontrado"
                     }
                 }
             }
