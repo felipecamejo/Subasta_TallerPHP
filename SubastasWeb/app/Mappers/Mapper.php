@@ -202,34 +202,46 @@ class Mapper {
         ]);
     }
 
-    public static function fromModelFactura(Factura $factura, &$visited = [], $depth = null): DtoFactura {
-
-        if (isset($visited['factura'][$factura->id])) {
-            return $visited['factura'][$factura->id];
-        }
-
-        $vendedorModel = Vendedor::find($factura->vendedor_id);
-        $dtoVendedor = ($vendedorModel instanceof Vendedor && ($depth === null || $depth > 0))
-            ? Mapper::fromModelVendedor($vendedorModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $pujaModel = Puja::where('factura_id', $factura->id)->first();
-        $dtoPuja = ($pujaModel && $pujaModel instanceof Puja && ($depth === null || $depth > 0))
-            ? Mapper::fromModelPuja($pujaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $dto = new DtoFactura(
-            $factura->id,
-            $factura->montoTotal,
-            $factura->condicionesDePago,
-            $factura->entrega,
-            $dtoVendedor,
-            $dtoPuja
-        );
-        $visited['factura'][$factura->id] = $dto;
-        return $dto;
+  public static function fromModelFactura(Factura $factura, &$visited = [], $depth = null): DtoFactura {
+    // Evitar procesar dos veces la misma factura (previene loops)
+    if (isset($visited['factura'][$factura->id])) {
+        return $visited['factura'][$factura->id];
     }
 
+    // Variables para relaciones
+    $vendedorDto = null;
+    $pujaDto = null;
+
+    // Si depth es nulo (sin límite) o mayor que 0, cargamos relaciones recursivamente
+    if ($depth === null || $depth > 0) {
+        $nextDepth = $depth !== null ? $depth - 1 : null;
+
+        // Carga el DTO del vendedor, si existe la relación
+        if ($factura->relationLoaded('vendedor') && $factura->vendedor !== null) {
+            $vendedorDto = Mapper::fromModelVendedor($factura->vendedor, $visited, $nextDepth);
+        }
+
+        // Carga el DTO de la puja, si existe la relación
+        if ($factura->relationLoaded('puja') && $factura->puja !== null) {
+            $pujaDto = Mapper::fromModelPuja($factura->puja, $visited, $nextDepth);
+        }
+    }
+
+    // Crear el DTO con los datos y las relaciones
+    $dto = new DtoFactura(
+        $factura->id,
+        $factura->monto_total,
+        $factura->condiciones_de_pago,
+        $factura->entrega,
+        $vendedorDto,
+        $pujaDto
+    );
+
+    // Guardar en visited para evitar ciclos futuros
+    $visited['factura'][$factura->id] = $dto;
+
+    return $dto;
+}
     public static function toModelFactura(DtoFactura $dto): Factura {
         return new Factura([
             'montoTotal' => $dto->montoTotal,

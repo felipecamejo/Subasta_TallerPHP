@@ -74,7 +74,7 @@ class PujaController extends Controller
 public function index()
 {
     try {
-        $pujas = Puja::with(['cliente.usuario', 'lote', 'factura'])->get();
+        $pujas = Puja::with(['cliente', 'lote', 'factura'])->get();
 
         $dtos = $pujas->map(function ($puja) {
             return Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
@@ -201,19 +201,19 @@ public function store(Request $request)
 public function show($id)
 {
     try {
-        $puja = Puja::with(['cliente', 'lote', 'factura'])->find($id);
+        $puja = Puja::with(['cliente', 'lote', 'factura'])->find($id); 
 
         if (!$puja) {
             return response()->json(['error' => 'Puja no encontrada'], 404);
         }
 
-        $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+        $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth); 
 
         return response()->json($dto);
     } catch (\Throwable $e) {
         return response()->json([
             'error' => 'Error al obtener la puja',
-            'message' => $e->getMessage()
+            'message' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor'
         ], 500);
     }
 }
