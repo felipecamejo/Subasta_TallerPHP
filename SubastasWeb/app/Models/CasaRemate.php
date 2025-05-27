@@ -1,6 +1,5 @@
 <?php
     namespace App\Models;
-    use App\DTOs\DtoDireccion;
     use App\Models\Rematador;
     use App\Models\Subasta;
     use Illuminate\Database\Eloquent\Model;
@@ -16,12 +15,16 @@
             'email', 
             'telefono', 
             'calificacion',
-            'calle',
-            'ciudad',
-            'pais',
+            'latitud',
+            'longitud',
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        // tiene un arreglo de calificaciones porque van a ser varias y se debe sacar un promedio a la hora de mostrar la calificación final.
+        protected $casts = [
+            'calificacion' => 'array',
+        ];
 
         public function rematadores() {
             return $this->belongsToMany(Rematador::class, 'casa_remate_rematador', 'casa_remate_id', 'rematador_id');

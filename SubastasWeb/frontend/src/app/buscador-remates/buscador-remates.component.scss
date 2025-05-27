@@ -1,0 +1,68 @@
+main {
+    font-family: 'Source Sans 3', sans-serif;
+    padding-left: 10vw;
+    padding-right: 10vw;
+    margin-top: 80px;
+    display: block; 
+    color:#242424
+}
+
+.titulo {
+    font-size: 2.2rem;
+    font-weight: bold;
+}
+
+.boton {
+    width: 2.2vw;
+    min-height: 25px;
+    padding: 0 0.3vw;
+    background: #444444;
+    color: #FFFFFF;
+    border-color: #444444;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 6px;
+    font-weight: 300;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.boton:hover {
+    background: #dad5d5;
+    color: #1a1919;
+    border-color: #ece5e5;
+}
+
+select {
+    background: #444444;
+    color: #FFFFFF;
+    border-color: #444444;
+}
+
+.rectangle {
+	width: 335px;
+	height: 332px;
+	padding: 12px 12px 12px 12px;
+	background: #e7e4e4;
+	border-radius: 16px 16px 16px 16px;
+    margin-bottom: 24px; // agrega separación entre rectángulos
+    border: 1px solid #414141; /* gris claro */
+}
+
+.article-1 {
+    gap: 2vw;
+    margin-bottom: 50px;
+}
+
+.article-subastas {
+    gap: 4vw;
+}
+
+img {
+    height: 275px;
+    border: 0.5px solid #414141; /* gris claro */
+}
+

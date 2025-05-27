@@ -40,10 +40,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
+Route::post('/casa-remates/{id}/calificar', [CasaRemateController::class, 'calificar']);
 // no estaba funcionando la asociacion de rematadores a casa de remate.
 Route::post('casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
 Route::apiResource('casa-remates', CasaRemateController::class);
 
+Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
 Route::apiResource('subastas', SubastaController::class);
 
 Route::apiResource('articulos', ArticuloController::class);

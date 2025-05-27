@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CasaRemate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Validator;
  */
 class CasaRemateController extends Controller
 {
+
+    public $maxDepth = 2;
+    public $visited = [];
     /**
      * @OA\Get(
      *     path="/api/casa-remates",
@@ -24,9 +28,11 @@ class CasaRemateController extends Controller
      */
     public function index()
     {
-        return response()->json(
-            CasaRemate::with(['rematadores', 'subastas', 'direccion'])->get()
-        );
+        $casaRemate = CasaRemate::with(['rematadores', 'subastas'])->get();
+        $dto = $casaRemate->map(function ($casa) {
+            return Mapper::fromModelCasaRemate($casa, $this->visited, $this->maxDepth);
+        });
+        return response()->json($dto);
     }
 
     /**
@@ -37,19 +43,13 @@ class CasaRemateController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "idFiscal", "email"},
+     *             required={"nombre", "idFiscal", "email", "telefono"},
      *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="idFiscal", type="string"),
      *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="calificacion", type="number", format="float"),
-     *             @OA\Property(property="direccion", type="object",
-     *                 @OA\Property(property="calle1", type="string"),
-     *                 @OA\Property(property="calle2", type="string"),
-     *                 @OA\Property(property="numero", type="string"),
-     *                 @OA\Property(property="ciudad", type="string"),
-     *                 @OA\Property(property="pais", type="string")
-     *             )
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(response=201, description="Casa de remate creada exitosamente"),
@@ -63,30 +63,24 @@ class CasaRemateController extends Controller
             'idFiscal'      => 'required|string|max:20',
             'email'         => 'required|email|max:255',
             'telefono'      => 'nullable|string|max:20',
-            'calificacion'  => 'nullable|numeric|min:0|max:5',
-            'direccion'     => 'sometimes|array',
-            'direccion.calle1' => 'required_with:direccion|string',
-            'direccion.ciudad' => 'required_with:direccion|string',
-            'direccion.pais' => 'required_with:direccion|string',
+            'latitud'       => 'nullable|numeric',
+            'longitud'      => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $casaRemate = CasaRemate::create($request->except('direccion'));
+        $casaRemate = CasaRemate::create($request->only([
+            'nombre',
+            'idFiscal',
+            'email',
+            'telefono',
+            'latitud',
+            'longitud',
+        ]));
 
-        if ($request->has('direccion') && !empty($request->direccion)) {
-            $casaRemate->direccion()->create([
-                'calle1' => $request->direccion['calle1'] ?? null,
-                'calle2' => $request->direccion['calle2'] ?? null,
-                'numero' => $request->direccion['numero'] ?? null,
-                'ciudad' => $request->direccion['ciudad'],
-                'pais' => $request->direccion['pais']
-            ]);
-        }
-
-        return response()->json($casaRemate->load('direccion'), 201);
+        return response()->json($casaRemate, 201);
     }
 
     /**
@@ -106,13 +100,13 @@ class CasaRemateController extends Controller
      */
     public function show(string $id)
     {
-        $casaRemate = CasaRemate::with(['rematadores', 'subastas', 'direccion'])->find($id);
+        $casaRemate = CasaRemate::with(['rematadores', 'subastas'])->find($id);
 
         if (!$casaRemate) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
-        return response()->json($casaRemate);
+        return response()->json(Mapper::fromModelCasaRemate($casaRemate, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -131,16 +125,10 @@ class CasaRemateController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="idFiscal", type="string"),
-     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="calificacion", type="number", format="float"),
-     *             @OA\Property(property="direccion", type="object",
-     *                 @OA\Property(property="calle1", type="string"),
-     *                 @OA\Property(property="calle2", type="string"),
-     *                 @OA\Property(property="numero", type="string"),
-     *                 @OA\Property(property="ciudad", type="string"),
-     *                 @OA\Property(property="pais", type="string")
-     *             )
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
      *     @OA\Response(response=200, description="Casa de remate actualizada"),
@@ -160,16 +148,29 @@ class CasaRemateController extends Controller
             'idFiscal'      => 'sometimes|string|max:20',
             'email'         => 'sometimes|email|max:255',
             'telefono'      => 'nullable|string|max:20',
-            'calificacion'  => 'nullable|numeric|min:0|max:5',
-            'rematadores'   => 'sometimes|array',
+            'latitud'       => 'nullable|numeric',
+            'longitud'      => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        return response()->json($casaRemate);
+        $casaRemate->update($request->only([
+            'nombre',
+            'idFiscal',
+            'email',
+            'telefono',
+            'latitud',
+            'longitud',
+        ]));
+
+        return response()->json([
+            'mensaje' => 'Casa de remate actualizada exitosamente.',
+            'casaRemate' => $casaRemate
+        ]);
     }
+
 
     /**
      * @OA\Delete(
@@ -245,5 +246,67 @@ class CasaRemateController extends Controller
             'casa_remate' => $casaRemate->load('rematadores')
         ]);
     }
+
+
+    /**
+     * @OA\Post(
+     *     path="/api/casa-remates/{id}/calificar",
+     *     summary="Agregar una calificación a una casa de remate",
+     *     tags={"CasaRemates"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la casa de remate",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"valor"},
+     *             @OA\Property(property="valor", type="integer", minimum=1, maximum=5, example=4)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Calificación agregada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="mensaje", type="string"),
+     *             @OA\Property(property="promedio", type="number", format="float"),
+     *             @OA\Property(property="total", type="integer")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Casa de remate no encontrada"),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
+     */
+    public function calificar(Request $request, $id)
+    {
+        $request->validate([
+            'valor' => 'required|integer|min:1|max:5',
+        ]);
+
+        $casa = CasaRemate::findOrFail($id);
+
+        // Asegura que calificacion es un array
+        $calificaciones = $casa->calificacion ?? [];
+        
+        // Agrega el nuevo valor
+        $calificaciones[] = $request->valor;
+
+        // Guarda nuevamente
+        $casa->calificacion = $calificaciones;
+        $casa->save();
+
+        // Calcula el nuevo promedio
+        $promedio = round(array_sum($calificaciones) / count($calificaciones), 2);
+
+        return response()->json([
+            'mensaje' => 'Calificación agregada exitosamente.',
+            'promedio' => $promedio,
+            'total' => count($calificaciones),
+        ]);
+    }
+
 
 }
