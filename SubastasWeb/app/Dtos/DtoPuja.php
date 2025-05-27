@@ -11,17 +11,15 @@ class DtoPuja {
     public $monto;
     public $lote;   
     public $factura;
+    public $cliente;
 
-    /** @var DtoCliente[] */
-    public array $clientes;
-
-    public function __construct($id, $fechaHora, $monto, $lote, $factura, $clientes) {
+    public function __construct($id, $fechaHora, $monto, $lote, $factura, $cliente) {
         $this->id = $id;
         $this->fechaHora = $fechaHora;
         $this->monto = $monto;
         $this->lote_id = $lote;
         $this->factura_id = $factura;
-        $this->clientes = $clientes;
+        $this->cliente = $cliente;
     }
 
     public function toArray(): array
@@ -32,9 +30,7 @@ class DtoPuja {
             'monto' => $this->monto,
             'lote' => $this->lote,
             'factura' => $this->factura,
-            'clientes' => array_map(function($cliente) {
-                return $cliente->toArray();
-            }, $this->clientes)
+            'cliente' => $this->cliente,
         ];
     }
 

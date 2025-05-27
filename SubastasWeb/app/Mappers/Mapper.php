@@ -309,13 +309,10 @@ class Mapper {
             ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
             : null;
 
-        $clientes = [];
-        if ($depth === null || $depth > 0) {
-            $clientesCollection = $puja->clientes ?? collect();
-            $clientes = $clientesCollection->map(function($cliente) use (&$visited, $depth) {
-                return Mapper::fromModelCliente($cliente, $visited, $depth !== null ? $depth - 1 : null);
-            })->toArray();
-        }
+        $cliente = Cliente::find($puja->cliente_id);
+        $dtoCliente = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
+            ? Mapper::fromModelCliente($cliente, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
 
         $dto = new DtoPuja(
             $puja->id,
@@ -323,7 +320,7 @@ class Mapper {
             $puja->monto,
             $dtoLote,      
             $dtoFactura,   
-            $clientes
+            $dtoCliente
         );
         $visited['puja'][$puja->id] = $dto;
         return $dto;
