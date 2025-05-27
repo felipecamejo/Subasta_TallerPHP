@@ -1,7 +1,7 @@
-import { vendedorDto } from './vendedorDto.ts';
-import { loteDto } from './loteDto.ts';
+import { loteDto } from './loteDto';
+import { vendedorDto } from './vendedorDto';
 
-export interface ArticuloDto {
+export interface articuloDto {
     id: number;
     nombre: string;
     imagen: string;
@@ -9,5 +9,5 @@ export interface ArticuloDto {
     disponibilidad: boolean;
     condicion: string;
     vendedor: Pick<vendedorDto, 'id' | 'nombre'>;
-    lote: Pick<loteDto, 'valorBase' | 'pujaMinima' | 'subasta_id'>;
+    lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
 }

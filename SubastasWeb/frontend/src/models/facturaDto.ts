@@ -1,14 +1,16 @@
-import { VendedorDto } from './VendedorDto';
-import { PujaDto } from './PujaDto';
 
-export interface FacturaDto {
+import { pujaDto } from "./pujaDto";
+import { vendedorDto } from "./vendedorDto";
+
+export interface facturaDto {
+    id: number;
     montoTotal: number;
     condicionesDePago: string;
     entrega: string;
     vendedor_id: number;
     
-    vendedor: Pick<VendedorDto, 'id' | 'nombre'>;
-    puja: Pick<PujaDto, 'fechaHora' | 'monto'>;
+    vendedor: Pick<vendedorDto, 'id' | 'nombre'>;
+    puja: Pick<pujaDto, 'id' | 'fechaHora' | 'monto'>;
 }
 
 

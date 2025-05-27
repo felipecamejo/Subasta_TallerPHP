@@ -12,7 +12,7 @@ export interface usuarioDto {
     latitud: number;
     longitud: number;
     
-    rematador: Pick<rematadorDto, 'id' | 'nombre'>;
-    cliente: Pick<clienteDto, 'id' | 'nombre'>;
+    rematador: Pick<rematadorDto, 'usuario'>;
+    cliente: Pick<clienteDto, 'usuario'>;
 
 }

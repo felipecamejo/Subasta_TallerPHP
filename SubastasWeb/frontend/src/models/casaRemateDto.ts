@@ -1,7 +1,8 @@
 import { rematadorDto } from './rematadorDto';
-import { SubastaDto } from './subastaDto';
+import { subastaDto } from './subastaDto';
 
 export interface casaRemateDto {
+    id : number;
     nombre: string;
     idFiscal: string;
     email: string;
@@ -10,6 +11,6 @@ export interface casaRemateDto {
     latitud: number;
     longitud: number;
 
-    rematador: Pick<rematadorDto, 'id' | 'nombre'>;
-    subastas: Pick<SubastaDto, 'nombre' | 'telefono' | 'credito'>[];
+    rematador: Pick<rematadorDto, 'id' | 'matricula'>;
+    subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha'>[];
 }

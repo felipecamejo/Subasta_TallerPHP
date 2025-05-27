@@ -1,9 +1,11 @@
 
     import { usuarioDto } from "./usuarioDto";
+    import { pujaDto } from "./pujaDto";
+    import { notificacionDto } from "./notificacionDto";
     
-    export interface loteDto {
-        //usuario: Pick<usuarioDto, 
+    export interface clienteDto {
+        usuario: Pick<usuarioDto, 'id' | 'nombre'> 
         calificacion: number;
-        //pujas: Pick<pujaDto, 'id' | 'nombre' | 'telefono'>[];
-        //notificaciones: Pick<notificacionDto, 'id' | 'nombre' | 'telefono'>[];
+        pujas: Pick<pujaDto, 'id' | 'fechaHora'| 'monto'>[];
+        notificaciones: Pick<notificacionDto, 'id' | 'mensaje'>[];
     } 

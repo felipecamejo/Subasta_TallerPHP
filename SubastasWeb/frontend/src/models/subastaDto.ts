@@ -8,11 +8,12 @@ export interface subastaDto {
     duracionMinutos: number;
     fecha: Date;
     longitud: number;
+    latitud: number;
 
     puja: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
 
     casaremate: Pick<casaRemateDto, 'id' | 'nombre'>;
 
-    rematador: Pick<rematadorDto, 'id' | 'nombre'>;
+    rematador: Pick<rematadorDto, 'usuario'>;
 }
 

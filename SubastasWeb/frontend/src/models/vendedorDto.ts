@@ -4,6 +4,7 @@ import { articuloDto } from './articuloDto';
 
 export interface vendedorDto {
     id: number;
+    
     nombre: string;
 
     factura: Pick<facturaDto, 'id' | 'montoTotal' | 'condicionesDePago' | 'entrega'>[];
