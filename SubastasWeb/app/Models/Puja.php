@@ -14,12 +14,13 @@
         'monto',
         'lote_id',
         'factura_id',
+        'cliente_id'
     ]; 
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
     
-    public function Clientes(){
-        return $this->belongsTo(Cliente::class, 'puja_cliente', 'puja_id', 'cliente_id');
+    public function Cliente(){
+        return $this->belongsTo(Cliente::class);
     }
 
     public function Lote(){
