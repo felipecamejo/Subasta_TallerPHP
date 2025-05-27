@@ -6,6 +6,7 @@ use App\Dtos\DtoCategoria;
 
 class DtoArticulo {
     public $id;
+    public $nombre;
     public $imagenes;
     public $especificacion;
     public $disponibilidad;
@@ -17,8 +18,9 @@ class DtoArticulo {
     /** @var DtoCategoria[] */
     public array $categorias;
 
-    public function __construct($id, $imagenes, $especificacion, $disponibilidad, $condicion, $vendedor, $categorias, $lote) {
+    public function __construct($id, $nombre, $imagenes, $especificacion, $disponibilidad, $condicion, $vendedor, $categorias, $lote) {
         $this->id = $id;
+        $this->nombre = $nombre;
         $this->imagenes = $imagenes;
         $this->especificacion = $especificacion;
         $this->disponibilidad = $disponibilidad;
@@ -32,6 +34,7 @@ class DtoArticulo {
     {
         return [
             'id' => $this->id,
+            'nombre' => $this->nombre,
             'imagenes' => $this->imagenes,
             'especificacion' => $this->especificacion,
             'disponibilidad' => $this->disponibilidad,

@@ -1,0 +1,46 @@
+main {
+    font-family: 'Source Sans 3', sans-serif;
+    padding-left: 10vw;
+    padding-right: 10vw;
+    margin-top: 80px;
+    display: block; 
+    color:#242424
+}
+
+.titulo {
+    font-size: 1.5rem;
+}
+
+.tituloCentrado {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.boton {
+    width: 10vw;
+    height: 40px;
+    margin-top: 20px;
+    background: #444444;
+    color: #FFFFFF;
+    border-color: #444444;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 21px 21px 21px;
+    font-weight: 200;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.boton:hover {
+    background: #dad5d5;
+    color: #1a1919;
+    border-color: #ece5e5;
+}
+
+
+.gap {
+    gap: 1.5vw;
+}
