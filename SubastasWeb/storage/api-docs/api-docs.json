@@ -819,6 +819,206 @@
                 }
             }
         },
+        "/api/facturas": {
+            "get": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Obtener todas las facturas",
+                "operationId": "bbbe5c66d08b31e895bcb4daf020827f",
+                "responses": {
+                    "200": {
+                        "description": "Listado de facturas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "trace": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Crear una nueva factura",
+                "operationId": "a60c68e4b506f8fecb055bae4aa0dc4c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "puja_id",
+                                    "montoTotal",
+                                    "condicionesDePago",
+                                    "entrega"
+                                ],
+                                "properties": {
+                                    "puja_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "vendedor_id": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    },
+                                    "montoTotal": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500.5
+                                    },
+                                    "condicionesDePago": {
+                                        "type": "string",
+                                        "example": "Contado"
+                                    },
+                                    "entrega": {
+                                        "type": "string",
+                                        "example": "Inmediata"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Factura creada exitosamente"
+                    },
+                    "422": {
+                        "description": "Datos inválidos"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
+        "/api/facturas/{id}": {
+            "put": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Actualizar una factura existente",
+                "operationId": "437c2bc4e268be03c8d782037a792730",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "puja_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "vendedor_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "montoTotal": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "condicionesDePago": {
+                                        "type": "string"
+                                    },
+                                    "entrega": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Factura actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Factura no encontrada"
+                    },
+                    "422": {
+                        "description": "Datos inválidos"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Facturas"
+                ],
+                "summary": "Eliminar una factura por ID",
+                "operationId": "018c9b125438a8560fb862adea4ac95a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la factura a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Factura eliminada correctamente"
+                    },
+                    "404": {
+                        "description": "Factura no encontrada"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
         "/api/lotes": {
             "get": {
                 "tags": [
@@ -1412,6 +1612,10 @@
         {
             "name": "Subastas",
             "description": "API para gestionar subastas"
+        },
+        {
+            "name": "Facturas",
+            "description": "Facturas"
         }
     ]
 }
