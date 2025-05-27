@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, TableModule],
+  imports: [CommonModule, TableModule, PaginatorModule],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
 })
+
 export class PerfilComponent {
   usuario = {
     nombre: 'Renzo Fernández',
@@ -73,5 +75,6 @@ export class PerfilComponent {
       amount: '$2,500.00'
     }
   ];
+
 }
 
