@@ -20,7 +20,7 @@ export class BuscadorRematesComponent {
   ];
 
   subastas = [
-    { name: 'Subasta 1', informacions: 'S1', imagen: '' },
+    { name: 'Subasta 1', informacions: 'S1', imagen: 'images/img.webp' },
     { name: 'Subasta 2', informacion: 'S2', imagen: '' },
     { name: 'Subasta 3', informacion: 'S3', imagen: '' },
     { name: 'Subasta 4', informacion: 'S4', imagen: '' },
