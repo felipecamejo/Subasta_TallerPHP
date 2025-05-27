@@ -8,7 +8,7 @@ export interface vendedorDto {
 
     factura: Pick<facturaDto, 'id' | 'montoTotal' | 'condicionesDePago' | 'entrega'>[];
 
-    casaremate: Pick<casaRemateDto, 'id' | 'nombre'>[]; // Update this line to only use valid keys from casaRemateDto
+    casaremate: Pick<casaRemateDto, 'id' | 'nombre' | 'idFiscal' | 'email' | 'telefono' | 'calificacion'>[];
 
     articulo: Pick<articuloDto, 'id' | 'nombre'>[];
 
