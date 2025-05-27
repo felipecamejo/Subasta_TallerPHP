@@ -1,0 +1,71 @@
+<!-- perfil.component.html -->
+<div class="perfil-container">
+  <!-- Sección de Perfil -->
+  <section class="perfil-header">
+    <div class="perfil-info">
+      <h2>{{ usuario.nombre }}</h2>
+      <p>{{ usuario.datos }}</p>
+      <div class="acciones">
+        <button>Botón</button>
+        <button>Botón</button>
+      </div>
+      <div class="rating">
+        ★★★☆☆ <span>{{ usuario.rating }}</span>
+      </div>
+    </div>
+    <div class="perfil-imagen">
+      <img [src]="usuario.imagen" alt="Imagen de perfil" />
+    </div>
+  </section>
+
+  <!-- Artículos Favoritos -->
+  <section class="favoritos">
+    <h3>Artículos Favoritos</h3>
+    <div class="carousel">
+      <div class="item" *ngFor="let item of favoritos">
+        <img [src]="item.imagen" alt="Artículo" />
+        <p>{{ item.titulo }}</p>
+        <p>{{ item.descripcion }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Historial de Compras -->
+  <section class="historial">
+    <h3>Historial de Compras</h3>
+    <!-- Aquí puedes usar <p-table> de PrimeNG -->
+    <p-table [value]="compras" [paginator]="true" [rows]="5">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Invoice</th>
+          <th>Customer</th>
+          <th>Email</th>
+          <th>Invoice date</th>
+          <th>Due date</th>
+          <th>Status</th>
+          <th>Amount</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.invoice }}</td>
+          <td>{{ row.customer }}</td>
+          <td>{{ row.email }}</td>
+          <td>{{ row.invoiceDate }}</td>
+          <td>{{ row.dueDate }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.amount }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+
+  <!-- Historial de Ventas -->
+  <section class="historial">
+    <h3>Historial de Ventas (en caso de ser Vendedor)</h3>
+    <p-table [value]="ventas" [paginator]="true" [rows]="5">
+      <!-- mismo formato que tabla anterior -->
+    </p-table>
+  </section>
+</div>
+

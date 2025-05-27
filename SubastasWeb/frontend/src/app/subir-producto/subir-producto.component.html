@@ -1,0 +1,29 @@
+<div class="form-container">
+  <!-- Imagen principal + miniaturas -->
+  <div class="imagen-preview">
+    <img [src]="imagenPrincipal" alt="Imagen principal" class="main-image" />
+    <div class="thumbnail-row">
+      <img *ngFor="let mini of miniaturas" [src]="mini" class="thumbnail" (click)="cambiarImagen(mini)" />
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="formulario">
+    <h2>Product title</h2>
+    <hr />
+    <div class="form-group">
+      <label for="incremento">Incremento mínimo</label>
+      <input type="number" id="incremento" [(ngModel)]="producto.incremento" placeholder="$$" />
+    </div>
+    <div class="form-group">
+      <label for="entrega">Disponibilidad/Entrega</label>
+      <textarea id="entrega" [(ngModel)]="producto.entrega" placeholder="Ej. 3 días hábiles"></textarea>
+    </div>
+
+    <div class="acciones">
+      <button class="subir" (click)="subir()">Subir</button>
+      <button class="cancelar" (click)="cancelar()">Cancel</button>
+    </div>
+    <hr />
+  </div>
+</div>
