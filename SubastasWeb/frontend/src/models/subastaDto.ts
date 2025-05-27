@@ -2,7 +2,7 @@
 //import { CreditoDto } from './credito.dto';
 //import { EntidadDto } from './entidad.dto';
 
-export interface SubastaDto {
+export interface subastaDto {
     id: number;
     nombre: string;
     telefono: string;
