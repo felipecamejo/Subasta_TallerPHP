@@ -1,0 +1,76 @@
+<div class="estadisticas-page">
+  <h1>Subastas</h1>
+
+  <div class="filters">
+    <p-dropdown placeholder="CATEGORIAS"></p-dropdown>
+    <p-dropdown placeholder="PRECIO"></p-dropdown>
+    <button pButton label="Mas Antiguo" class="p-button-outlined"></button>
+    <p-dropdown placeholder="ESTADO DEL PRODUCTO"></p-dropdown>
+  </div>
+
+  <div class="stats-cards">
+    <div class="card dark">
+      <i class="pi pi-shopping-bag"></i>
+      <div class="info">
+        <div class="title">Ganancias</div>
+        <div class="subtitle">731 Orders</div>
+        <div class="amount">$9,328.55</div>
+        <div class="details">+15.6% <span class="light">+1.4k this week</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <i class="pi pi-user"></i>
+      <div class="info">
+        <div class="title">Subastas Totales</div>
+        <div class="subtitle">Avg. time: 4:30m</div>
+        <div class="amount">12,302</div>
+        <div class="details">+12.7% <span class="light">+1.2k this week</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="info">
+        <div class="title">Top Categories</div>
+        <ul class="categories">
+          <li><span class="dot black"></span> Electronics</li>
+          <li><span class="dot gray"></span> Laptops</li>
+          <li><span class="dot lightgray"></span> Phones</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <p-table [value]="subastas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
+    <ng-template pTemplate="header">
+      <tr>
+        <th><p-checkbox binary="true"></p-checkbox></th>
+        <th>Invoice</th>
+        <th>Customer</th>
+        <th>Email</th>
+        <th>Invoice date</th>
+        <th>Due date</th>
+        <th>Status</th>
+        <th>Amount</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-subasta>
+      <tr>
+        <td><p-checkbox binary="true" [(ngModel)]="subasta.selected"></p-checkbox></td>
+        <td><a href="#">{{ subasta.invoice }}</a></td>
+        <td>{{ subasta.customer }}</td>
+        <td>{{ subasta.email }}</td>
+        <td>{{ subasta.invoiceDate }}</td>
+        <td>{{ subasta.dueDate }}</td>
+        <td>{{ subasta.status }}</td>
+        <td>{{ subasta.amount }}</td>
+        <td class="actions">
+          <button pButton icon="pi pi-download" class="p-button-text p-button-sm"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm"></button>
+          <button pButton icon="pi pi-ellipsis-v" class="p-button-text p-button-sm"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
