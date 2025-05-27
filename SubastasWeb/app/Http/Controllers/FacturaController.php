@@ -82,48 +82,44 @@ class FacturaController extends Controller
  *     @OA\Response(response=500, description="Error del servidor")
  * )
  */
-    public function store(Request $request)
-    {
-        // 1. Validación
-        $validator = Validator::make($request->all(), [
-            'puja_id' => 'required|exists:pujas,id',
-            'vendedor_id' => 'nullable|exists:vendedors,id',
-            'montoTotal' => 'required|numeric',
-            'condicionesDePago' => 'required|string',
-            'entrega' => 'required|string',
-        ]);
+   public function store(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'puja_id' => 'required|exists:pujas,id',
+        'vendedor_id' => 'nullable|exists:vendedores,id',
+        'montoTotal' => 'required|numeric',
+        'condicionesDePago' => 'required|string',
+        'entrega' => 'required|string',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errores' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            // 2. Crear la factura
-            $factura = new Factura();
-            $factura->puja_id = $request->puja_id;
-            $factura->vendedor_id = $request->vendedor_id; // puede ser null
-            $factura->montoTotal = $request->montoTotal;
-            $factura->condicionesDePago = $request->condicionesDePago;
-            $factura->entrega = $request->entrega;
-            $factura->save();
-
-            // 3. Cargar relaciones necesarias para el DTO
-            $factura->load(['puja', 'vendedor']);
-
-            // 4. Retornar DTO
-            $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
-
-            return response()->json($dto, 201);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => 'Error al crear la factura',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'errores' => $validator->errors()
+        ], 422);
     }
 
+    try {
+        // Mapeamos camelCase del request a snake_case del modelo
+        $factura = new Factura();
+        $factura->puja_id = $request->puja_id;
+        $factura->vendedor_id = $request->vendedor_id;
+        $factura->monto_total = $request->montoTotal;  // <-- snake_case
+        $factura->condiciones_de_pago = $request->condicionesDePago;
+        $factura->entrega = $request->entrega;
+        $factura->save();
+
+        $factura->load(['puja', 'vendedor']);
+
+        $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+
+        return response()->json($dto, 201);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => 'Error al crear la factura',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Display the specified resource.
@@ -172,7 +168,7 @@ class FacturaController extends Controller
 {
     $validator = Validator::make($request->all(), [
         'puja_id' => 'nullable|exists:pujas,id',
-        'vendedor_id' => 'nullable|exists:vendedors,id',
+        'vendedor_id' => 'nullable|exists:vendedores,id',
         'montoTotal' => 'sometimes|required|numeric',
         'condicionesDePago' => 'sometimes|required|string',
         'entrega' => 'sometimes|required|string',

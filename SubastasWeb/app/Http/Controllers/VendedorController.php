@@ -17,7 +17,6 @@ use App\Mappers\Mapper;
 */
 
 class VendedorController extends Controller{
-
 /**
  * @OA\Get(
  *     path="/vendedores",
@@ -31,7 +30,10 @@ class VendedorController extends Controller{
  *             @OA\Items(
  *                 type="object",
  *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="nombre", type="string", example="Juan Pérez")
+ *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
+ *                 @OA\Property(property="facturas", type="array", @OA\Items(type="object")),
+ *                 @OA\Property(property="articulos", type="array", @OA\Items(type="object")),
+ *                 @OA\Property(property="casaRemate", type="array", @OA\Items(type="object"))
  *             )
  *         )
  *     ),
@@ -46,6 +48,7 @@ class VendedorController extends Controller{
  *     )
  * )
  */
+
    
        public function index()
     {
@@ -115,7 +118,7 @@ class VendedorController extends Controller{
  *                     type="object",
  *                     @OA\Property(property="id", type="integer", example=3),
  *                     @OA\Property(property="nombre", type="string", example="Casa Remate XYZ")
- *                     
+ *                    
  *                 )
  *             )
  *         )

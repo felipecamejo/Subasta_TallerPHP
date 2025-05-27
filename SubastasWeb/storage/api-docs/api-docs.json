@@ -2036,6 +2036,24 @@
                                             "nombre": {
                                                 "type": "string",
                                                 "example": "Juan Pérez"
+                                            },
+                                            "facturas": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "articulos": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "casaRemate": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
                                             }
                                         },
                                         "type": "object"
