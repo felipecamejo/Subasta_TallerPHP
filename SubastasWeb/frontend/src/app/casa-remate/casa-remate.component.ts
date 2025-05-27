@@ -21,5 +21,20 @@ export class CasaRemateComponent {
 
   totalRecords: number = 0;
 
-  lalala : any = [];
+  lalala : any = [
+    {
+      nombre: "holi",
+      especificacion: "laburante",
+      disponibilidad: true,
+      condicion: "Impeclable",
+      nombreVendedor: "Roberto"
+    },
+    {
+      nombre: "chau",
+      especificacion: "vago",
+      disponibilidad: false,
+      condicion: "Roto",
+      nombreVendedor: "Salvador"
+    }
+  ];
 }
