@@ -207,30 +207,35 @@ class Mapper {
     }
 
     public static function fromModelFactura(Factura $factura, &$visited = [], $depth = null): DtoFactura {
-
         if (isset($visited['factura'][$factura->id])) {
             return $visited['factura'][$factura->id];
         }
 
-        $vendedorModel = Vendedor::find($factura->vendedor_id);
-        $dtoVendedor = ($vendedorModel instanceof Vendedor && ($depth === null || $depth > 0))
-            ? Mapper::fromModelVendedor($vendedorModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
+        $vendedorDto = null;
+        $pujaDto = null;
+        if ($depth === null || $depth > 0) {
+            $nextDepth = $depth !== null ? $depth - 1 : null;
 
-        $pujaModel = Puja::where('factura_id', $factura->id)->first();
-        $dtoPuja = ($pujaModel && $pujaModel instanceof Puja && ($depth === null || $depth > 0))
-            ? Mapper::fromModelPuja($pujaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
+            if ($factura->relationLoaded('vendedor') && $factura->vendedor !== null) {
+                $vendedorDto = Mapper::fromModelVendedor($factura->vendedor, $visited, $nextDepth);
+            }
+
+            if ($factura->relationLoaded('puja') && $factura->puja !== null) {
+                $pujaDto = Mapper::fromModelPuja($factura->puja, $visited, $nextDepth);
+            }
+        }
 
         $dto = new DtoFactura(
             $factura->id,
-            $factura->montoTotal,
-            $factura->condicionesDePago,
+            $factura->monto_total,
+            $factura->condiciones_de_pago,
             $factura->entrega,
-            $dtoVendedor,
-            $dtoPuja
+            $vendedorDto,
+            $pujaDto
         );
+
         $visited['factura'][$factura->id] = $dto;
+
         return $dto;
     }
 
@@ -243,26 +248,34 @@ class Mapper {
         ]);
     }
 
-    public static function fromModelLote(Lote $lote, &$visited = [], $depth = null): DtoLote{
-
-        if (isset($visited['lote'][$lote->id])) {
-            return $visited['lote'][$lote->id];
-        }
-
-        $subastaModel = Subasta::find($lote->subasta_id);
-        $dtoSubasta = ($subastaModel instanceof Subasta && ($depth === null || $depth > 0))
-            ? Mapper::fromModelSubasta($subastaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
-
-        $dto = new DtoLote(
-            $lote->id,
-            $lote->valorBase,
-            $lote->pujaMinima,
-            $dtoSubasta
-        );
-        $visited['lote'][$lote->id] = $dto;
-        return $dto;
+    public static function fromModelLote(Lote $lote, &$visited = [], $depth = null): DtoLote {
+    if (!$lote instanceof Lote) {
+        throw new \InvalidArgumentException('Se esperaba instancia de Lote');
     }
+
+    if (isset($visited['lote'][$lote->id])) {
+        return $visited['lote'][$lote->id];
+    }
+
+    $dtoSubasta = null;
+    if ($lote->subasta_id && ($depth === null || $depth > 0)) {
+        $subastaModel = Subasta::find($lote->subasta_id);
+        if ($subastaModel) {
+            $dtoSubasta = Mapper::fromModelSubasta($subastaModel, $visited, $depth !== null ? $depth - 1 : null);
+        }
+    }
+
+    $dto = new DtoLote(
+        $lote->id,
+        $lote->valorBase,
+        $lote->pujaMinima,
+        $dtoSubasta
+    );
+
+    $visited['lote'][$lote->id] = $dto;
+
+    return $dto;
+}
 
     public static function toModelLote(DtoLote $dto): Lote{
         return new Lote([
@@ -295,48 +308,92 @@ class Mapper {
         ]);
     }
 
+ 
     public static function fromModelPuja(Puja $puja, &$visited = [], $depth = null): DtoPuja {
-
         if (isset($visited['puja'][$puja->id])) {
             return $visited['puja'][$puja->id];
         }
 
-        $facturaModel = Factura::find($puja->factura_id);
-        $dtoFactura = ($facturaModel instanceof Factura && ($depth === null || $depth > 0))
-            ? Mapper::fromModelFactura($facturaModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
+        // Mapear factura
+        $dtoFactura = null;
+        if (
+            $puja->relationLoaded('factura') &&
+            $puja->factura !== null &&
+            ($depth === null || $depth > 0)
+        ) {
+            $dtoFactura = Mapper::fromModelFactura(
+                $puja->factura,
+                $visited,
+                $depth !== null ? $depth - 1 : null
+            );
+        } else {
+            $facturaModel = Factura::find($puja->factura_id);
+            $dtoFactura = ($facturaModel instanceof Factura && ($depth === null || $depth > 0))
+                ? Mapper::fromModelFactura($facturaModel, $visited, $depth !== null ? $depth - 1 : null)
+                : null;
+        }
 
-        $loteModel = Lote::find($puja->lote_id);
-        $dtoLote = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
-            ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
+        // Mapear lote
+        $dtoLote = null;
+        if (
+            $puja->relationLoaded('lote') &&
+            $puja->lote !== null &&
+            ($depth === null || $depth > 0)
+        ) {
+            $dtoLote = Mapper::fromModelLote(
+                $puja->lote,
+                $visited,
+                $depth !== null ? $depth - 1 : null
+            );
+        } else {
+            $loteModel = Lote::find($puja->lote_id);
+            $dtoLote = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
+                ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
+                : null;
+        }
 
-        $cliente = Cliente::find($puja->cliente_id);
-        $dtoCliente = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
-            ? Mapper::fromModelCliente($cliente, $visited, $depth !== null ? $depth - 1 : null)
-            : null;
+        // Mapear cliente
+        $dtoCliente = null;
+        if (
+            $puja->relationLoaded('cliente') &&
+            $puja->cliente !== null &&
+            ($depth === null || $depth > 0)
+        ) {
+            $dtoCliente = Mapper::fromModelCliente(
+                $puja->cliente,
+                $visited,
+                $depth !== null ? $depth - 1 : null
+            );
+        } else {
+            $clienteModel = Cliente::find($puja->cliente_id);
+            $dtoCliente = ($clienteModel instanceof Cliente && ($depth === null || $depth > 0))
+                ? Mapper::fromModelCliente($clienteModel, $visited, $depth !== null ? $depth - 1 : null)
+                : null;
+        }
 
         $dto = new DtoPuja(
             $puja->id,
             $puja->fechaHora,
             $puja->monto,
-            $dtoLote,      
-            $dtoFactura,   
+            $dtoLote,
+            $dtoFactura,
             $dtoCliente
         );
+
         $visited['puja'][$puja->id] = $dto;
+
         return $dto;
-    }
+    }   
 
     public static function toModelPuja(DtoPuja $dto): Puja {
         return new Puja([
             'fechaHora' => $dto->fechaHora,
             'monto' => $dto->monto,
-            'lote_id' => $dto->lote->id ?? null,
-            'factura_id' => $dto->factura->id ?? null,
+            'lote_id' => $dto->lote?->id ?? null,
+            'factura_id' => $dto->factura?->id ?? null,
+            'cliente_id' => $dto->cliente?->id ?? null,
         ]);
     }
-
     public static function fromModelSubasta(Subasta $subasta, &$visited = [], $depth = null): DtoSubasta {
 
         if (isset($visited['subasta'][$subasta->id])) {

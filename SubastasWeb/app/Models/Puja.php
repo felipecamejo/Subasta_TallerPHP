@@ -1,12 +1,12 @@
 <?php
- namespace App\Models;
+namespace App\Models;
 
- use Illuminate\Database\Eloquent\Model;
- use App\Models\Cliente;
- use App\Models\Lote;
- use App\Models\Factura;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Cliente;
+use App\Models\Lote;
+use App\Models\Factura;
 
- class Puja extends Model {
+class Puja extends Model {
     protected $table = 'pujas'; // Nombre de la tabla si es diferente al plural de la clase
 
     protected $fillable = [ 
@@ -18,18 +18,18 @@
     ]; 
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
-    
-    public function Cliente(){
+
+    public function cliente()
+    {
         return $this->belongsTo(Cliente::class);
     }
 
-    public function Lote(){
+    public function lote(){
         return $this->belongsTo(Lote::class);
     }
 
-    public function Factura(){
+    public function factura(){
         return $this->belongsTo(Factura::class);
     }
-
 }
 ?>

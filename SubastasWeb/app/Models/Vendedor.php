@@ -17,15 +17,15 @@
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
        
-        public function Facturas(){
+        public function facturas(){
             return $this->hasMany(Factura::class);
         }
         
-        public function Articulos(){
+        public function articulos(){
             return $this->hasMany(Articulo::class);
         }
 
-        public function CasaRemate() {
+        public function casaRemate() {
             return $this->hasMany(CasaRemate::class);
         }
 

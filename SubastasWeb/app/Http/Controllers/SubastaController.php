@@ -63,18 +63,14 @@ class SubastaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
-            'casa_remate_id'   => 'sometimes|exists:casa_remates,id',
-            'rematador_id'    => 'sometimes|exists:rematadores,id',
+            'casa_remate_id'   => 'nullable|exists:casa_remates,id',
+            'rematador_id'    => 'nullable|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $subasta = Subasta::create($request->only([
             'duracionMinutos',
@@ -90,6 +86,7 @@ class SubastaController extends Controller
         }
 
         return response()->json($subasta->load(['casaRemate', 'rematador']), 201);
+
     }
 
     /**
@@ -156,8 +153,8 @@ class SubastaController extends Controller
         $validator = Validator::make($request->all(), [
             'duracionMinutos' => 'sometimes|integer|min:1',
             'fecha'           => 'sometimes|date',
-            'casaremate_id'   => 'sometimes|exists:casa_remates,id',
-            'rematador_id'    => 'sometimes|exists:rematadores,id',
+            'casaremate_id'   => 'nullable|exists:casa_remates,id',
+            'rematador_id'    => 'nullable|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
             'lotes'           => 'sometimes|array',

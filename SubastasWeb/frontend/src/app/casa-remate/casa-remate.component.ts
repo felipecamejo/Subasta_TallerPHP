@@ -6,20 +6,27 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { DialogModule } from 'primeng/dialog';
 
 
 @Component({
   selector: 'app-casa-remate',
-  imports: [CommonModule, ButtonModule, RatingModule, ReactiveFormsModule, TableModule],
+  imports: [DialogModule, InputGroupModule, InputGroupAddonModule, FormsModule, CommonModule, ButtonModule, RatingModule, ReactiveFormsModule, TableModule],
   templateUrl: './casa-remate.component.html',
   styleUrl: './casa-remate.component.scss'
 })
 export class CasaRemateComponent {
   estrellas = new FormGroup({
-    value: new FormControl(2)  // valor inicial de la calificación
+    value: new FormControl(2)  
   });
 
   totalRecords: number = 0;
+
+  modalSubasta : boolean = false;
+  modalArticulo: boolean = false;
 
   lalala : any = [
     {
@@ -37,4 +44,21 @@ export class CasaRemateComponent {
       nombreVendedor: "Salvador"
     }
   ];
+
+  mostrarArticulo() {
+    this.modalArticulo = true;
+  }
+
+  mostrarSubasta() {
+    this.modalSubasta = true;
+  }
+
+  saveSubasta() {
+
+  }
+
+  saveArticulo(){
+
+  }
+
 }

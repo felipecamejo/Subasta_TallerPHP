@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { FooterComponent } from '../footer/footer.component';
 import { SubastaService } from '../../services/subasta.service';
 import { subastaDto } from '../../models/subastaDto';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-stream',
@@ -17,11 +18,17 @@ export class StreamComponent {
   timer: string = '2:47';
   value: string = '';
 
-  constructor() {
-    subastaService: SubastaService;
+  subasta!: subastaDto;
+
+  constructor( 
+    private route: ActivatedRoute,
+    private subastaService: SubastaService 
+  ){}
+
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.subastaService.getSubasta(id).subscribe(data => {
+      this.subasta = data;
+    });
   }
-
- // subastaDto: subastaDto;
-
-  //subastaDto = subastaService.getSubasta(3);
 }
