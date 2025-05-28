@@ -7,7 +7,7 @@ import { PerfilComponent } from './perfil/perfil.component';
 import { SubirProductoComponent } from './subir-producto/subir-producto.component';
 
 export const routes: Routes = [
-    { path: 'stream', loadComponent: () => StreamComponent },
+    { path: 'stream/:id', loadComponent: () => StreamComponent },
     { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
     { path: 'buscadorRemtaes', loadComponent: () => BuscadorRematesComponent },
     { path: 'buscadorRemates', loadComponent: () => BuscadorRematesComponent },
