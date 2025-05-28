@@ -1835,6 +1835,12 @@
                                     },
                                     "matricula": {
                                         "type": "string"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"
