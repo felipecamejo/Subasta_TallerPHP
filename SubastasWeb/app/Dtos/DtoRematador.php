@@ -3,7 +3,6 @@
 namespace App\DTOs;
 
 class DtoRematador {
-    public $id;
     public $matricula;
     public $usuario;
 
@@ -13,8 +12,7 @@ class DtoRematador {
     /** @var DtoCasaRemate[] */
     public array $casasRemate;
 
-    public function __construct($id, $matricula, $usuario, $subastas, $casasRemate) {
-        $this->id = $id;
+    public function __construct($matricula, $usuario, $subastas, $casasRemate) {
         $this->matricula = $matricula;
         $this->usuario = $usuario;
         $this->subastas = $subastas;
@@ -24,7 +22,6 @@ class DtoRematador {
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
             'matricula' => $this->matricula,
             'usuario' => $this->usuario,
             'subastas' => array_map(function($subasta) {

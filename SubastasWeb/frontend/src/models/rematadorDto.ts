@@ -3,7 +3,6 @@ import { subastaDto } from './subastaDto';
 import { casaRemateDto } from './casaRemateDto';
 
 export interface rematadorDto{
-    id: number;
     matricula: string;
 
     // Relaciones
