@@ -4,16 +4,17 @@ namespace App\DTOs;
 
 use App\DTOs\DtoCliente;
 
-class DtoPuja {
-
+class DtoPuja
+{
     public $id;
     public $fechaHora;
     public $monto;
-    public $lote;   
-    public $factura;
-    public $cliente;
+    public $lote_id;
+    public $factura_id;
+    public ?DtoCliente $cliente;
 
-    public function __construct($id, $fechaHora, $monto, $lote, $factura, $cliente) {
+    public function __construct($id, $fechaHora, $monto, $lote, $factura, $cliente)
+    {
         $this->id = $id;
         $this->fechaHora = $fechaHora;
         $this->monto = $monto;
@@ -28,15 +29,9 @@ class DtoPuja {
             'id' => $this->id,
             'fechaHora' => $this->fechaHora,
             'monto' => $this->monto,
-            'lote' => $this->lote,
-            'factura' => $this->factura,
-            'cliente' => $this->cliente,
+            'lote' => $this->lote_id,
+            'factura' => $this->factura_id,
+            'cliente' => $this->cliente?->toArray(),
         ];
     }
-
-
-
-
-
-
 }

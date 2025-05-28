@@ -18,11 +18,11 @@
 
     protected $hidden = []; // Columnas ocultas en las respuestas JSON
         
-    public function Vendedor(){
+    public function vendedor(){
         return  $this->belongsTo(Vendedor::class);
     } 
 
-    public function Puja(){
+    public function puja(){
         return  $this->hasOne(Puja::class);
     } 
 
