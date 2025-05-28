@@ -4,5 +4,5 @@ export interface loteDto {
     id: number;
     valorBase: number;
     pujaMinima: number;
-    subasta: Pick<subastaDto, 'id' | 'fecha' | 'duracionMinutos'>;
+    subasta: Pick<subastaDto, 'id' | 'fecha' | 'duracionMinutos'| 'nombre'>;
 }   

@@ -6,11 +6,12 @@ import { FooterComponent } from '../footer/footer.component';
 import { SubastaService } from '../../services/subasta.service';
 import { subastaDto } from '../../models/subastaDto';
 import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [InputTextModule, FormsModule, ButtonModule, FooterComponent],
+  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })

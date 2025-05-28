@@ -9,7 +9,7 @@ import { subastaDto } from '../models/subastaDto';
 })
 export class SubastaService {
 
-  private endpoint: string = '/subasta';
+  private endpoint: string = '/subastas';
 
   constructor(
     private http: HttpClient,
@@ -18,7 +18,7 @@ export class SubastaService {
 
   getSubasta(id: number): Observable<subastaDto> {
     const params = new HttpParams().set('id', id.toString());
-    return this.http.get<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}/seleccionarSubasta`, { params });
+    return this.http.get<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}` , { params });
   }
 
 
