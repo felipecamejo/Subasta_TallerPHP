@@ -7,6 +7,8 @@ import { SubastaService } from '../../services/subasta.service';
 import { subastaDto } from '../../models/subastaDto';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { OnInit } from '@angular/core';
+
 
 @Component({
   selector: 'app-stream',
@@ -15,7 +17,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
-export class StreamComponent {
+export class StreamComponent implements OnInit {
   timer: string = '2:47';
   value: string = '';
 
