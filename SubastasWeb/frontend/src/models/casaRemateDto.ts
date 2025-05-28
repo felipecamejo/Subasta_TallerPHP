@@ -11,6 +11,6 @@ export interface casaRemateDto {
     latitud: number;
     longitud: number;
 
-    rematador: Pick<rematadorDto, 'id' | 'matricula'>;
+    rematador: Pick<rematadorDto, 'usuario' | 'matricula'>;
     subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre'>[];
 }
