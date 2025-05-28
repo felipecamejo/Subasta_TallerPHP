@@ -6,7 +6,7 @@ use App\DTOs\DtoVendedor;
 use App\DTOs\DtoPuja;
 
 class DtoFactura {
-    public $id = null;
+    public $id;
     public $montoTotal;
     public $condicionesDePago;
     public $entrega;

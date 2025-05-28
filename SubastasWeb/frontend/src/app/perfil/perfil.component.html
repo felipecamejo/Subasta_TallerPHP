@@ -1,0 +1,109 @@
+<!-- perfil.component.html -->
+<div class="perfil-container">
+  <!-- Sección de Perfil -->
+  <section class="perfil-header">
+    <div class="perfil-info">
+      <h2>{{ usuario.nombre }}</h2>
+      <p>{{ usuario.datos }}</p>
+      <div class="acciones">
+        <button>Botón</button>
+        <button>Botón</button>
+      </div>
+      <div class="rating">
+        ★★★☆☆ <span>{{ usuario.rating }}</span>
+      </div>
+    </div>
+    <div class="perfil-imagen">
+      <img [src]="usuario.imagen" alt="Imagen de perfil" />
+    </div>
+  </section>
+
+  <!-- Artículos Favoritos -->
+  <section class="favoritos">
+    <h3>Artículos Favoritos</h3>
+    <div class="carousel">
+      <div class="item" *ngFor="let item of favoritos">
+        <img [src]="item.imagen" alt="Artículo" />
+        <p>{{ item.titulo }}</p>
+        <p>{{ item.descripcion }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Historial de Compras -->
+  <section class="historial">
+    <h3>Historial de Compras</h3>
+    <p-table
+      class="texto"
+      [value]="compras"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      paginatorPosition="bottom"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} compras"
+      showGridlines
+      [responsive]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="texto">Factura</th>
+          <th class="texto">Cliente</th>
+          <th class="texto">Email</th>
+          <th class="texto">Fecha Factura</th>
+          <th class="texto">Fecha Vencimiento</th>
+          <th class="texto">Estado</th>
+          <th class="texto">Monto</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-compra>
+        <tr>
+          <td>{{ compra.invoice }}</td>
+          <td>{{ compra.customer }}</td>
+          <td>{{ compra.email }}</td>
+          <td>{{ compra.invoiceDate }}</td>
+          <td>{{ compra.dueDate }}</td>
+          <td>{{ compra.status }}</td>
+          <td>{{ compra.amount }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+
+  <!-- Historial de Ventas -->
+  <section class="historial">
+    <h3>Historial de Ventas (en caso de ser Vendedor)</h3>
+    <p-table
+      class="texto"
+      [value]="ventas"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      paginatorPosition="bottom"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} ventas"
+      showGridlines
+      [responsive]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="texto">Factura</th>
+          <th class="texto">Cliente</th>
+          <th class="texto">Email</th>
+          <th class="texto">Fecha Factura</th>
+          <th class="texto">Fecha Vencimiento</th>
+          <th class="texto">Estado</th>
+          <th class="texto">Monto</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-venta>
+        <tr>
+          <td>{{ venta.invoice }}</td>
+          <td>{{ venta.customer }}</td>
+          <td>{{ venta.email }}</td>
+          <td>{{ venta.invoiceDate }}</td>
+          <td>{{ venta.dueDate }}</td>
+          <td>{{ venta.status }}</td>
+          <td>{{ venta.amount }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</div>
+

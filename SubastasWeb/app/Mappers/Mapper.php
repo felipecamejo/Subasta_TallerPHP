@@ -13,6 +13,7 @@ use App\DTOs\DtoPuja;
 use App\DTOs\DtoVendedor;
 use App\DTOs\DtoSubasta;
 use App\DTOs\DtoRematador;
+use App\DTOs\DtoUsuario;
 
 use App\Models\Articulo;
 use App\Models\Lote;
@@ -54,6 +55,7 @@ class Mapper {
 
         $dto = new DtoArticulo(
             $articulo->id,
+            $articulo->nombre,
             $articulo->imagenes,
             $articulo->especificacion,
             $articulo->disponibilidad,
@@ -69,6 +71,7 @@ class Mapper {
 
     public static function toModelArticulo(DtoArticulo $dto): Articulo{
         return new Articulo([
+            'nombre' => $dto->nombre,
             'imagenes' => $dto->imagenes,
             'especificacion' => $dto->especificacion,
             'disponibilidad' => $dto->disponibilidad,
@@ -186,10 +189,11 @@ class Mapper {
         }
 
         $dto = new DtoCliente(
-            $dtoUsuario,
+            $cliente->id,
             $cliente->calificacion,
             $pujas,
-            $notificaciones
+            $notificaciones,
+            $dtoUsuario
         );
         $visited['cliente'][$cliente->id] = $dto;
         return $dto;
@@ -326,6 +330,44 @@ public static function fromModelPuja(Puja $puja, &$visited = [], $depth = null):
         return $visited['puja'][$puja->id];
     }
 
+    // Mapear factura
+    $dtoFactura = null;
+    if (
+        $puja->relationLoaded('factura') &&
+        $puja->factura !== null &&
+        ($depth === null || $depth > 0)
+    ) {
+        $dtoFactura = Mapper::fromModelFactura(
+            $puja->factura,
+            $visited,
+            $depth !== null ? $depth - 1 : null
+        );
+    } else {
+        $facturaModel = Factura::find($puja->factura_id);
+        $dtoFactura = ($facturaModel instanceof Factura && ($depth === null || $depth > 0))
+            ? Mapper::fromModelFactura($facturaModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+    }
+
+    // Mapear lote
+    $dtoLote = null;
+    if (
+        $puja->relationLoaded('lote') &&
+        $puja->lote !== null &&
+        ($depth === null || $depth > 0)
+    ) {
+        $dtoLote = Mapper::fromModelLote(
+            $puja->lote,
+            $visited,
+            $depth !== null ? $depth - 1 : null
+        );
+    } else {
+        $loteModel = Lote::find($puja->lote_id);
+        $dtoLote = ($loteModel instanceof Lote && ($depth === null || $depth > 0))
+            ? Mapper::fromModelLote($loteModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+    }
+
     // Mapear cliente
     $dtoCliente = null;
     if (
@@ -338,7 +380,26 @@ public static function fromModelPuja(Puja $puja, &$visited = [], $depth = null):
             $visited,
             $depth !== null ? $depth - 1 : null
         );
+    } else {
+        $clienteModel = Cliente::find($puja->cliente_id);
+        $dtoCliente = ($clienteModel instanceof Cliente && ($depth === null || $depth > 0))
+            ? Mapper::fromModelCliente($clienteModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
     }
+
+    $dto = new DtoPuja(
+        $puja->id,
+        $puja->fechaHora,
+        $puja->monto,
+        $dtoLote,
+        $dtoFactura,
+        $dtoCliente
+    );
+
+    $visited['puja'][$puja->id] = $dto;
+
+    return $dto;
+}
 
     // Mapear lote
     $dtoLote = null;
@@ -548,6 +609,14 @@ public static function toModelPuja(DtoPuja $dto): Puja
         $dtoUsuario = ($usuarioModel instanceof Usuario && ($depth === null || $depth > 0))
             ? Mapper::fromModelUsuario($usuarioModel, $visited, $depth !== null ? $depth - 1 : null)
             : null;
+        $clienteModel = $usuario ->cliente ?? null;
+        $dtoCliente = ($clienteModel instanceof Cliente && ($depth === null || $depth > 0))
+            ? Mapper::fromModelCliente($clienteModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
+        $rematadorModel = $usuario ->rematador ?? null;
+        $dtoRematador = ($rematadorModel instanceof Rematador && ($depth === null || $depth > 0))
+            ? Mapper::fromModelRematador($rematadorModel, $visited, $depth !== null ? $depth - 1 : null)
+            : null;
 
         $subastas = [];
         $casasRemate = [];
@@ -562,12 +631,19 @@ public static function toModelPuja(DtoPuja $dto): Puja
             })->toArray();
         }
 
-        $dto = new DtoRematador(
+        $dto = new DtoUsuario(
             $usuario->id,
-            $usuario->matricula,
-            $dtoUsuario,
-            $subastas,
-            $casasRemate
+            $usuario->nombre,
+            $usuario->cedula,
+            $usuario->email,
+            $usuario->telefono,
+            $usuario->imagen,
+            $usuario->contrasenia,
+            $usuario->latitud,
+            $usuario->longitud,
+            $dtoRematador,
+            $dtoCliente,
+            
         );
         $visited['usuario'][$usuario->id] = $dto;
         return $dto;

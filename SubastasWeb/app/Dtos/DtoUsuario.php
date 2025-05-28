@@ -10,11 +10,12 @@ class DtoUsuario {
     public $telefono;
     public $imagen;
     public $contrasenia;
-    public $direccionFiscal;
     public $latitud;
     public $longitud;
+    public $cliente;
+    public $rematador;
 
-    public function __construct($id, $nombre, $cedula, $email, $telefono, $imagen, $contrasenia, $direccionFiscal, $latitud, $longitud) {
+    public function __construct($id, $nombre, $cedula, $email, $telefono, $imagen, $contrasenia, $latitud, $longitud, $rematador, $cliente) {
         $this->id = $id;
         $this->nombre = $nombre;
         $this->cedula = $cedula;
@@ -22,9 +23,10 @@ class DtoUsuario {
         $this->telefono = $telefono;
         $this->imagen = $imagen;
         $this->contrasenia = $contrasenia;
-        $this->direccionFiscal = $direccionFiscal;
         $this->latitud = $latitud;
         $this->longitud = $longitud;
+        $this->rematador = $rematador;
+        $this->cliente = $cliente;
     }
 
     public function toArray(): array {
@@ -36,9 +38,10 @@ class DtoUsuario {
             'telefono' => $this->telefono,
             'imagen' => $this->imagen,
             'contrasenia' => $this->contrasenia,
-            'direccionFiscal' => $this->direccionFiscal,
             'latitud' => $this->latitud,
-            'longitud' => $this->longitud
+            'longitud' => $this->longitud,
+            'rematador' => $this->rematador,
+            'cliente' => $this->cliente
         ];
     }
 }

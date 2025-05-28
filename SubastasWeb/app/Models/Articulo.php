@@ -11,6 +11,7 @@
         protected $table = 'articulos'; 
 
         protected $fillable = [ 
+            'nombre',
             'imagenes', 
             'especificacion', 
             'disponibilidad', 

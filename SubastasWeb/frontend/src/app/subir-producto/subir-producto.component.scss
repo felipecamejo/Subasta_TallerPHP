@@ -1,0 +1,99 @@
+.form-container {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+
+  .imagen-preview {
+    flex: 1;
+
+    .main-image {
+      width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .thumbnail-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+
+      .thumbnail {
+        width: 60px;
+        height: 60px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        cursor: pointer;
+        object-fit: cover;
+
+        &:hover {
+          border-color: #333;
+        }
+      }
+    }
+  }
+
+  .formulario {
+    flex: 1;
+
+    h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    hr {
+      margin: 1rem 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+
+        &:focus {
+          border-color: #0066ff;
+          outline: none;
+        }
+      }
+
+      textarea {
+        resize: vertical;
+        height: 80px;
+      }
+    }
+
+    .acciones {
+      display: flex;
+      gap: 1rem;
+
+      .subir {
+        background-color: #333;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .cancelar {
+        background-color: #eee;
+        color: #333;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+    }
+  }
+}
