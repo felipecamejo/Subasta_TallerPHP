@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rematadores', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+            $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
             $table->string('matricula');
             $table->timestamps();
+
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade'); // FOREIGN KEY
         });
     }
 

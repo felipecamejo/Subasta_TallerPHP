@@ -21,8 +21,10 @@ return new class extends Migration
 
         
             $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
-            $table->foreignId('rematador_id')->nullable()->constrained('rematadores')->onDelete('cascade');
-        
+            
+            $table->unsignedBigInteger('rematador_id')->nullable();
+            $table->foreign('rematador_id')->references('usuario_id')->on('rematadores')->onDelete('cascade');
+
             $table->timestamps();
         });
         
