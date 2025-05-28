@@ -21,7 +21,7 @@ export class StreamComponent {
     subastaService: SubastaService;
   }
 
-  subastaDto: subastaDto;
+ // subastaDto: subastaDto;
 
-  subastaDto = subastaService.getSubasta(3);
+  //subastaDto = subastaService.getSubasta(3);
 }
