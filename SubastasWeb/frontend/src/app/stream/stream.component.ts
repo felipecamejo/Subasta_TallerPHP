@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,11 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OnInit } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
+import { takeWhile } from 'rxjs/operators'; 
+import { LoteService } from '../../services/lote.service'
+import { loteDto } from '../../models/loteDto';
+import { PujaService } from '../../services/puja.service'
+import { pujaDto } from '../../models/pujaDto';
 
 
 @Component({
@@ -17,56 +22,109 @@ import { interval, Subscription } from 'rxjs';
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
-export class StreamComponent implements OnInit {
-  
+export class StreamComponent implements OnInit, OnDestroy{
+
   subasta!: subastaDto;
-  
-  
+  lotes! : loteDto[];
+  pujas! : pujaDto[];
 
-  constructor( 
-    private route: ActivatedRoute,
-    private subastaService: SubastaService ,
-  ){}
+  indexLotes: number = 0;
 
-  ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-
-    this.subastaService.getSubasta(id).subscribe(data => {
-      this.subasta = data;
-      
-      if (this.subasta.activa) {
-        this.boton = true;
-        this.iniciarTimer();
-      }
-
-    });
+  anteriorLote() {
+    if(this.lotes && this.indexLotes > 0){
+      this.indexLotes--;
+      console.log(this.indexLotes);
+    } 
   }
 
+  siguienteLote() {
+    if(this.lotes && this.indexLotes < this.lotes.length-1){
+      this.indexLotes++;
+      console.log(this.indexLotes);
+    }
+  }
+
+  // -------------------------------------timer-------------------------------------------------------
+  
   timer: string = "00:00:00";
   private timerSubscription?: Subscription;
+  private subastaSubscription?: Subscription;
   timerActivo: boolean = false;
   boton: boolean = false;
 
-  iniciarSubasta() {
-    if (!this.subasta || !this.subasta.fecha || this.subasta.activa) return;
+  pujaActual: number = 0;
 
-    this.boton = true;
-    this.subasta.activa = true;
+  constructor(
+    private route: ActivatedRoute,
+    private subastaService: SubastaService,
+    private loteService: LoteService,
+    private pujaService: PujaService,
+  ) {}
 
-    this.subastaService.updateSubasta(this.subasta).subscribe({
-      next: () => {
-        this.iniciarTimer(); 
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    
+    this.subastaSubscription?.unsubscribe();
+
+    this.subastaSubscription = this.subastaService.getSubasta(id).subscribe({
+      next: (data) => {
+        this.subasta = data;
+        this.boton = this.subasta.activa;
+
+        this.loteService.getLotesSubasta(this.subasta.id).subscribe({
+          next: (data) => {
+            this.lotes = data;
+
+            this.pujaService.getPujaslote(this.lotes[this.indexLotes].id).subscribe({
+              next: (data) => {
+                this.pujas = data; 
+
+                for(let puja of this.pujas){
+                  if (puja.monto > this.pujaActual){
+                    this.pujaActual = puja.monto;
+                  }
+                }
+                
+              },
+              error: (err) => {
+                console.error('Error al obtener las pujas:', err);
+              }
+            });
+            
+          },
+          error: (err) => {
+            console.error('Error al obtener los lotes:', err);
+          }
+
+        });
+        
+        if (this.subasta.activa) {
+          this.iniciarTimer();
+        }
       },
       error: (err) => {
-        console.error('Error al actualizar la subasta:', err);
+        console.error('Error al cargar subasta:', err);
       }
     });
   }
 
+  iniciarSubasta() {
+  if (!this.subasta || !this.subasta.fecha || this.subasta.activa) return;
+
+  this.boton = true;
+  this.subasta.activa = true;
+
+  this.subastaService.updateSubasta(this.subasta).subscribe(() => {
+    setTimeout(() => {
+      this.iniciarTimer();
+    }, 0);
+  });
+}
+
   iniciarTimer() {
-    if (this.timerActivo || this.timerSubscription) {
-      return;
-    }
+    this.detenerTimer();
+
+    if (!this.subasta?.fecha) return;
 
     const fechaInicio = new Date(this.subasta.fecha).getTime();
     const duracionMs = this.subasta.duracionMinutos * 60 * 1000;
@@ -74,26 +132,28 @@ export class StreamComponent implements OnInit {
 
     this.timerActivo = true;
 
-    this.timerSubscription = interval(1000).subscribe(() => {
+    this.timerSubscription = interval(1000).pipe(
+      takeWhile(() => this.timerActivo)
+    ).subscribe(() => {
       const ahora = Date.now();
-      let nuevoTimer = '';
-
+      
       if (ahora < fechaInicio) {
-        let diff = Math.floor((fechaInicio - ahora) / 1000);
-        nuevoTimer = this.formatearTiempo(diff);
-      } else if (ahora >= fechaInicio && ahora <= fechaFin) {
-        let diff = Math.floor((fechaFin - ahora) / 1000);
-        nuevoTimer = this.formatearTiempo(diff);
+        const diff = Math.floor((fechaInicio - ahora) / 1000);
+        this.timer = this.formatearTiempo(diff);
+      } else if (ahora <= fechaFin) {
+        const diff = Math.floor((fechaFin - ahora) / 1000);
+        this.timer = this.formatearTiempo(diff);
       } else {
-        nuevoTimer = 'finalizada';
-        this.timerActivo = false;
-        this.timerSubscription?.unsubscribe();
+        this.timer = 'Finalizada';
+        this.detenerTimer();
       }
-
-      this.timer = nuevoTimer;
     });
+  }
 
-    console.log('Timer iniciado correctamente');
+  detenerTimer(): void {
+    this.timerActivo = false;
+    this.timerSubscription?.unsubscribe();
+    this.timerSubscription = undefined;
   }
 
   formatearTiempo(segundos: number): string {
@@ -106,8 +166,12 @@ export class StreamComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    this.timerSubscription?.unsubscribe();
+    this.detenerTimer();
+    this.subastaSubscription?.unsubscribe();
   }
+
+  
 }
+
   
 
