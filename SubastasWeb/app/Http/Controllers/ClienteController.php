@@ -167,9 +167,9 @@ class ClienteController extends Controller
      *     )
      * )
     */
-    public function show($id)
+    public function show($usuario_id)
     {
-        $cliente = Cliente::with('usuario')->find($id);
+        $cliente = Cliente::with('usuario')->find($usuario_id);
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
@@ -179,7 +179,7 @@ class ClienteController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $usuario_id)
     {
         //
     }
@@ -214,9 +214,9 @@ class ClienteController extends Controller
      *     @OA\Response(response=404, description="Cliente no encontrado")
      * )
     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $usuario_id)
     {
-       $cliente = Cliente::find($id);
+       $cliente = Cliente::find($usuario_id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
@@ -278,9 +278,9 @@ class ClienteController extends Controller
      *     )
      * )
      */
-    public function destroy(string $id)
+    public function destroy(string $usuario_id)
     {
-         $cliente = Cliente::find($id);
+         $cliente = Cliente::find($usuario_id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
