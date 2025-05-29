@@ -1889,8 +1889,14 @@
                                     "rematador_id"
                                 ],
                                 "properties": {
-                                    "duracionMinutos": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "duracionSegundos": {
                                         "type": "integer"
+                                    },
+                                    "activa": {
+                                        "type": "boolean"
                                     },
                                     "fecha": {
                                         "type": "string",

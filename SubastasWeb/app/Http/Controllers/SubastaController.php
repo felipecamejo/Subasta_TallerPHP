@@ -57,7 +57,9 @@ class SubastaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"duracionMinutos", "fecha", "casa_remate_id", "rematador_id"},
-     *             @OA\Property(property="duracionMinutos", type="integer"),
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="duracionSegundos", type="integer"),
+     *             @OA\Property(property="activa", type="boolean"),
      *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
      *             @OA\Property(property="casa_remate_id", type="integer"),
      *             @OA\Property(property="rematador_id", type="integer"),

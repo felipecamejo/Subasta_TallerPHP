@@ -12,12 +12,14 @@ class Subasta extends Model
     protected $table = 'subastas'; 
 
     protected $fillable = [ 
-        'duracionMinutos', 
+        'nombre', 
         'fecha',
         'casa_remate_id',
         'rematador_id',
         'latitud',
         'longitud',
+        'activa',
+        'duracionSegundos'
     ]; 
 
     protected $hidden = [];

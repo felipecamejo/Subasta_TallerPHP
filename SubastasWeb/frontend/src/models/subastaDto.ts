@@ -6,7 +6,8 @@ import { rematadorDto } from './rematadorDto';
 export interface subastaDto {
     id: number;
     nombre: string;
-    duracionMinutos: number;
+    activa: boolean;
+    duracionSegundos: number;
     fecha: Date;
     longitud: number;
     latitud: number;

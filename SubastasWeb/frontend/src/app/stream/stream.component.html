@@ -6,6 +6,7 @@
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
+            <p-button label="Iniciar" severity="secondary" (click)="startTimer()"/>
             <span class="pi pi-clock"></span>
             <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
         </div>
@@ -14,18 +15,18 @@
         <div class="w-full subDiv">
             <div class="w-full flex padrePujas">
                 <span class="subtitulo">Puja Actual:</span>
-                <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                <input type="text" class="text-input" pInputText/>
             </div>
 
             <div class="w-full flex">
                 <div class="w-full flex padrePujas">
                     <p-button label="Puja Rapida" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    <input type="text" class="text-input" pInputText  />
                 </div>
 
                 <div class="w-full flex padrePujas">
                     <p-button label="Puja" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    <input type="text" class="text-input" pInputText  />
                     
                 </div>
             </div>

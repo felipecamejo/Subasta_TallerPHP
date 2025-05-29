@@ -7,31 +7,37 @@ use App\DTOs\DtoLote;
 class DtoSubasta {
 
     public $id;
-    public $duracionMinutos;
+    public $nombre;
+    public $duracionSegundos;
     public $fecha;
     public $casaremate;
     public $rematador;
     public $latitud;
     public $longitud;
+    public $activa;
 
     /** @var DtoLote[] */
     public array $lotes;
 
-    public function __construct($id, $duracionMinutos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
+    public function __construct($id, $activa, $nombre, $duracionSegundos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
         $this->id = $id;
-        $this->duracionMinutos = $duracionMinutos;
+        $this->nombre = $nombre;
+        $this->duracionSegundos = $duracionSegundos;
         $this->fecha = $fecha;
         $this->casaremate = $casaremate;
         $this->rematador = $rematador;
         $this->latitud = $latitud;
         $this->longitud = $longitud;
         $this->lotes = $lotes;
+        $this->activa = $activa;
     }
 
     public function toArray(): array {
         return [
             'id' => $this->id,
-            'duracionMinutos' => $this->duracionMinutos,
+            'nombre' => $this->nombre,
+            'activa' => $this->activa,
+            'duracionSegundos' => $this->duracionSegundos,
             'fecha' => $this->fecha,
             'casaremate_id' => $this->casaremate,
             'rematador_id' => $this->rematador,

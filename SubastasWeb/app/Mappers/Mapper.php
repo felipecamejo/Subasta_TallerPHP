@@ -420,7 +420,9 @@ class Mapper {
 
         $dto = new DtoSubasta(
             $subasta->id,
-            $subasta->duracionMinutos,
+            $subasta->activa,
+            $subasta->nombre,
+            $subasta->duracionSegundos,
             $subasta->fecha,
             $dtoCasaRemate,
             $dtoRematador,
@@ -434,7 +436,9 @@ class Mapper {
 
     public static function toModelSubasta(DtoSubasta $dto): Subasta {
         return new Subasta([
-            'duracionMinutos' => $dto->duracionMinutos,
+            'nombre' => $dto->nombre,
+            'activa' => $dto->activa,
+            'duracionSegundos' => $dto->duracionSegundos,
             'fecha' => $dto->fecha,
             'casaremate_id' => $dto->casaremate->id ?? null,
             'rematador_id' => $dto->rematador->id ?? null,
