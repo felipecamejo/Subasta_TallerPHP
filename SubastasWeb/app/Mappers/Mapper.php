@@ -541,7 +541,7 @@ class Mapper {
         return $dto;
     }
 
-    public static function fromModelUsuario(Usuario $usuario, &$visited = [], $depth = null): DtoRematador {
+    public static function fromModelUsuario(Usuario $usuario, &$visited = [], $depth = null): DtoUsuario {
         if (isset($visited['usuario'][$usuario->id])) {
             return $visited['usuario'][$usuario->id];
         }

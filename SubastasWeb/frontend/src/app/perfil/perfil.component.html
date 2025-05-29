@@ -2,19 +2,15 @@
 <div class="perfil-container">
   <!-- Sección de Perfil -->
   <section class="perfil-header">
-    <div class="perfil-info">
-      <h2>{{ usuario.nombre }}</h2>
-      <p>{{ usuario.datos }}</p>
-      <div class="acciones">
-        <button>Botón</button>
-        <button>Botón</button>
-      </div>
-      <div class="rating">
-        ★★★☆☆ <span>{{ usuario.rating }}</span>
-      </div>
+    <div class="perfil-info" *ngIf="cliente?.usuario || rematador?.usuario">
+      <h2>{{ cliente?.usuario?.nombre || rematador?.usuario?.nombre }}</h2>
+      <p>ID: {{ cliente?.usuario_id || rematador?.usuario_id }}</p>
+      <p>Email: {{ cliente?.usuario?.email || rematador?.usuario?.email }}</p>
+      <p *ngIf="cliente">Calificación: {{ cliente.calificacion }}</p>
+      <p *ngIf="rematador">Matrícula: {{ rematador.matricula }}</p>
     </div>
-    <div class="perfil-imagen">
-      <img [src]="usuario.imagen" alt="Imagen de perfil" />
+    <div class="perfil-imagen" *ngIf="cliente?.usuario?.imagen || rematador?.usuario?.imagen">
+      <img [src]="cliente?.usuario?.imagen || rematador?.usuario?.imagen" alt="Imagen de perfil" />
     </div>
   </section>
 
