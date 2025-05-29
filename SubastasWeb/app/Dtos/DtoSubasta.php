@@ -8,7 +8,7 @@ class DtoSubasta {
 
     public $id;
     public $nombre;
-    public $duracionSegundos;
+    public $duracionMinutos;
     public $fecha;
     public $casaremate;
     public $rematador;
@@ -19,10 +19,10 @@ class DtoSubasta {
     /** @var DtoLote[] */
     public array $lotes;
 
-    public function __construct($id, $activa, $nombre, $duracionSegundos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
+    public function __construct($id, $activa, $nombre, $duracionMinutos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
         $this->id = $id;
         $this->nombre = $nombre;
-        $this->duracionSegundos = $duracionSegundos;
+        $this->duracionMinutos = $duracionMinutos;
         $this->fecha = $fecha;
         $this->casaremate = $casaremate;
         $this->rematador = $rematador;
@@ -37,7 +37,7 @@ class DtoSubasta {
             'id' => $this->id,
             'nombre' => $this->nombre,
             'activa' => $this->activa,
-            'duracionSegundos' => $this->duracionSegundos,
+            'duracionMinutos' => $this->duracionMinutos,
             'fecha' => $this->fecha,
             'casaremate_id' => $this->casaremate,
             'rematador_id' => $this->rematador,

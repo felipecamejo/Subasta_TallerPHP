@@ -1892,7 +1892,7 @@
                                     "nombre": {
                                         "type": "string"
                                     },
-                                    "duracionSegundos": {
+                                    "duracionMinutos": {
                                         "type": "integer"
                                     },
                                     "activa": {
@@ -1984,7 +1984,7 @@
                                     "nombre": {
                                         "type": "string"
                                     },
-                                    "duracionSegundos": {
+                                    "duracionMinutos": {
                                         "type": "integer"
                                     },
                                     "activa": {

@@ -422,7 +422,7 @@ class Mapper {
             $subasta->id,
             $subasta->activa,
             $subasta->nombre,
-            $subasta->duracionSegundos,
+            $subasta->duracionMinutos,
             $subasta->fecha,
             $dtoCasaRemate,
             $dtoRematador,
@@ -438,7 +438,7 @@ class Mapper {
         return new Subasta([
             'nombre' => $dto->nombre,
             'activa' => $dto->activa,
-            'duracionSegundos' => $dto->duracionSegundos,
+            'duracionMinutos' => $dto->duracionMinutos,
             'fecha' => $dto->fecha,
             'casaremate_id' => $dto->casaremate->id ?? null,
             'rematador_id' => $dto->rematador->id ?? null,

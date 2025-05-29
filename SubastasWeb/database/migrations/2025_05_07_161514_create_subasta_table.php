@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
         
             $table->string('nombre');
-            $table->integer('duracionSegundos')->default(0);
+            $table->integer('duracionMinutos')->default(0);
             $table->boolean('activa');
             $table->dateTime('fecha');
             $table->decimal('latitud', 10, 7);

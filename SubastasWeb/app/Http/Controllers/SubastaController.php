@@ -58,7 +58,7 @@ class SubastaController extends Controller
      *         @OA\JsonContent(
      *             required={"duracionMinutos", "fecha", "casa_remate_id", "rematador_id"},
      *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="duracionSegundos", type="integer"),
+     *             @OA\Property(property="duracionMinutos", type="integer"),
      *             @OA\Property(property="activa", type="boolean"),
      *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
      *             @OA\Property(property="casa_remate_id", type="integer"),
@@ -76,7 +76,7 @@ class SubastaController extends Controller
         $request->validate([
             'nombre' => 'required|string',
             'activa' => 'required|boolean',
-            'duracionSegundos' => 'required|integer|min:1',
+            'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
             'casa_remate_id'   => 'nullable|exists:casa_remates,id',
             'rematador_id'    => 'nullable|exists:rematadores,id',
@@ -87,7 +87,7 @@ class SubastaController extends Controller
         $subasta = Subasta::create($request->only([
             'nombre',
             'activa',
-            'duracionSegundos',
+            'duracionMinutos',
             'fecha',
             'casa_remate_id',
             'rematador_id',
@@ -144,7 +144,7 @@ class SubastaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="duracionSegundos", type="integer"),
+     *             @OA\Property(property="duracionMinutos", type="integer"),
      *             @OA\Property(property="activa", type="boolean"),
      *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
      *             @OA\Property(property="casa_remate_id", type="integer"),
@@ -169,7 +169,7 @@ class SubastaController extends Controller
         $request->validate([
             'nombre' => 'required|string',
             'activa' => 'required|boolean',
-            'duracionSegundos' => 'required|integer|min:1',
+            'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'nullable|date',
             'casa_remate_id'   => 'nullable|exists:casa_remates,id',
             'rematador_id'    => 'nullable|exists:rematadores,id',
@@ -180,7 +180,7 @@ class SubastaController extends Controller
         $subasta->update($request->only([
             'nombre',
             'activa',
-            'duracionSegundos',
+            'duracionMinutos',
             'fecha',
             'casaremate_id',
             'rematador_id',
