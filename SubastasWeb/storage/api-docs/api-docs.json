@@ -1981,14 +1981,21 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "duracionMinutos": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "duracionSegundos": {
                                         "type": "integer"
+                                    },
+                                    "activa": {
+                                        "type": "boolean"
                                     },
                                     "fecha": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "date-time",
+                                        "example": "2025-06-01T14:00:00Z"
                                     },
-                                    "casaremate_id": {
+                                    "casa_remate_id": {
                                         "type": "integer"
                                     },
                                     "rematador_id": {
