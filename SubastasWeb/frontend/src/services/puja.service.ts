@@ -9,7 +9,7 @@ import { pujaDto } from '../models/pujaDto';
 })
 export class PujaService {
 
-  private endpoint: string = '/lotes';
+  private endpoint: string = '/pujas';
 
   constructor(
     private http: HttpClient,
@@ -17,7 +17,7 @@ export class PujaService {
   ) {}
 
   getPujaslote(id : number): Observable<pujaDto[]> {
-    return this.http.get<pujaDto[]>(`${this.urlService.baseUrl}${this.endpoint}/lotesSubasta/${id}`);
+    return this.http.get<pujaDto[]>(`${this.urlService.baseUrl}${this.endpoint}/pujasLote/${id}`);
   }
 
 }

@@ -20,13 +20,13 @@
             
             <div class="w-full flex padrePujas margin">
                 <span class="subtitulo">Puja Actual:</span>
-                <input type="text" class="text-input" pInputText readonly/>
+                <input type="text" class="text-input" [value]="pujaActual === 0 ? '' : pujaActual" pInputText readonly/>
             </div>
 
             <div class="w-full margin">
                 <div class="w-full flex padrePujas">
                     <p-button label="Puja Rapida" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" [value]="lotes[indexLotes].pujaMinima" pInputText readonly/>
+                    <input type="text" class="text-input" [value]="pujaRapida" pInputText readonly/>
                 </div>
 
                 <div class="w-full flex padrePujas margin">

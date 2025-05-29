@@ -33,14 +33,14 @@ export class StreamComponent implements OnInit, OnDestroy{
   anteriorLote() {
     if(this.lotes && this.indexLotes > 0){
       this.indexLotes--;
-      console.log(this.indexLotes);
+      this.cargarPujas(this.lotes[this.indexLotes]);
     } 
   }
 
   siguienteLote() {
     if(this.lotes && this.indexLotes < this.lotes.length-1){
       this.indexLotes++;
-      console.log(this.indexLotes);
+      this.cargarPujas(this.lotes[this.indexLotes]);
     }
   }
 
@@ -53,6 +53,7 @@ export class StreamComponent implements OnInit, OnDestroy{
   boton: boolean = false;
 
   pujaActual: number = 0;
+  pujaRapida: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -75,21 +76,7 @@ export class StreamComponent implements OnInit, OnDestroy{
           next: (data) => {
             this.lotes = data;
 
-            this.pujaService.getPujaslote(this.lotes[this.indexLotes].id).subscribe({
-              next: (data) => {
-                this.pujas = data; 
-
-                for(let puja of this.pujas){
-                  if (puja.monto > this.pujaActual){
-                    this.pujaActual = puja.monto;
-                  }
-                }
-                
-              },
-              error: (err) => {
-                console.error('Error al obtener las pujas:', err);
-              }
-            });
+            this.cargarPujas(this.lotes[this.indexLotes]);
             
           },
           error: (err) => {
@@ -170,7 +157,32 @@ export class StreamComponent implements OnInit, OnDestroy{
     this.subastaSubscription?.unsubscribe();
   }
 
-  
+  //-------------------------------------------pujas--------------------------------------
+
+  cargarPujas(lote : loteDto){
+    this.pujaService.getPujaslote(lote.id).subscribe({
+      next: (data) => {
+        this.pujas = data; 
+        console.log(this.pujas);
+
+        this.pujaActual = 0;
+        this.pujaRapida = lote.pujaMinima;
+
+        for(let puja of this.pujas){
+          if (puja.monto > this.pujaActual){
+            this.pujaActual = puja.monto;
+          }
+        }
+                
+      },
+      error: (err) => {
+         console.error('Error al obtener las pujas:', err);
+      }
+    });
+  }
+
+
+
 }
 
   
