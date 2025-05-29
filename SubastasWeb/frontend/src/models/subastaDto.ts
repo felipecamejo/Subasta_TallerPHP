@@ -7,7 +7,7 @@ export interface subastaDto {
     id: number;
     nombre: string;
     activa: boolean;
-    duracionSegundos: number;
+    duracionMinutos: number;
     fecha: Date;
     longitud: number;
     latitud: number;

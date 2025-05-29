@@ -12,5 +12,5 @@ export interface casaRemateDto {
     longitud: number;
 
     rematador: Pick<rematadorDto, 'usuario' | 'matricula'>;
-    subastas: Pick<subastaDto, 'id' | 'duracionSegundos' | 'fecha' | 'nombre'>[];
+    subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre'>[];
 }
