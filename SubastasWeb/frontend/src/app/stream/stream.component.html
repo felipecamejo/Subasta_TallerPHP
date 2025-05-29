@@ -6,26 +6,32 @@
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
+            <p-button label="Iniciar" severity="secondary" (click)="iniciarSubasta()"/>
             <span class="pi pi-clock"></span>
             <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
         </div>
 
         <hr class="w-full" />
-        <div class="w-full subDiv">
-            <div class="w-full flex padrePujas">
+        <div class="w-full subDiv" >
+            <div class="w-full margin">
+                <p-button label="Anterior lote" severity="secondary" (click)="anteriorLote()"/>
+                <p-button label="Siguiente lote" severity="secondary" (click)="siguienteLote()"/>
+            </div>
+            
+            <div class="w-full flex padrePujas margin">
                 <span class="subtitulo">Puja Actual:</span>
-                <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                <input type="text" class="text-input" [value]="pujaActual === 0 ? '' : pujaActual" pInputText readonly/>
             </div>
 
-            <div class="w-full flex">
+            <div class="w-full margin">
                 <div class="w-full flex padrePujas">
                     <p-button label="Puja Rapida" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    <input type="text" class="text-input" [value]="pujaRapida" pInputText readonly/>
                 </div>
 
-                <div class="w-full flex padrePujas">
+                <div class="w-full flex padrePujas margin">
                     <p-button label="Puja" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" pInputText [(ngModel)]="value" />
+                    <input type="text" class="text-input" pInputText  />
                     
                 </div>
             </div>

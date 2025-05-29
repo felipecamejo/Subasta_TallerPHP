@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->foreignId('lote_id')->nullable()->constrained('lotes')->onDelete('set null');
             $table->foreignId('factura_id')->nullable()->constrained('facturas')->onDelete('set null');
-
+            $table->foreignId('cliente_id')->nullable()->references('usuario_id')->on('clientes')->nullOnDelete();
         });
     }
 

@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('subastas', function (Blueprint $table) {
             $table->id();
         
-            $table->integer('duracionMinutos');
+            $table->string('nombre');
+            $table->integer('duracionMinutos')->default(0);
+            $table->boolean('activa');
             $table->dateTime('fecha');
             $table->decimal('latitud', 10, 7);
             $table->decimal('longitud', 10, 7);
