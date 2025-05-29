@@ -8,6 +8,7 @@
 
     class Rematador extends Model {
         protected $table = 'rematadores';
+        protected $primaryKey = 'usuario_id';
 
         protected $fillable = [ 
         'usuario_id',
