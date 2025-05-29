@@ -30,13 +30,21 @@ class SubastaController extends Controller
      *     )
      * )
      */
-    public function index()
-    {
-        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->get();
-        $dto = $subasta->map(function ($subasta) {
-            return Mapper::fromModelSubasta($subasta, $this->visited, 1);
-        });
-        return response()->json($dto);
+    public function index() {
+        try {
+            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->get();
+            
+            $dto = $subasta->map(function ($subasta) {
+                return Mapper::fromModelSubasta($subasta, $this->visited, 1);
+            });
+            return response()->json($dto);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+        
     }
 
 
