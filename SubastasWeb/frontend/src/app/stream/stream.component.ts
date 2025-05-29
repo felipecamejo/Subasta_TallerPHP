@@ -26,6 +26,8 @@ export class StreamComponent implements OnInit {
   subasta!: subastaDto;
   timerActivo: boolean = false;
 
+  boton: boolean = false;
+
   constructor( 
     private route: ActivatedRoute,
     private subastaService: SubastaService 
@@ -33,38 +35,62 @@ export class StreamComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    console.log('ID from route:', id);
+
     this.subastaService.getSubasta(id).subscribe(data => {
       this.subasta = data;
-      
-      this.remainingSeconds = this.subasta.duracionSegundos;
 
-      this.timerActivo = this.subasta.activa;
-
-      if (this.timerActivo && this.remainingSeconds > 0) {
+      if (this.subasta.activa) {
         this.startTimer();
       } else {
-        this.updateTimerDisplay()
+        this.timer = '0:00';
       }
     });
   }
 
+  iniciarBoton() {
+    this.subasta.activa = true;
+    this.startTimer();
+
+    this.subastaService.updateSubasta(this.subasta).subscribe(() => {
+      this.boton = true;
+      this.startTimer();
+    });
+  }
+
   startTimer() {
+    const inicio = new Date(this.subasta.fecha).getTime();
+    const ahora = Date.now();
+    const transcurrido = Math.floor((ahora - inicio) / 1000); 
+
+    this.remainingSeconds = this.subasta.duracionSegundos - transcurrido;
+
+    if (!this.subasta.activa) {
+      this.timer = '0:00';
+      this.timerActivo = false;
+      return;
+    }
+
+    this.timerActivo = true;
+    this.updateTimerDisplay();
+
     this.countdownSub = interval(1000).subscribe(() => {
-      if (this.remainingSeconds > 0 && this.timerActivo) {
-        this.remainingSeconds--;
-        this.updateTimerDisplay();
-      } else {
+      this.remainingSeconds--;
+
+      if (this.remainingSeconds <= 0) {
         this.timerActivo = false;
-        this.updateTimerDisplay();
+        this.timer = '0:00';
         this.countdownSub.unsubscribe();
+        this.subastaService.updateSubasta(this.subasta);
+      } else {
+        this.updateTimerDisplay();
       }
     });
   }
 
   updateTimerDisplay() {
-    const minutos = Math.floor(this.remainingSeconds / 60);
-    const segundos = this.remainingSeconds % 60;
+    const segundosTotales = Math.max(this.remainingSeconds, 0);
+    const minutos = Math.floor(segundosTotales / 60);
+    const segundos = segundosTotales % 60;
     this.timer = `${minutos}:${segundos.toString().padStart(2, '0')}`;
   }
 

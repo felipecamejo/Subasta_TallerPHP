@@ -20,5 +20,13 @@ export class SubastaService {
     return this.http.get<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}`);
   }
 
+  updateSubasta(subasta: subastaDto): Observable<subastaDto> {
+    return this.http.put<subastaDto>(
+      `${this.urlService.baseUrl}${this.endpoint}/${subasta.id}`,
+      subasta
+    );
+  }
+
+
 
 }
