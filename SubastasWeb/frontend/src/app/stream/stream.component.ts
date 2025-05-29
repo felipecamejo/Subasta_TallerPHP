@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { FooterComponent } from '../footer/footer.component';
 import { SubastaService } from '../../services/subasta.service';
 import { subastaDto } from '../../models/subastaDto';
 import { ActivatedRoute } from '@angular/router';
@@ -21,11 +20,8 @@ import { interval, Subscription } from 'rxjs';
 export class StreamComponent implements OnInit {
   
   subasta!: subastaDto;
-  timerActivo: boolean = false;
-
-  boton: boolean = false;
-
-  private intervalId: any;
+  
+  
 
   constructor( 
     private route: ActivatedRoute,
@@ -33,25 +29,25 @@ export class StreamComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
-    console.log('ngOnInit ejecutado');
     const id = Number(this.route.snapshot.paramMap.get('id'));
 
     this.subastaService.getSubasta(id).subscribe(data => {
-      console.log('Subasta obtenida:', data);
       this.subasta = data;
       
       if (this.subasta.activa) {
-        console.log('Subasta ya activa, iniciando timer');
         this.boton = true;
         this.iniciarTimer();
       }
+
     });
   }
 
   timer: string = "00:00:00";
+  private timerSubscription?: Subscription;
+  timerActivo: boolean = false;
+  boton: boolean = false;
 
   iniciarSubasta() {
-    console.log('iniciarSubasta ejecutado');
     if (!this.subasta || !this.subasta.fecha || this.subasta.activa) return;
 
     this.boton = true;
@@ -59,7 +55,6 @@ export class StreamComponent implements OnInit {
 
     this.subastaService.updateSubasta(this.subasta).subscribe({
       next: () => {
-        console.log('Subasta actualizada en backend, iniciando timer');
         this.iniciarTimer(); 
       },
       error: (err) => {
@@ -69,44 +64,50 @@ export class StreamComponent implements OnInit {
   }
 
   iniciarTimer() {
-  if (!this.boton || this.timerActivo) {
-    console.log('Timer ya activo o botón no presionado, no inicio timer');
-    return;
-  }
-
-  this.timerActivo = true;
-  console.log('Timer iniciado');
-
-  const fechaSubasta = new Date(this.subasta.fecha).getTime();
-
-  this.intervalId = setInterval(() => {
-    const ahora = Date.now();
-    let diferencia = Math.floor((fechaSubasta - ahora) / 1000);
-
-    if (diferencia <= 0) {
-      this.timer = '¡Subasta iniciada!';
-      this.timerActivo = false;
-      clearInterval(this.intervalId);
-      console.log('Timer finalizado y limpiado');
+    if (this.timerActivo || this.timerSubscription) {
       return;
     }
 
-    const horas = Math.floor(diferencia / 3600);
-    const minutos = Math.floor((diferencia % 3600) / 60);
-    const segundos = diferencia % 60;
+    const fechaInicio = new Date(this.subasta.fecha).getTime();
+    const duracionMs = this.subasta.duracionMinutos * 60 * 1000;
+    const fechaFin = fechaInicio + duracionMs;
 
-    this.timer = 
-      `${horas.toString().padStart(2, '0')}:` + 
-      `${minutos.toString().padStart(2, '0')}:` + 
-      `${segundos.toString().padStart(2, '0')}`;
-  }, 1000);
-}
+    this.timerActivo = true;
 
- ngOnDestroy() {
-  if (this.intervalId) {
-    clearInterval(this.intervalId);
-    console.log('Interval limpiado en ngOnDestroy');
+    this.timerSubscription = interval(1000).subscribe(() => {
+      const ahora = Date.now();
+      let nuevoTimer = '';
+
+      if (ahora < fechaInicio) {
+        let diff = Math.floor((fechaInicio - ahora) / 1000);
+        nuevoTimer = this.formatearTiempo(diff);
+      } else if (ahora >= fechaInicio && ahora <= fechaFin) {
+        let diff = Math.floor((fechaFin - ahora) / 1000);
+        nuevoTimer = this.formatearTiempo(diff);
+      } else {
+        nuevoTimer = 'finalizada';
+        this.timerActivo = false;
+        this.timerSubscription?.unsubscribe();
+      }
+
+      this.timer = nuevoTimer;
+    });
+
+    console.log('Timer iniciado correctamente');
+  }
+
+  formatearTiempo(segundos: number): string {
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const seg = segundos % 60;
+    return `${horas.toString().padStart(2, '0')}:` +
+          `${minutos.toString().padStart(2, '0')}:` +
+          `${seg.toString().padStart(2, '0')}`;
+  }
+
+  ngOnDestroy(): void {
+    this.timerSubscription?.unsubscribe();
   }
 }
   
-}
+
