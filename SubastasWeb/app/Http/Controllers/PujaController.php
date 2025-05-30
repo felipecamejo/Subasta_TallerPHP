@@ -134,7 +134,7 @@ class PujaController extends Controller
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'required|date',
             'montoTotal' => 'required|numeric',
-            'cliente_id' => 'required|exists:clientes,id',
+            'cliente_id' => 'required|exists:clientes,usuario_id',
             'lote_id' => 'required|exists:lotes,id',
         ]);
 
@@ -273,7 +273,7 @@ class PujaController extends Controller
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
             'montoTotal' => 'sometimes|required|numeric',
-            'cliente_id' => 'sometimes|required|exists:clientes,id',
+            'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
             'lote_id' => 'sometimes|required|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
         ]);
