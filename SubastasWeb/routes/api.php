@@ -21,6 +21,8 @@ Route::post('/mensaje', [MensajeController::class, 'enviar']);
 // Ruta pública para login
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::post('/register', [AuthController::class, 'register']);
+
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // Ruta para cerrar sesión

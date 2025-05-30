@@ -17,9 +17,13 @@ class UsuarioFactory extends Factory
 
         return [
             'nombre' => $this->faker->name(),
+            'cedula' => $this->faker->unique()->numerify('########'),
             'email' => $this->faker->unique()->safeEmail(),
-            'contrasenia' => Hash::make($password),
-            // otros campos si los tenés en la tabla usuarios
+            'telefono' => $this->faker->phoneNumber(),
+            'imagen' => null,
+            'contrasenia' => Hash::make('password'), // o '123456'
+            'latitud' => $this->faker->latitude(),
+            'longitud' => $this->faker->longitude(),
         ];
     }
 }

@@ -5,22 +5,18 @@ namespace Database\Seeders;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class DatabaseSeeder extends Seeder
+class UsuarioSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         // Usuario tipo Cliente
         $clienteUsuario = Usuario::create([
-            'nombre' => ' Steven Spielberg',
+            'nombre' => 'Steven Spielberg',
             'cedula' => '11111111',
-            'email' => 'Spielberg@example.com',
+            'email' => 'spielberg@example.com',
             'telefono' => '099111111',
             'imagen' => null,
             'contrasenia' => Hash::make('123456'),
@@ -37,7 +33,7 @@ class DatabaseSeeder extends Seeder
         $rematadorUsuario = Usuario::create([
             'nombre' => 'Rematador Derremate',
             'cedula' => '22222222',
-            'email' => 'rrematador@example.com',
+            'email' => 'rematador@example.com',
             'telefono' => '099222222',
             'imagen' => null,
             'contrasenia' => Hash::make('123456'),
