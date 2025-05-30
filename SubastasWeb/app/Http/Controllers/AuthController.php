@@ -8,6 +8,30 @@ use App\Models\Usuario;
 
 class AuthController extends Controller
 {
+    /**
+ * @OA\Post(
+ *     path="/api/login",
+ *     summary="Iniciar sesión",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"email","password"},
+ *             @OA\Property(property="email", type="string", example="test@example.com"),
+ *             @OA\Property(property="password", type="string", example="123456")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Token generado correctamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOi...")
+ *         )
+ *     ),
+ *     @OA\Response(response=401, description="Credenciales inválidas")
+ * )
+ */
+
     public function login(Request $request)
     {
         $request->validate([
