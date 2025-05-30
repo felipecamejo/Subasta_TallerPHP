@@ -10,6 +10,6 @@ export interface pujaDto {
 
     lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
     factura: Pick<facturaDto, 'id' | 'montoTotal' | 'entrega'>;
-    puja: Pick<clienteDto, 'usuario'>;
+    cliente: Pick<clienteDto, 'usuario'>;
 }
 

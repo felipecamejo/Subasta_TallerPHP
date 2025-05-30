@@ -54,6 +54,7 @@ export class StreamComponent implements OnInit, OnDestroy{
 
   pujaActual: number = 0;
   pujaRapida: number = 0;
+  pujaComun: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -163,15 +164,21 @@ export class StreamComponent implements OnInit, OnDestroy{
     this.pujaService.getPujaslote(lote.id).subscribe({
       next: (data) => {
         this.pujas = data; 
-        console.log(this.pujas);
 
         this.pujaActual = 0;
-        this.pujaRapida = lote.pujaMinima;
 
-        for(let puja of this.pujas){
-          if (puja.monto > this.pujaActual){
-            this.pujaActual = puja.monto;
+        if(this.pujas) {
+          for(let puja of this.pujas){
+            if (puja.monto > this.pujaActual){
+              this.pujaActual = puja.monto;
+            }
           }
+        }
+        
+        if( this.pujaActual == 0 ){
+          this.pujaRapida = lote.pujaMinima;
+        }else{
+          this.pujaRapida = Math.round(Number(this.pujaActual) * 0.40 + Number(this.pujaActual));
         }
                 
       },
@@ -181,8 +188,48 @@ export class StreamComponent implements OnInit, OnDestroy{
     });
   }
 
+  crearPujaRapida() {
 
+    const puja = {
+      fechaHora: new Date().toISOString(),
+      montoTotal: Number(this.pujaRapida),
+      cliente_id: null,
+      lote_id: Number(this.lotes[this.indexLotes].id)
+    }
 
+    console.log(puja);
+
+     this.pujaService.crearPuja(puja).subscribe({
+      next: (data) => {
+          this.cargarPujas(this.lotes[this.indexLotes]);
+      },
+      error: (err) => {
+         console.error('Error al obtener las pujas:', err);
+     }
+    });
+
+  }
+
+  crearPujaComun(){
+
+    const puja = {
+      fechaHora: new Date().toISOString(),
+      montoTotal: Number(this.pujaComun),
+      cliente_id: null,
+      lote_id: Number(this.lotes[this.indexLotes].id)
+    }
+
+    console.log(puja);
+
+    this.pujaService.crearPuja(puja).subscribe({
+      next: (data) => {
+          this.cargarPujas(this.lotes[this.indexLotes]);
+      },
+      error: (err) => {
+         console.error('Error al obtener las pujas:', err);
+     }
+    });
+  }
 }
 
   

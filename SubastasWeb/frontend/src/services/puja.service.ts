@@ -20,4 +20,7 @@ export class PujaService {
     return this.http.get<pujaDto[]>(`${this.urlService.baseUrl}${this.endpoint}/pujasLote/${id}`);
   }
 
+  crearPuja(puja : any): Observable<pujaDto> {
+    return this.http.post<pujaDto>(`${this.urlService.baseUrl}${this.endpoint}`, puja);
+  }
 }
