@@ -32,7 +32,7 @@ class SubastaController extends Controller
      */
     public function index() {
         try {
-            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->get();
+            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
             
             $dto = $subasta->map(function ($subasta) {
                 return Mapper::fromModelSubasta($subasta, $this->visited, 1);
@@ -118,15 +118,15 @@ class SubastaController extends Controller
      *     @OA\Response(response=404, description="Subasta no encontrada")
      * )
      */
-    public function show($id)
-    {
-        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->find($id);
+    public function show($id){
+
+        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, 1));
+        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, 2));
     }
 
     /**

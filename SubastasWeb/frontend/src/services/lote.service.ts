@@ -20,8 +20,5 @@ export class LoteService {
     return this.http.get<loteDto>(`${this.urlService.baseUrl}${this.endpoint}`);
   }
 
-  getLotesSubasta(id : number): Observable<loteDto[]> {
-    return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}/lotesSubasta/${id}`);
-  }
 
 }

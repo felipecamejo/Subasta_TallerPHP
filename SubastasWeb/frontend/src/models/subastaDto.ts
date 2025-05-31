@@ -2,6 +2,7 @@
 import { pujaDto } from './pujaDto';
 import { casaRemateDto } from './casaRemateDto';
 import { rematadorDto } from './rematadorDto';
+import { loteDto } from './loteDto';
 
 export interface subastaDto {
     id: number;
@@ -12,7 +13,7 @@ export interface subastaDto {
     longitud: number;
     latitud: number;
 
-    puja: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
+    lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' >[];
 
     casaremate: Pick<casaRemateDto, 'id' | 'nombre'>;
 

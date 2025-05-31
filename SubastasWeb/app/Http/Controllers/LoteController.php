@@ -121,29 +121,4 @@ class LoteController extends Controller{
         return response()->json(['Mensaje' => "Lote eliminado correctamente. id: $id"], 200);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/lotes/lotesSubasta/{id}",
-     *     summary="Obtener los lotes de una Subasta por ID",
-     *     tags={"Subastas"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(response=200, description="Lotes encontrados"),
-     *     @OA\Response(response=404, description="Subasta no encontrada")
-     * )
-    */
-    public function lotesSubasta($id){
-
-        $subasta = Subasta::with('lotes')->find($id);
-
-        if (!$subasta) {
-            return response()->json(['message' => 'Subasta no encontrada'], 404);
-        }
-
-        return response()->json($subasta->lotes); 
-    }
 }

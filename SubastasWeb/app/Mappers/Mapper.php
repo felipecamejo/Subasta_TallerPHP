@@ -249,33 +249,54 @@ class Mapper {
     }
 
     public static function fromModelLote(Lote $lote, &$visited = [], $depth = null): DtoLote {
-    if (!$lote instanceof Lote) {
-        throw new \InvalidArgumentException('Se esperaba instancia de Lote');
-    }
-
-    if (isset($visited['lote'][$lote->id])) {
-        return $visited['lote'][$lote->id];
-    }
-
-    $dtoSubasta = null;
-    if ($lote->subasta_id && ($depth === null || $depth > 0)) {
-        $subastaModel = Subasta::find($lote->subasta_id);
-        if ($subastaModel) {
-            $dtoSubasta = Mapper::fromModelSubasta($subastaModel, $visited, $depth !== null ? $depth - 1 : null);
+        if (!$lote instanceof Lote) {
+            throw new \InvalidArgumentException('Se esperaba instancia de Lote');
         }
+
+        if (isset($visited['lote'][$lote->id])) {
+            return $visited['lote'][$lote->id];
+        }
+
+        $dtoSubasta = null;
+
+        if ($lote->subasta_id && ($depth === null || $depth > 0) && isset($visited['subasta'][$lote->subasta_id])) {
+            $subastaModel = Subasta::find($lote->subasta_id);
+            if ($subastaModel) {
+                $dtoSubasta = new DtoSubasta(
+                    $subastaModel->id,
+                    $subastaModel->nombre,
+                    $subastaModel->activa,
+                    $subastaModel->duracionMinutos,
+                    $subastaModel->fecha,
+                    $subastaModel->longitud,
+                    $subastaModel->latitud,
+                    [], // No lotes to avoid circular reference
+                    null, // No casaremate
+                    null  // No rematador
+                );
+            }
+        }
+
+        $pujas = [];
+        if ($depth === null || $depth > 0) {
+            $pujasCollection = $lote->pujas ?? collect();
+            $pujas = $pujasCollection->map(function($puja) use (&$visited, $depth) {
+                return Mapper::fromModelPuja($puja, $visited, $depth !== null ? $depth - 1 : null);
+            })->toArray();
+        }
+
+        $dto = new DtoLote(
+            $lote->id,
+            $lote->valorBase,
+            $lote->pujaMinima,
+            $dtoSubasta,
+            $pujas
+        );
+
+        $visited['lote'][$lote->id] = $dto;
+
+        return $dto;
     }
-
-    $dto = new DtoLote(
-        $lote->id,
-        $lote->valorBase,
-        $lote->pujaMinima,
-        $dtoSubasta
-    );
-
-    $visited['lote'][$lote->id] = $dto;
-
-    return $dto;
-}
 
     public static function toModelLote(DtoLote $dto): Lote{
         return new Lote([

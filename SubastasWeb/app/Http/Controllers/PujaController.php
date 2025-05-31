@@ -147,7 +147,7 @@ class PujaController extends Controller
         try {
             $puja = Puja::create([
                 'fechaHora' => $request->fechaHora,
-                'montoTotal' => $request->montoTotal,
+                'monto' => $request->montoTotal,
                 'cliente_id' => $request->cliente_id,
                 'lote_id' => $request->lote_id,
             ]);
@@ -289,13 +289,19 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $puja->fill($request->only([
+            $updateData = $request->only([
                 'fechaHora',
-                'montoTotal',
                 'cliente_id',
                 'lote_id',
                 'factura_id',
-            ]));
+            ]);
+            
+            // Map montoTotal to monto for the model
+            if ($request->has('montoTotal')) {
+                $updateData['monto'] = $request->montoTotal;
+            }
+
+            $puja->fill($updateData);
 
             $puja->save();
 
@@ -367,32 +373,6 @@ class PujaController extends Controller
             ], 500);
         }
 
-
     }
 
-/**
-     * @OA\Get(
-     *     path="/api/pujas/pujasLote/{id}",
-     *     summary="Obtener los lotes de una Subasta por ID",
-     *     tags={"Subastas"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(response=200, description="Pujas encontrados"),
-     *     @OA\Response(response=404, description="Lote no encontrada")
-     * )
-    */
-    public function pujasLote($id){
-
-        $lote = Lote::with('pujas')->find($id);
-
-        if (!$lote) {
-            return response()->json(['message' => 'Lote no encontrada'], 404);
-        }
-
-        return response()->json($lote->pujas); 
-    }
 }

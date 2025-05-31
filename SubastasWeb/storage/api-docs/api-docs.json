@@ -1175,33 +1175,6 @@
                 }
             }
         },
-        "/api/lotes/lotesSubasta/{id}": {
-            "get": {
-                "tags": [
-                    "Subastas"
-                ],
-                "summary": "Obtener los lotes de una Subasta por ID",
-                "operationId": "a66b1f02b4520b1c589092c3e7e0593b",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lotes encontrados"
-                    },
-                    "404": {
-                        "description": "Subasta no encontrada"
-                    }
-                }
-            }
-        },
         "/api/pujas": {
             "get": {
                 "tags": [
@@ -1628,33 +1601,6 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/api/pujas/pujasLote/{id}": {
-            "get": {
-                "tags": [
-                    "Subastas"
-                ],
-                "summary": "Obtener los lotes de una Subasta por ID",
-                "operationId": "76685979cd19d4a92ffc9f3a933c6cf8",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pujas encontrados"
-                    },
-                    "404": {
-                        "description": "Lote no encontrada"
                     }
                 }
             }

@@ -16,9 +16,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\MensajeController;
 
-Route::get('/lotes/lotesSubasta/{id}', [LoteController::class, 'lotesSubasta']);
-
-Route::get('/pujas/pujasLote/{id}', [PujaController::class, 'pujasLote']);
 
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
