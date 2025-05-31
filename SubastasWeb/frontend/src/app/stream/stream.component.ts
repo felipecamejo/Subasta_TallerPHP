@@ -50,7 +50,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   
   indexLotes: number = 0;
   
-  private timerState: TimerState = {
+  public timerState: TimerState = {
     timer: "00:00:00",
     timerActivo: false
   };
