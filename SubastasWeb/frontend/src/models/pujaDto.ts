@@ -4,7 +4,7 @@ import { clienteDto } from './clienteDto';
 
 
 export interface pujaDto {
-    id: number;
+    id: number | null;
     fechaHora: Date;
     monto: number;
 

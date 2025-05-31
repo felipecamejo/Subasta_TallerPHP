@@ -3,7 +3,7 @@ import { casaRemateDto } from './casaRemateDto';
 import { articuloDto } from './articuloDto';
 
 export interface vendedorDto {
-    id: number;
+    id: number | null;
     
     nombre: string;
 

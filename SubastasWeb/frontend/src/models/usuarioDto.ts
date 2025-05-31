@@ -2,7 +2,7 @@ import { rematadorDto } from './rematadorDto';
 import { clienteDto } from './clienteDto';
 
 export interface usuarioDto {
-    id: number;
+    id: number | null;
     nombre: string;
     cedula: string;
     email: string;

@@ -56,6 +56,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   };
   
   private subastaSubscription?: Subscription;
+  private timerInitialized: boolean = false;
   boton: boolean = false;
 
   pujaActual: number = 0;
@@ -75,6 +76,32 @@ export class StreamComponent implements OnInit, OnDestroy {
     private subastaService: SubastaService,
     private pujaService: PujaService,
   ) {}
+
+  anteriorLote(): void {
+    if (this.indexLotes > 0) {
+      this.indexLotes--;
+      console.log(this.indexLotes);
+      this.cargarPujas(this.indexLotes);
+    }
+  }
+
+  siguienteLote(): void {
+    if (this.indexLotes < this.lotes.length - 1) {
+      this.indexLotes++;
+      console.log(this.indexLotes);
+      this.cargarPujas(this.indexLotes);
+    }
+  }
+
+  cargarPujas(loteIndex: number): void {
+    this.pujas = (this.lotes[this.indexLotes]?.pujas as pujaDto[]) || [];
+    this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
+    if (this.pujaActual === 0) {
+      this.pujaActual = Number(this.lotes[this.indexLotes].pujaMinima);
+    }
+    this.pujaRapida = Number(this.pujaActual) + 1;
+    this.pujaComun = null;
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -101,10 +128,15 @@ export class StreamComponent implements OnInit, OnDestroy {
           }
         }));
 
-        this.pujas = (this.lotes[this.indexLotes]?.pujas as pujaDto[]) || [];
+        this.cargarPujas(this.indexLotes);
         
-        if (this.subasta.activa) {
-          this.iniciarTimer();
+        // Solo iniciar timer si no se ha inicializado antes y la subasta está activa
+        if (this.subasta.activa && this.subasta.fecha && !this.timerInitialized) {
+          this.timerInitialized = true;
+          // Usar requestAnimationFrame para evitar bloqueo del hilo principal
+          requestAnimationFrame(() => {
+            this.iniciarTimer();
+          });
         }
       },
       error: (err) => {
@@ -114,42 +146,98 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   iniciarSubasta() {
-    if (!this.subasta || !this.subasta.fecha || this.subasta.activa) return;
+    if (!this.subasta || !this.subasta.fecha || this.subasta.activa) {
+      console.warn('No se puede iniciar la subasta: subasta ya activa o datos faltantes');
+      return;
+    }
 
     this.boton = true;
     this.subasta.activa = true;
 
-    this.subastaService.updateSubasta(this.subasta).subscribe(() => {
-      setTimeout(() => {
-        this.iniciarTimer();
-      }, 0);
+    this.subastaService.updateSubasta(this.subasta).subscribe({
+      next: () => {
+        console.log('Subasta actualizada correctamente');
+        if (!this.timerInitialized) {
+          this.timerInitialized = true;
+          requestAnimationFrame(() => {
+            this.iniciarTimer();
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error al actualizar subasta:', err);
+        // Revertir cambios en caso de error
+        this.boton = false;
+        this.subasta!.activa = false;
+      }
     });
   }
 
   iniciarTimer() {
+    // Evitar múltiples inicializaciones
+    if (this.timerState.timerActivo) {
+      console.warn('Timer ya está activo, ignorando nueva inicialización');
+      return;
+    }
+
     this.detenerTimer();
 
-    if (!this.subasta?.fecha) return;
+    if (!this.subasta?.fecha) {
+      console.warn('No hay fecha de subasta definida');
+      return;
+    }
 
     const fechaInicio = new Date(this.subasta.fecha).getTime();
+    
+    if (isNaN(fechaInicio)) {
+      console.error('Fecha de subasta inválida:', this.subasta.fecha);
+      return;
+    }
+
     const duracionMs = this.subasta.duracionMinutos * 60 * 1000;
     const fechaFin = fechaInicio + duracionMs;
+
+    console.log('Iniciando timer para subasta:', {
+      fechaInicio: new Date(fechaInicio),
+      fechaFin: new Date(fechaFin),
+      duracion: this.subasta.duracionMinutos
+    });
 
     this.timerState.timerActivo = true;
 
     this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
       takeWhile(() => this.timerState.timerActivo)
-    ).subscribe(() => {
-      const ahora = Date.now();
-      
-      if (ahora < fechaInicio) {
-        const diff = Math.floor((fechaInicio - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
-        this.timerState.timer = this.formatearTiempo(diff);
-      } else if (ahora <= fechaFin) {
-        const diff = Math.floor((fechaFin - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
-        this.timerState.timer = this.formatearTiempo(diff);
-      } else {
-        this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+    ).subscribe({
+      next: () => {
+        try {
+          const ahora = Date.now();
+          
+          if (ahora < fechaInicio) {
+            // Subasta aún no ha comenzado
+            const diff = Math.floor((fechaInicio - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
+            this.timerState.timer = this.formatearTiempo(diff);
+          } else if (ahora <= fechaFin) {
+            // Subasta en progreso
+            const diff = Math.floor((fechaFin - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
+            this.timerState.timer = this.formatearTiempo(diff);
+          } else {
+            // Subasta finalizada
+            this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+            this.detenerTimer();
+            
+            // Marcar la subasta como inactiva
+            if (this.subasta && this.subasta.activa) {
+              this.subasta.activa = false;
+              this.boton = false;
+            }
+          }
+        } catch (error) {
+          console.error('Error en timer:', error);
+          this.detenerTimer();
+        }
+      },
+      error: (error) => {
+        console.error('Error en suscripción del timer:', error);
         this.detenerTimer();
       }
     });
@@ -157,14 +245,21 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   detenerTimer(): void {
     this.timerState.timerActivo = false;
-    this.timerState.timerSubscription?.unsubscribe();
-    this.timerState.timerSubscription = undefined;
+    if (this.timerState.timerSubscription) {
+      this.timerState.timerSubscription.unsubscribe();
+      this.timerState.timerSubscription = undefined;
+    }
   }
 
   formatearTiempo(segundos: number): string {
+    if (segundos < 0) {
+      segundos = 0;
+    }
+    
     const horas = Math.floor(segundos / TIMER_CONSTANTS.SECONDS_PER_HOUR);
     const minutos = Math.floor((segundos % TIMER_CONSTANTS.SECONDS_PER_HOUR) / TIMER_CONSTANTS.SECONDS_PER_MINUTE);
     const seg = segundos % TIMER_CONSTANTS.SECONDS_PER_MINUTE;
+    
     return `${horas.toString().padStart(2, '0')}:` +
           `${minutos.toString().padStart(2, '0')}:` +
           `${seg.toString().padStart(2, '0')}`;
@@ -173,11 +268,16 @@ export class StreamComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.detenerTimer();
     this.subastaSubscription?.unsubscribe();
+    this.timerInitialized = false;
   }
 
   //-------------------------------------------pujas--------------------------------------
 
   private validarPuja(monto: number | null): { valida: boolean; error?: string } {
+    if (!this.timerState.timerActivo){
+      return { valida: false, error: 'La subasta no está activa' };
+    }
+
     if (!monto || monto <= 0) {
       return { valida: false, error: 'El monto debe ser mayor a 0' };
     }
@@ -189,6 +289,10 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     if (monto < loteActual.pujaMinima) {
       return { valida: false, error: `El monto debe ser mayor a ${loteActual.pujaMinima}` };
+    }
+
+    if (monto < this.pujaActual) {
+      return { valida: false, error: `El monto debe ser mayor a la puja actual de ${this.pujaActual}` };
     }
 
     return { valida: true };
@@ -204,6 +308,8 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   crearPujaRapida(): void {
+    this.pujaRapida = this.pujaActual+ 1
+
     const validacion = this.validarPuja(this.pujaRapida);
     
     if (!validacion.valida) {
@@ -216,6 +322,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   crearPujaComun(): void {
+    console.log('Puja común:', this.pujaComun);
     const validacion = this.validarPuja(this.pujaComun);
     
     if (!validacion.valida) {
@@ -234,6 +341,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       next: (data) => {
         console.log('Puja creada exitosamente:', data);
         this.actualizarDatos();
+        this.cargarPujas(this.indexLotes);
         this.limpiarCamposPuja();
       },
       error: (err) => {
@@ -243,7 +351,6 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   private actualizarDatos(): void {
-    // En lugar de llamar ngOnInit(), es mejor actualizar solo los datos necesarios
     const id = Number(this.route.snapshot.paramMap.get('id'));
     
     this.subastaService.getSubasta(id).subscribe({
@@ -258,7 +365,7 @@ export class StreamComponent implements OnInit, OnDestroy {
             nombre: this.subasta!.nombre
           }
         }));
-        this.pujas = (this.lotes[this.indexLotes]?.pujas as pujaDto[]) || [];
+        this.cargarPujas(this.indexLotes);
       },
       error: (err) => {
         console.error('Error al actualizar datos:', err);

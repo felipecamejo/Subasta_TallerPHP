@@ -131,18 +131,13 @@ class PujaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate( [
             'fechaHora' => 'required|date',
             'montoTotal' => 'required|numeric',
-            'cliente_id' => 'required|exists:clientes,id',
+            'cliente_id' => 'nullable|exists:clientes,usuario_id',
             'lote_id' => 'required|exists:lotes,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errores' => $validator->errors()
-            ], 422);
-        }
 
         try {
             $puja = Puja::create([
@@ -273,7 +268,7 @@ class PujaController extends Controller
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
             'montoTotal' => 'sometimes|required|numeric',
-            'cliente_id' => 'sometimes|required|exists:clientes,id',
+            'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
             'lote_id' => 'sometimes|required|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
         ]);
