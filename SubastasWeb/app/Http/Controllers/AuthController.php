@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
+use App\Models\Cliente;
+use App\Models\Rematador;
 
 class AuthController extends Controller
 {
@@ -155,5 +157,52 @@ public function register(Request $request)
         'token' => $token
     ], 201);
 }
+
+public function loginWithGoogle(Request $request)
+{
+    $request->validate([
+        'token' => 'required|string',
+        'rol' => 'required|in:cliente,rematador',
+        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+    ]);
+
+    $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+
+    $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
+
+    if (!$usuario) {
+        // Usuario nuevo
+        $usuario = Usuario::create([
+            'nombre' => $googleUser->getName(),
+            'email' => $googleUser->getEmail(),
+            'cedula' => '', // Adaptá según tu lógica
+            'telefono' => '',
+            'imagen' => $googleUser->getAvatar(),
+            'contrasenia' => bcrypt(Str::random(16)),
+        ]);
+
+        if ($request->rol === 'rematador') {
+            Rematador::create([
+                'usuario_id' => $usuario->id,
+                'matricula' => $request->matricula,
+            ]);
+        } else if ($request->rol === 'cliente') {
+            Cliente::create([
+                'usuario_id' => $usuario->id,
+            ]);
+        }
+    }
+
+    $token = $usuario->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'usuario' => $usuario->load(['rematador', 'cliente']),
+    ]);
+}
+
+
+
 
 }

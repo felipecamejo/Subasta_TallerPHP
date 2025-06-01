@@ -17,9 +17,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\MensajeController;
 
-Route::get('/auth/redirect/google', [SocialAuthController::class, 'redirectToGoogle']);
-Route::get('/auth/callback/google', [SocialAuthController::class, 'handleGoogleCallback']);
-
+Route::post('/login-with-google', [SocialAuthController::class, 'loginWithGoogle']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
 // Ruta pública para login

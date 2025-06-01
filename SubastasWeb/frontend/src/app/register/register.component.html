@@ -1,0 +1,53 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+  <label for="nombre">Nombre:</label>
+  <input id="nombre" formControlName="nombre" type="text" />
+  <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" style="color:red;">
+    Nombre es obligatorio.
+  </div>
+
+  <label for="email">Email:</label>
+  <input id="email" formControlName="email" type="email" />
+  <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" style="color:red;">
+    Email inválido.
+  </div>
+
+  <label for="password">Contraseña:</label>
+  <input id="password" formControlName="password" type="password" />
+  <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" style="color:red;">
+    Contraseña es obligatoria.
+  </div>
+
+  <label for="rol">Tipo de usuario:</label>
+  <select id="rol" formControlName="rol">
+    <option value="" disabled>Selecciona un rol</option>
+    <option value="cliente">Cliente</option>
+    <option value="rematador">Rematador</option>
+  </select>
+  <div *ngIf="form.get('rol')?.invalid && form.get('rol')?.touched" style="color:red;">
+    Debes seleccionar un rol.
+  </div>
+
+  <!-- Campos para Cliente -->
+  <div *ngIf="form.get('rol')?.value === 'cliente'">
+    <label for="direccion">Dirección:</label>
+    <input id="direccion" formControlName="direccion" type="text" />
+    <div *ngIf="form.get('direccion')?.invalid && form.get('direccion')?.touched" style="color:red;">
+      Dirección es obligatoria para clientes.
+    </div>
+
+    <label for="telefono">Teléfono:</label>
+    <input id="telefono" formControlName="telefono" type="text" />
+  </div>
+
+  <!-- Campos para Rematador -->
+  <div *ngIf="form.get('rol')?.value === 'rematador'">
+    <label for="matricula">Matrícula:</label>
+    <input id="matricula" formControlName="matricula" type="text" />
+    <div *ngIf="form.get('matricula')?.invalid && form.get('matricula')?.touched" style="color:red;">
+      Matrícula es obligatoria para rematadores.
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="form.invalid">Registrar</button>
+</form>
