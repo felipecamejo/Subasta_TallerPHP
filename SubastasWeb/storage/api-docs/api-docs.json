@@ -1916,6 +1916,10 @@
                                     "longitud": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "videoId": {
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2008,6 +2012,10 @@
                                     "longitud": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "videoId": {
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"

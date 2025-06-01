@@ -27,6 +27,10 @@ export class SubastaService {
     );
   }
 
+  getSubastas(): Observable<subastaDto[]> {
+    return this.http.get<subastaDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
+  }
+
 
 
 }

@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SubastaService } from '../../services/subasta.service';
+import { subastaDto } from '../../models/subastaDto';
 
 @Component({
   selector: 'app-buscador-remates',
@@ -13,22 +16,29 @@ import { FormsModule } from '@angular/forms';
 })
 export class BuscadorRematesComponent {
   
-  cities = [
+  categorias = [
     { name: 'Santiago', code: 'STG' },
     { name: 'Valparaíso', code: 'VLP' },
     { name: 'Concepción', code: 'CCP' }
   ];
 
-  subastas = [
-    { name: 'Subasta 1', informacions: 'S1', imagen: 'images/img.webp' },
-    { name: 'Subasta 2', informacion: 'S2', imagen: '' },
-    { name: 'Subasta 3', informacion: 'S3', imagen: '' },
-    { name: 'Subasta 4', informacion: 'S4', imagen: '' },
-    { name: 'Subasta 5', informacion: 'S5', imagen: '' },
-    { name: 'Subasta 6', informacion: 'S6', imagen: '' },
-  ]
+  filtros = [
+    { name: 'Mas Reciente',},
+    { name: 'Mas Antiguo', },
+  ];
+
+  Estado = [
+    { name: 'Santiago', code: 'STG' },
+    { name: 'Valparaíso', code: 'VLP' },
+    { name: 'Concepción', code: 'CCP' }
+  ];
+
+  subastas! : subastaDto[];
   
   selectedCity: any = null;
+  selectedCategory: any = null;
+  selectedFiltro: any = null;
+  selectedEstado: any = null;
 
   get subastasPorGrupo(): any[][] {
     const grupos = [];
@@ -36,5 +46,43 @@ export class BuscadorRematesComponent {
       grupos.push(this.subastas.slice(i, i + 3));
     }
     return grupos;
+  }
+
+  getImagenSubasta(subasta: any): string {
+    if (subasta.lotes && 
+        subasta.lotes.length > 0 && 
+        subasta.lotes[0].articulos && 
+        subasta.lotes[0].articulos.length > 0 && 
+        subasta.lotes[0].articulos[0].imagen) {
+      return subasta.lotes[0].articulos[0].imagen;
+    }
+    return '/images/img.webp';
+  }
+
+  getNombreSubasta(subasta: any): string {
+    return subasta.nombre || 'Subasta sin nombre';
+  }
+
+  irASubasta(subasta: any): void {
+    if (subasta.id) {
+      this.router.navigate(['/stream', subasta.id]);
+    }
+  }
+
+  constructor(
+    private route: ActivatedRoute,
+    private subastaService: SubastaService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.subastaService.getSubastas().subscribe({
+      next: (data) => {
+        this.subastas = data;
+      }
+      , error: (error) => {
+        console.error('Error al cargar las subastas:', error);
+      }
+    });
   }
 }
