@@ -5,6 +5,6 @@ export interface categoriaDto {
     nombre: string;
     
     articulos: Pick<articuloDto, 'id' | 'nombre'>;
-    categoria_hija: Pick<categoriaDto, 'id' |'nombre' | 'categoria_padre'>[] | null;
+    categoria_hijas: Pick<categoriaDto, 'id' |'nombre' | 'categoria_padre'>[] | null;
     categoria_padre: Pick<categoriaDto,  'id' | 'nombre' | 'categoria_padre'> | null;
 }

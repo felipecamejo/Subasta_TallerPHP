@@ -19,8 +19,9 @@ import { CategoriaService } from '../../services/categoria.service';
 export class BuscadorRematesComponent {
 
   filtros = [
-    { name: 'Mas Reciente',},
-    { name: 'Mas Antiguo', },
+    { name: 'Todos', value: 0 },
+    { name: 'Mas Reciente', value: 1 },
+    { name: 'Mas Antiguo', value: 2 },
   ];
 
   Estado = [
@@ -29,11 +30,18 @@ export class BuscadorRematesComponent {
     { name: 'Concepción'},
   ];
 
+  constructor(
+    private route: ActivatedRoute,
+    private subastaService: SubastaService,
+    private categoriaService: CategoriaService,
+    private router: Router
+  ) {}
+
   categoriaDefault: categoriaDto = {
     id: 0,
     nombre: 'Todas las categorías',
     articulos: { id: 0, nombre: 'Todos los artículos' },
-    categoria_hija: [],    
+    categoria_hijas: [],    
     categoria_padre: null
   }
 
@@ -41,17 +49,46 @@ export class BuscadorRematesComponent {
   categorias: categoriaDto[] = [];
   categoriasLoading: boolean = true;
   
-  selectedCategory: any = 0;
-  selectedFiltro: any = null;
-  selectedEstado: any = null;
+  selectedCategory: number = 0;
+  selectedFiltro: number = 0;
+  selectedEstado: number = 0;
+
+  subastasPorFiltro(subastas: subastaDto[]): subastaDto[] {
+    
+    if (!subastas || subastas.length === 0) {
+      return subastas;
+    }
+
+    if (this.selectedFiltro === 0) {
+      return subastas; 
+    } else if (this.selectedFiltro === 1) {
+      return [...subastas].sort((a, b) => {
+        const fechaA = new Date(a.fecha).getTime();
+        const fechaB = new Date(b.fecha).getTime();
+        return fechaB - fechaA;
+      }); 
+    } else if (this.selectedFiltro === 2) {
+
+      return [...subastas].sort((a, b) => {
+        const fechaA = new Date(a.fecha).getTime();
+        const fechaB = new Date(b.fecha).getTime();
+        return fechaA - fechaB;
+      }); 
+    }
+    return subastas;
+  }
 
   get subastasPorGrupo(): any[][] {
-    if (!this.subastas || this.subastas.length === 0) {
+    let subastasFiltradas = this.getSubastasPorCategoria();
+    subastasFiltradas = this.subastasPorFiltro(subastasFiltradas);
+
+    if (!subastasFiltradas || subastasFiltradas.length === 0) {
       return [];
     }
+    
     const grupos = [];
-    for (let i = 0; i < this.subastas.length; i += 3) {
-      grupos.push(this.subastas.slice(i, i + 3));
+    for (let i = 0; i < subastasFiltradas.length; i += 3) {
+      grupos.push(subastasFiltradas.slice(i, i + 3));
     }
     return grupos;
   }
@@ -77,18 +114,59 @@ export class BuscadorRematesComponent {
     }
   }
 
-  constructor(
-    private route: ActivatedRoute,
-    private subastaService: SubastaService,
-    private categoriaService: CategoriaService,
-    private router: Router
-  ) {}
+  getCategoriasRelacionadas(categoriaSeleccionada: number): number[] {
+    if (categoriaSeleccionada === 0) return [0];
+    
+    const categoriasRelacionadas = new Set<number>();
+    categoriasRelacionadas.add(categoriaSeleccionada);
+
+    const categoriaActual = this.categorias.find(cat => cat.id === categoriaSeleccionada);
+    
+    if (categoriaActual) {
+      if (categoriaActual.categoria_hijas && categoriaActual.categoria_hijas.length > 0) {
+        categoriaActual.categoria_hijas.forEach(hija => {
+          if (hija.id) categoriasRelacionadas.add(hija.id);
+        });
+      }
+      
+      if (categoriaActual.categoria_padre && categoriaActual.categoria_padre.id && categoriaActual.categoria_padre.id !== 0) {
+        this.categorias.forEach(cat => {
+          if (cat.categoria_padre && 
+              cat.categoria_padre.id === categoriaActual.categoria_padre!.id && 
+              cat.id && cat.id !== 0) {
+            categoriasRelacionadas.add(cat.id);
+          }
+        });
+      }
+    }
+    
+    return Array.from(categoriasRelacionadas);
+  }
+
+  getSubastasPorCategoria(): subastaDto[] {
+    if (this.selectedCategory === 0) {
+      return this.subastas;
+    }
+    
+    const categoriasValidas = this.getCategoriasRelacionadas(this.selectedCategory);
+
+    const subastasFiltradas = this.subastas.filter(subasta =>
+      subasta.lotes?.some(lote =>
+        lote.articulos?.some(articulo =>
+          articulo.categorias?.some(categoria => 
+            categoria.id && categoriasValidas.includes(categoria.id)
+          )
+        )
+      )
+    );
+
+    return subastasFiltradas;
+  }
 
   ngOnInit() {
     this.subastaService.getSubastas().subscribe({
       next: (data) => {
         this.subastas = data;
-        console.log('Subastas cargadas:', this.subastas);
       }
       , error: (error) => {
         console.error('Error al cargar las subastas:', error);
@@ -97,15 +175,17 @@ export class BuscadorRematesComponent {
     
     this.categoriaService.getCategorias().subscribe({
       next: (data) => {
-        console.log('Datos crudos del backend:', data);
         
         this.categorias = data.map(categoria => ({
           ...categoria,
           id: categoria.id,
-          nombre: categoria.nombre
+          nombre: categoria.nombre,
+          categoria_padre: categoria.categoria_padre,
+          categoria_hijas: (categoria as any).categoriasHijas || []
         }));
 
-        this.categoriaDefault.categoria_hija = this.categorias.map(categoria => ({
+        // Configurar la categoría por defecto
+        this.categoriaDefault.categoria_hijas = this.categorias.map(categoria => ({
           id: categoria.id,
           nombre: categoria.nombre,
           categoria_padre: { id: 0, nombre: 'Todas las categorías', categoria_padre: null }
@@ -114,8 +194,6 @@ export class BuscadorRematesComponent {
         this.categorias.unshift(this.categoriaDefault);
         
         this.categoriasLoading = false;
-        console.log('Categorias cargadas y transformadas:', this.categorias);
-        console.log('Categoria default con hijas:', this.categoriaDefault);
       }
       , error: (error) => {
         console.error('Error al cargar las categorías:', error);
