@@ -8,5 +8,5 @@ export interface loteDto {
     pujaMinima: number;
     subasta: Pick<subastaDto, 'id' | 'fecha' | 'duracionMinutos'| 'nombre'>;
     pujas: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
-    articulos: Pick<articuloDto, 'id' | 'nombre' | 'imagen'>[];
+    articulos: Pick<articuloDto, 'id' | 'nombre' | 'imagen'| 'categorias'>[];
 }   

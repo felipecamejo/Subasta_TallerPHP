@@ -2,26 +2,27 @@
     <article class="w-full flex flex-wrap article-1">
         <span class="titulo">Subastas</span>
         <p-button class="boton" icon="pi pi-map-marker" severity="secondary"/>
-        <p-dropdown 
+        <p-select 
             [options]="categorias" 
             [(ngModel)]="selectedCategory" 
-            optionLabel="name" 
-            optionValue="code"
-            placeholder="Categoria">
-        </p-dropdown>
-        <p-dropdown 
+            optionLabel="nombre" 
+            optionValue="id"
+            placeholder="Seleccionar categoría"
+            [loading]="categoriasLoading">
+        </p-select>
+        <p-select 
             [options]="filtros" 
             [(ngModel)]="selectedFiltro" 
             optionLabel="name" 
             placeholder="Filtro">
-        </p-dropdown>
-        <p-dropdown 
+        </p-select>
+        <p-select 
             [options]="Estado" 
             [(ngModel)]="selectedEstado" 
             optionLabel="name" 
             optionValue="code"
             placeholder="Estado">
-        </p-dropdown>
+        </p-select>
     </article>
     <ng-container *ngFor="let grupo of subastasPorGrupo">
         <article class="w-full flex flex-wrap article-subastas">

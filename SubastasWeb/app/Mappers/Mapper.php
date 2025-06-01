@@ -285,12 +285,21 @@ class Mapper {
             })->toArray();
         }
 
+        $articulos = [];
+        if ($depth === null || $depth > 0) {
+            $articulosCollection = $lote->articulos ?? collect();
+            $articulos = $articulosCollection->map(function($articulo) use (&$visited, $depth) {
+                return Mapper::fromModelArticulo($articulo, $visited, $depth !== null ? $depth - 1 : null);
+            })->toArray();
+        }
+
         $dto = new DtoLote(
             $lote->id,
             $lote->valorBase,
             $lote->pujaMinima,
             $dtoSubasta,
-            $pujas
+            $pujas,
+            $articulos
         );
 
         $visited['lote'][$lote->id] = $dto;

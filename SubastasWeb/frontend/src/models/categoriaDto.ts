@@ -1,10 +1,10 @@
 import { articuloDto } from './articuloDto.js';
 
 export interface categoriaDto {
+    id: number | null;
     nombre: string;
-    categoria_padre_id: number | null;
     
-    articulo: Pick<articuloDto, 'id' | 'nombre'>;
-    categoria_hija: Pick<categoriaDto, 'nombre' | 'categoria_padre_id'>[];
-    categoria_padre: Pick<categoriaDto, 'nombre' | 'categoria_padre_id'>;
+    articulos: Pick<articuloDto, 'id' | 'nombre'>;
+    categoria_hija: Pick<categoriaDto, 'id' |'nombre' | 'categoria_padre'>[] | null;
+    categoria_padre: Pick<categoriaDto,  'id' | 'nombre' | 'categoria_padre'> | null;
 }

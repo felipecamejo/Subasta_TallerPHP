@@ -17,7 +17,7 @@ use App\Mappers\Mapper;
  */
 class SubastaController extends Controller
 {
-    public $maxDepth = 2;
+    public $maxDepth = 3;
     public $visited = [];
     /**
      * @OA\Get(
@@ -35,7 +35,7 @@ class SubastaController extends Controller
             $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
             
             $dto = $subasta->map(function ($subasta) {
-                return Mapper::fromModelSubasta($subasta, $this->visited, 1);
+                return Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth);
             });
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -129,7 +129,7 @@ class SubastaController extends Controller
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, 2));
+        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth));
     }
 
     /**

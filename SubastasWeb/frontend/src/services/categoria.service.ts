@@ -2,22 +2,22 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { UrlService } from './url.service';
-import { loteDto } from '../models/loteDto';
+import { categoriaDto } from '../models/categoriaDto';
 
 @Injectable({
   providedIn: 'root',
 })
-export class LoteService {
+export class CategoriaService {
 
-  private endpoint: string = '/lotes';
+  private endpoint: string = '/categorias';
 
   constructor(
     private http: HttpClient,
     private urlService: UrlService,
   ) {}
 
-  getLotes(): Observable<loteDto[]> {
-    return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
+  getCategorias(): Observable<categoriaDto[]> {
+    return this.http.get<categoriaDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
   }
 
 

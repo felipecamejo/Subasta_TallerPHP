@@ -1,3 +1,4 @@
+import { categoriaDto } from './categoriaDto';
 import { loteDto } from './loteDto';
 import { vendedorDto } from './vendedorDto';
 
@@ -10,4 +11,5 @@ export interface articuloDto {
     condicion: string;
     vendedor: Pick<vendedorDto, 'id' | 'nombre'>;
     lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
+    categorias: Pick<categoriaDto, 'id' | 'nombre'>[];
 }
