@@ -25,9 +25,9 @@ export class BuscadorRematesComponent {
   ];
 
   Estado = [
-    { name: 'Santiago'},
-    { name: 'Valparaíso'},
-    { name: 'Concepción'},
+    { name: 'Santiago', value: 0},
+    { name: 'Valparaíso', value: 1},
+    { name: 'Concepción', value: 2},
   ];
 
   constructor(
