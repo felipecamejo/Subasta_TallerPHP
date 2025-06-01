@@ -50,6 +50,23 @@ class AuthController extends Controller
         return response()->json(['token' => $token], 200);
     }
 
+       /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     tags={"Autenticación"},
+     *     summary="Cerrar sesión",
+     *     description="Revoca el token del usuario autenticado",
+     *     operationId="logoutUser",
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sesión cerrada correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Sesión cerrada con éxito")
+     *         )
+     *     )
+     * )
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -138,4 +155,5 @@ public function register(Request $request)
         'token' => $token
     ], 201);
 }
+
 }

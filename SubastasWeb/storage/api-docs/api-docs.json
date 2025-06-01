@@ -254,6 +254,39 @@
                 }
             }
         },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Cerrar sesión",
+                "description": "Revoca el token del usuario autenticado",
+                "operationId": "logoutUser",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sesión cerrada con éxito"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/register": {
             "post": {
                 "tags": [
@@ -2038,6 +2071,21 @@
                 "summary": "Redirigir a Google para iniciar sesión",
                 "description": "Esta ruta redirige al usuario a Google para el inicio de sesión.",
                 "operationId": "redirectToGoogle",
+                "parameters": [
+                    {
+                        "name": "rol",
+                        "in": "query",
+                        "description": "Rol del usuario: cliente o rematador",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cliente",
+                                "rematador"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "302": {
                         "description": "Redirección a Google"
@@ -2051,27 +2099,26 @@
                     "Autenticación Social"
                 ],
                 "summary": "Callback de Google después del login",
-                "description": "Procesa la información del usuario devuelta por Google y genera un token Sanctum.",
+                "description": "Procesa el usuario de Google y lo registra como cliente o rematador",
                 "operationId": "handleGoogleCallback",
                 "responses": {
                     "200": {
-                        "description": "Token generado exitosamente",
+                        "description": "Usuario autenticado y rol asignado",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "token": {
-                                            "type": "string",
-                                            "example": "1|abcd1234..."
+                                            "type": "string"
+                                        },
+                                        "rol": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Error al procesar los datos de Google"
                     }
                 }
             }
