@@ -2030,6 +2030,52 @@
                 }
             }
         },
+        "/api/auth/redirect/google": {
+            "get": {
+                "tags": [
+                    "Autenticación Social"
+                ],
+                "summary": "Redirigir a Google para iniciar sesión",
+                "description": "Esta ruta redirige al usuario a Google para el inicio de sesión.",
+                "operationId": "redirectToGoogle",
+                "responses": {
+                    "302": {
+                        "description": "Redirección a Google"
+                    }
+                }
+            }
+        },
+        "/api/auth/callback/google": {
+            "get": {
+                "tags": [
+                    "Autenticación Social"
+                ],
+                "summary": "Callback de Google después del login",
+                "description": "Procesa la información del usuario devuelta por Google y genera un token Sanctum.",
+                "operationId": "handleGoogleCallback",
+                "responses": {
+                    "200": {
+                        "description": "Token generado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcd1234..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error al procesar los datos de Google"
+                    }
+                }
+            }
+        },
         "/api/subastas": {
             "get": {
                 "tags": [
@@ -2617,6 +2663,10 @@
         {
             "name": "Pujas",
             "description": "Pujas"
+        },
+        {
+            "name": "Autenticación Social",
+            "description": "Autenticación Social"
         }
     ]
 }
