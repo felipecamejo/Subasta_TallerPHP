@@ -1,7 +1,23 @@
 <main class="w-full flex flex-wrap">
     <article class="article-1 col-12 md:col-6 flex">
-        <div class="video-player-1">
-        </div>
+        <iframe class="video-player-1" 
+            *ngIf="videoUrl; else noVideo"
+            [src]="videoUrl"
+            frameborder="0"
+            allowfullscreen
+            loading="lazy"
+            title="Stream de la subasta"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        </iframe>
+        <ng-template #noVideo>
+            <div class="no-video-placeholder">
+                <p>Stream no disponible</p>
+            </div>
+        </ng-template>
+        <p-dialog [visible]="modalVideo">
+            <input type="text" class="text-input" pInputText [(ngModel)]="video" />
+            <p-button label="Buscar" severity="secondary" (click)="initializeVideo(video)"/>
+        </p-dialog>
     </article>
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">

@@ -12,6 +12,8 @@ import { takeWhile } from 'rxjs/operators';
 import { loteDto } from '../../models/loteDto';
 import { PujaService } from '../../services/puja.service'
 import { pujaDto } from '../../models/pujaDto';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DialogModule } from 'primeng/dialog';
 
 
 interface PujaRequest {
@@ -38,7 +40,7 @@ const TIMER_CONSTANTS = {
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule],
+  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
@@ -50,6 +52,8 @@ export class StreamComponent implements OnInit, OnDestroy {
   
   indexLotes: number = 0;
   
+  videoUrl: SafeResourceUrl | null = null;
+
   public timerState: TimerState = {
     timer: "00:00:00",
     timerActivo: false
@@ -72,10 +76,42 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   constructor(
+    private sanitizer: DomSanitizer,
     private route: ActivatedRoute,
     private subastaService: SubastaService,
     private pujaService: PujaService,
-  ) {}
+  ) {
+    this.setVideo();
+  }
+
+  modalVideo: boolean = false;
+  video: string = '';
+
+  private setVideo(): void {
+    this.modalVideo = true;
+  }
+
+  public initializeVideo(videoId: string | undefined): void {
+
+    this.modalVideo = false;
+
+    //DN8P7kukaGo
+    
+    if (!videoId) {
+      console.warn('No hay videoId configurado para el stream');
+      return;
+    }
+    
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?` +
+      'mute=1&' +          
+      'controls=1&' +       
+      'rel=0&' +           
+      'modestbranding=1&' + 
+      'iv_load_policy=3';  
+      
+    this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+
+  }
 
   anteriorLote(): void {
     if (this.indexLotes > 0) {
