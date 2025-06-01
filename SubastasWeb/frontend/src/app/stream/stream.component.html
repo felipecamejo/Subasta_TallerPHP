@@ -1,7 +1,7 @@
 <main class="w-full flex flex-wrap">
     <article class="article-1 col-12 md:col-6 flex">
         <iframe class="video-player-1" 
-            *ngIf="videoUrl; else noVideo"
+            *ngIf="videoUrl && videoUrl !== null; else noVideo"
             [src]="videoUrl"
             frameborder="0"
             allowfullscreen
@@ -12,12 +12,11 @@
         <ng-template #noVideo>
             <div class="no-video-placeholder">
                 <p>Stream no disponible</p>
+                <p>ID de video actual: {{ subasta?.videoId || 'No configurado' }}</p>
+                <input type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video" />
+                <p-button label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
             </div>
         </ng-template>
-        <p-dialog [visible]="modalVideo">
-            <input type="text" class="text-input" pInputText [(ngModel)]="video" />
-            <p-button label="Buscar" severity="secondary" (click)="initializeVideo(video)"/>
-        </p-dialog>
     </article>
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">

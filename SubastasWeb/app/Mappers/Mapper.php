@@ -441,6 +441,7 @@ class Mapper {
 
         $dto = new DtoSubasta(
             $subasta->id,
+            $subasta->videoId,
             $subasta->activa,
             $subasta->nombre,
             $subasta->duracionMinutos,
@@ -449,7 +450,8 @@ class Mapper {
             $dtoRematador,
             $subasta->latitud,
             $subasta->longitud,
-            $lotes
+            $lotes,
+            
         );
         $visited['subasta'][$subasta->id] = $dto;
         return $dto;
@@ -461,10 +463,11 @@ class Mapper {
             'activa' => $dto->activa,
             'duracionMinutos' => $dto->duracionMinutos,
             'fecha' => $dto->fecha,
-            'casaremate_id' => $dto->casaremate->id ?? null,
+            'casa_remate_id' => $dto->casaremate->id ?? null,
             'rematador_id' => $dto->rematador->id ?? null,
             'latitud' => $dto->latitud,
-            'longitud' => $dto->longitud
+            'longitud' => $dto->longitud,
+            'videoId' => $dto->videoId,
         ]);
     }
 

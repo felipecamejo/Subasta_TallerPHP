@@ -19,7 +19,8 @@ class Subasta extends Model
         'latitud',
         'longitud',
         'activa',
-        'duracionMinutos'
+        'duracionMinutos',
+        'videoId'
     ]; 
 
     protected $hidden = [];

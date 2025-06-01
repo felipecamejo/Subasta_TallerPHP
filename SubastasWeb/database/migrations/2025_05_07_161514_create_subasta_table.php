@@ -20,7 +20,7 @@ return new class extends Migration
             $table->dateTime('fecha');
             $table->decimal('latitud', 10, 7);
             $table->decimal('longitud', 10, 7);
-
+            $table->string('videoId')->nullable();
         
             $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
             

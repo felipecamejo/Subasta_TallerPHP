@@ -15,11 +15,12 @@ class DtoSubasta {
     public $latitud;
     public $longitud;
     public $activa;
+    public $videoId;
 
     /** @var DtoLote[] */
     public array $lotes;
 
-    public function __construct($id, $activa, $nombre, $duracionMinutos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
+    public function __construct($id, $videoId,$activa, $nombre, $duracionMinutos, $fecha, $casaremate, $rematador, $latitud, $longitud, $lotes) {
         $this->id = $id;
         $this->nombre = $nombre;
         $this->duracionMinutos = $duracionMinutos;
@@ -30,6 +31,7 @@ class DtoSubasta {
         $this->longitud = $longitud;
         $this->lotes = $lotes;
         $this->activa = $activa;
+        $this->videoId = $videoId; 
     }
 
     public function toArray(): array {
@@ -43,6 +45,7 @@ class DtoSubasta {
             'rematador_id' => $this->rematador,
             'latitud' => $this->latitud,
             'longitud' => $this->longitud,
+            'videoId' => $this->videoId,
             'lotes' => array_map(function($lote) {
                 return $lote->toArray();
             }, $this->lotes)

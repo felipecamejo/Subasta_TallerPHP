@@ -81,15 +81,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     private subastaService: SubastaService,
     private pujaService: PujaService,
   ) {
-    this.setVideo();
   }
 
   modalVideo: boolean = false;
   video: string = '';
-
-  private setVideo(): void {
-    this.modalVideo = true;
-  }
 
   public initializeVideo(videoId: string | undefined): void {
 
@@ -97,12 +92,16 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     //DN8P7kukaGo
     
-    if (!videoId) {
-      console.warn('No hay videoId configurado para el stream');
+    // Validación mejorada del videoId
+    if (!videoId || videoId.trim() === '') {
+      console.warn('No hay videoId válido configurado para el stream');
+      this.videoUrl = null; // Asegurar que videoUrl sea null para mostrar el placeholder
       return;
     }
     
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?` +
+    const cleanVideoId = videoId.trim();
+    
+    const embedUrl = `https://www.youtube.com/embed/${cleanVideoId}?` +
       'mute=1&' +          
       'controls=1&' +       
       'rel=0&' +           
@@ -111,12 +110,24 @@ export class StreamComponent implements OnInit, OnDestroy {
       
     this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
 
+
+    // Solo actualizar en BD si es diferente al actual
+    if(this.subasta?.videoId == null || this.subasta?.videoId.trim() !== cleanVideoId){
+      this.subasta!.videoId = cleanVideoId;
+      this.subastaService.updateSubasta(this.subasta!).subscribe({
+        next: () => {
+          console.log('Subasta actualizada con el nuevo video');
+        },
+        error: (err) => {
+          console.error('Error al actualizar subasta con el nuevo video:', err);
+        }
+      });
+    }
   }
 
   anteriorLote(): void {
     if (this.indexLotes > 0) {
       this.indexLotes--;
-      console.log(this.indexLotes);
       this.cargarPujas(this.indexLotes);
     }
   }
@@ -124,7 +135,6 @@ export class StreamComponent implements OnInit, OnDestroy {
   siguienteLote(): void {
     if (this.indexLotes < this.lotes.length - 1) {
       this.indexLotes++;
-      console.log(this.indexLotes);
       this.cargarPujas(this.indexLotes);
     }
   }
@@ -164,12 +174,21 @@ export class StreamComponent implements OnInit, OnDestroy {
           }
         }));
 
-        this.cargarPujas(this.indexLotes);
+
         
-        // Solo iniciar timer si no se ha inicializado antes y la subasta está activa
+        if(this.subasta.videoId && this.subasta.videoId.trim() !== '') {
+          console.log('Inicializando video con ID:', this.subasta.videoId);
+          this.initializeVideo(this.subasta.videoId);
+        } else {
+          console.log('No hay videoId válido para inicializar');
+          console.log('Condición falló - videoId:', !!this.subasta.videoId, 'trim:', this.subasta.videoId?.trim());
+        }
+        
+        this.cargarPujas(this.indexLotes);
+
         if (this.subasta.activa && this.subasta.fecha && !this.timerInitialized) {
           this.timerInitialized = true;
-          // Usar requestAnimationFrame para evitar bloqueo del hilo principal
+          
           requestAnimationFrame(() => {
             this.iniciarTimer();
           });
