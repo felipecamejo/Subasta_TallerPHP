@@ -91,11 +91,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.modalVideo = false;
 
     //DN8P7kukaGo
-    
-    // Validación mejorada del videoId
+
     if (!videoId || videoId.trim() === '') {
       console.warn('No hay videoId válido configurado para el stream');
-      this.videoUrl = null; // Asegurar que videoUrl sea null para mostrar el placeholder
+      this.videoUrl = null; 
       return;
     }
     
@@ -110,8 +109,6 @@ export class StreamComponent implements OnInit, OnDestroy {
       
     this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
 
-
-    // Solo actualizar en BD si es diferente al actual
     if(this.subasta?.videoId == null || this.subasta?.videoId.trim() !== cleanVideoId){
       this.subasta!.videoId = cleanVideoId;
       this.subastaService.updateSubasta(this.subasta!).subscribe({
