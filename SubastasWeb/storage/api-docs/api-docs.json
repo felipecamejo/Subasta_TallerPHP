@@ -704,18 +704,18 @@
                 }
             }
         },
-        "/api/clientes/{id}": {
+        "/api/clientes/{usuario_id}": {
             "get": {
                 "tags": [
                     "Cliente"
                 ],
-                "summary": "Obtener un cliente por ID",
-                "operationId": "0d3826d79390929601421b5810b61231",
+                "summary": "Obtener un cliente por su usuario_id",
+                "operationId": "e291267aa80ff4384cc6590297522af8",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
-                        "description": "ID del cliente",
+                        "description": "ID del usuario asociado al cliente",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -731,45 +731,17 @@
                     }
                 }
             },
-            "delete": {
-                "tags": [
-                    "Cliente"
-                ],
-                "summary": "Eliminar un cliente por ID",
-                "operationId": "d15e304c609752c9f409ab81072fb52e",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del cliente a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Cliente eliminado correctamente"
-                    },
-                    "404": {
-                        "description": "Cliente no encontrado"
-                    }
-                }
-            }
-        },
-        "/api/clientes/{cliente}": {
             "put": {
                 "tags": [
                     "Cliente"
                 ],
                 "summary": "Actualizar un cliente",
-                "operationId": "dfaf60e73f35810fb160b2946330b76d",
+                "operationId": "c9f27624ed5819a0ce609517bdc49cef",
                 "parameters": [
                     {
-                        "name": "cliente",
+                        "name": "usuario_id",
                         "in": "path",
-                        "description": "ID del cliente a actualizar",
+                        "description": "ID del usuario asociado al cliente a actualizar",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -821,6 +793,32 @@
                 "responses": {
                     "200": {
                         "description": "Cliente actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Eliminar un cliente por usuario_id",
+                "operationId": "71b1a2547ed0e7746edb731b8b78fcb5",
+                "parameters": [
+                    {
+                        "name": "usuario_id",
+                        "in": "path",
+                        "description": "ID del usuario asociado al cliente a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cliente eliminado correctamente"
                     },
                     "404": {
                         "description": "Cliente no encontrado"
