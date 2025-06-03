@@ -16,6 +16,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\MensajeController;
 
+
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
 // Ruta pública para login
@@ -62,7 +63,6 @@ Route::apiResource('categorias', CategoriaController::class);
 Route::apiResource('clientes', ClienteController::class);
 
 Route::apiResource('rematadores', RematadorController::class);
-
 
 Route::apiResource('facturas', FacturaController::class);
 

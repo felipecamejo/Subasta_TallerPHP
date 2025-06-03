@@ -8,6 +8,7 @@
 
     class Cliente extends Model {
         protected $table = 'clientes';
+        protected $primaryKey = 'usuario_id';
 
         protected $fillable = [ 
             'usuario_id',
@@ -25,7 +26,7 @@
         }
 
         public function pujas() {
-            return $this->belongsToMany(Puja::class, 'puja_cliente', 'cliente_id', 'puja_id');
+            return $this->hasMany(Puja::class, 'cliente_id', 'usuario_id');
         }
 
         public function notificaciones() {

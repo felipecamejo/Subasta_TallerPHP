@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lote;
+use App\Models\Subasta;
 use Illuminate\Http\Request;
 use App\Mappers\Mapper;
+
 
 /**
  * @OA\Tag(
@@ -118,4 +120,5 @@ class LoteController extends Controller{
 
         return response()->json(['Mensaje' => "Lote eliminado correctamente. id: $id"], 200);
     }
+
 }

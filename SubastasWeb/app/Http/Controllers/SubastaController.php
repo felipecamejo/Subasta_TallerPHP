@@ -17,7 +17,7 @@ use App\Mappers\Mapper;
  */
 class SubastaController extends Controller
 {
-    public $maxDepth = 2;
+    public $maxDepth = 3;
     public $visited = [];
     /**
      * @OA\Get(
@@ -32,10 +32,10 @@ class SubastaController extends Controller
      */
     public function index() {
         try {
-            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->get();
+            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
             
             $dto = $subasta->map(function ($subasta) {
-                return Mapper::fromModelSubasta($subasta, $this->visited, 1);
+                return Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth);
             });
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -57,12 +57,15 @@ class SubastaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"duracionMinutos", "fecha", "casa_remate_id", "rematador_id"},
+     *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="duracionMinutos", type="integer"),
+     *             @OA\Property(property="activa", type="boolean"),
      *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
      *             @OA\Property(property="casa_remate_id", type="integer"),
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
-     *             @OA\Property(property="longitud", type="number", format="float")
+     *             @OA\Property(property="longitud", type="number", format="float"),
+     *             @OA\Property(property="videoId", type="string", nullable=true)
      *         )
      *     ),
      *     @OA\Response(response=201, description="Subasta creada exitosamente"),
@@ -72,21 +75,27 @@ class SubastaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'nombre' => 'required|string',
+            'activa' => 'required|boolean',
             'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
             'casa_remate_id'   => 'nullable|exists:casa_remates,id',
             'rematador_id'    => 'nullable|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
+            'videoId'         => 'nullable|string|max:255',
         ]);
 
         $subasta = Subasta::create($request->only([
+            'nombre',
+            'activa',
             'duracionMinutos',
             'fecha',
             'casa_remate_id',
             'rematador_id',
             'latitud',
-            'longitud'
+            'longitud',
+            'videoId'
         ]));
 
         if ($request->has('direccion')) {
@@ -112,15 +121,15 @@ class SubastaController extends Controller
      *     @OA\Response(response=404, description="Subasta no encontrada")
      * )
      */
-    public function show($id)
-    {
-        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes'])->find($id);
+    public function show($id){
+
+        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, 1));
+        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth));
     }
 
     /**
@@ -137,12 +146,16 @@ class SubastaController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
+     *             @OA\Property(property="nombre", type="string"),
      *             @OA\Property(property="duracionMinutos", type="integer"),
-     *             @OA\Property(property="fecha", type="string", format="date-time"),
-     *             @OA\Property(property="casaremate_id", type="integer"),
+     *             @OA\Property(property="activa", type="boolean"),
+     *             @OA\Property(property="fecha", type="string", format="date-time", example="2025-06-01T14:00:00Z"),
+     *             @OA\Property(property="casa_remate_id", type="integer"),
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
      *             @OA\Property(property="longitud", type="number", format="float"),
+     *             @OA\Property(property="videoId", type="string", nullable=true),
+     *             @OA\Property(property="loteIndex", type="integer", minimum=0, nullable=true)
      *         )
      *     ),
      *     @OA\Response(response=200, description="Subasta actualizada"),
@@ -158,28 +171,30 @@ class SubastaController extends Controller
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'duracionMinutos' => 'sometimes|integer|min:1',
-            'fecha'           => 'sometimes|date',
-            'casaremate_id'   => 'nullable|exists:casa_remates,id',
+        $request->validate([
+            'nombre' => 'required|string',
+            'activa' => 'required|boolean',
+            'duracionMinutos' => 'required|integer|min:1',
+            'fecha'           => 'nullable|date',
+            'casa_remate_id'   => 'nullable|exists:casa_remates,id',
             'rematador_id'    => 'nullable|exists:rematadores,id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
-            'lotes'           => 'sometimes|array',
-            'lotes.*'         => 'exists:lotes,id'
+            'videoId'         => 'nullable|string|max:255',
+            'loteIndex'       => 'required|integer|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $subasta->update($request->only([
+            'nombre',
+            'activa',
             'duracionMinutos',
             'fecha',
-            'casaremate_id',
+            'casa_remate_id',
             'rematador_id',
             'latitud',
-            'longitud'
+            'longitud',
+            'videoId',
+            'loteIndex'
         ])); 
 
         return response()->json($subasta->load(['casaremate', 'rematador',]));

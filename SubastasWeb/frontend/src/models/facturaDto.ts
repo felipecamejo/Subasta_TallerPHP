@@ -3,7 +3,7 @@ import { pujaDto } from "./pujaDto";
 import { vendedorDto } from "./vendedorDto";
 
 export interface facturaDto {
-    id: number;
+    id: number | null;
     montoTotal: number;
     condicionesDePago: string;
     entrega: string;

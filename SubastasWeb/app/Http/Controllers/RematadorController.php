@@ -165,9 +165,9 @@ class RematadorController extends Controller
      *     )
      * )
     */
-    public function show($id)
+    public function show($usuario_id)
     {
-        $rematador = Rematador::with('usuario')->find($id);
+        $rematador = Rematador::with(['usuario', 'subastas', 'casasRemate'])->find($usuario_id);
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
@@ -212,9 +212,9 @@ class RematadorController extends Controller
      *     @OA\Response(response=404, description="Rematador no encontrado")
      * )
     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $usuario_id)
     {
-        $rematador = Rematador::find($id);
+        $rematador = Rematador::find($usuario_id);
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
@@ -228,7 +228,7 @@ class RematadorController extends Controller
             'email' => 'sometimes|email|unique:usuarios,email,' . $usuario->id,
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
-            'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $id,
+            'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $usuario_id,
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
         ]);
@@ -275,9 +275,9 @@ class RematadorController extends Controller
      *     )
      * )
      */
-    public function destroy(string $id)
+    public function destroy(string $usuario_id)
     {
-          $rematador = Rematador::find($id);
+          $rematador = Rematador::find($usuario_id);
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);

@@ -17,9 +17,20 @@ export class SubastaService {
   ) {}
 
   getSubasta(id: number): Observable<subastaDto> {
-    const params = new HttpParams().set('id', id.toString());
-    return this.http.get<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}` , { params });
+    return this.http.get<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}`);
   }
+
+  updateSubasta(subasta: subastaDto): Observable<subastaDto> {
+    return this.http.put<subastaDto>(
+      `${this.urlService.baseUrl}${this.endpoint}/${subasta.id}`,
+      subasta
+    );
+  }
+
+  getSubastas(): Observable<subastaDto[]> {
+    return this.http.get<subastaDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
+  }
+
 
 
 }

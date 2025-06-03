@@ -2,7 +2,7 @@ import { clienteDto } from './clienteDto';
 
 export interface notificacionDto{
     
-    id: number;
+    id: number | null;
     mensaje: string;
 
     cliente: Pick<clienteDto, 'usuario'>[];

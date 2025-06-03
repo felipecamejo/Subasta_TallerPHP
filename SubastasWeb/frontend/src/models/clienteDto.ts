@@ -4,7 +4,8 @@
     import { notificacionDto } from "./notificacionDto";
     
     export interface clienteDto {
-        usuario: Pick<usuarioDto, 'id' | 'nombre'> 
+        usuario_id: number;
+        usuario: Pick<usuarioDto, 'id' | 'nombre' | 'imagen' | 'email'>;
         calificacion: number;
         pujas: Pick<pujaDto, 'id' | 'fechaHora'| 'monto'>[];
         notificaciones: Pick<notificacionDto, 'id' | 'mensaje'>[];

@@ -4,12 +4,12 @@ import { clienteDto } from './clienteDto';
 
 
 export interface pujaDto {
-    id: number;
+    id: number | null;
     fechaHora: Date;
     monto: number;
 
     lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
     factura: Pick<facturaDto, 'id' | 'montoTotal' | 'entrega'>;
-    puja: Pick<clienteDto, 'usuario'>;
+    cliente: Pick<clienteDto, 'usuario'>;
 }
 

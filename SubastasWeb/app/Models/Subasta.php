@@ -12,12 +12,16 @@ class Subasta extends Model
     protected $table = 'subastas'; 
 
     protected $fillable = [ 
-        'duracionMinutos', 
+        'nombre', 
         'fecha',
         'casa_remate_id',
         'rematador_id',
         'latitud',
         'longitud',
+        'activa',
+        'duracionMinutos',
+        'videoId',
+        'loteIndex',
     ]; 
 
     protected $hidden = [];
@@ -27,7 +31,7 @@ class Subasta extends Model
     }
 
     public function rematador() {
-        return $this->belongsTo(Rematador::class, 'rematador_id', 'usuario_id');
+        return $this->belongsTo(Rematador::class, 'rematador_id', 'usuario_id')->withDefault();
     }
     public function lotes() {
         return $this->hasMany(Lote::class);

@@ -22,7 +22,7 @@
         }
 
         public function subastas() {
-            return $this->hasMany(Subasta::class);
+            return $this->hasMany(Subasta::class, 'rematador_id', 'usuario_id');
         }
 
         public function casasRemate() {
