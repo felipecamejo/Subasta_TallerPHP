@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -48,8 +50,10 @@ class AuthController extends Controller
         }
 
         $token = $usuario->createToken('token-personal')->plainTextToken;
+        $rol = $usuario->cliente ? 'cliente' : ($usuario->rematador ? 'rematador' : null);
 
-        return response()->json(['token' => $token], 200);
+        return response()->json(['token' => $token,  'usuario_id' => $usuario->id,
+    'rol' => $rol    ], 200);
     }
 
        /**
@@ -195,14 +199,19 @@ public function loginWithGoogle(Request $request)
 
     $token = $usuario->createToken('auth_token')->plainTextToken;
 
+    $usuario->load(['rematador', 'cliente']);
+
+    // Determinar el rol actual
+    $rol = $usuario->rematador ? 'rematador' : 'cliente';
+
     return response()->json([
         'access_token' => $token,
         'token_type' => 'Bearer',
-        'usuario' => $usuario->load(['rematador', 'cliente']),
+        'usuario_id' => $usuario->id,
+        'rol' => $rol,
+        'usuario' => $usuario,
     ]);
 }
-
-
 
 
 }
