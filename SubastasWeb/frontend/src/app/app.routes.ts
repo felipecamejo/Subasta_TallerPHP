@@ -5,6 +5,7 @@ import { EstadisticasComponent } from './estadisticas/estadisticas.component';
 import { CasaRemateComponent } from './casa-remate/casa-remate.component';
 import { BuscadorRematesComponent } from './buscador-remates/buscador-remates.component';
 import { PerfilComponent } from './perfil/perfil.component';
+import { RegisterComponent } from './register/register.component';
 
 export const routes: Routes = [
     { path: 'stream/:id', loadComponent: () => StreamComponent },
@@ -12,5 +13,8 @@ export const routes: Routes = [
     { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
     { path: 'buscadorRemates', component: BuscadorRematesComponent},
     { path: 'perfil/:id', loadComponent: () => PerfilComponent },
+    { path: 'stream/:id', loadComponent: () => StreamComponent },
+    { path: 'registro', component: RegisterComponent },
+    { path: '', redirectTo: 'registro', pathMatch: 'full' }, 
 ];
 

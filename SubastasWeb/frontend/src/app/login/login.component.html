@@ -1,17 +1,1 @@
-<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-  <h2>Iniciar sesión</h2>
-
-  <label>Email</label>
-  <input type="email" formControlName="email" />
-  <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error">
-    Email inválido o requerido.
-  </div>
-
-  <label>Contraseña</label>
-  <input type="password" formControlName="password" />
-  <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error">
-    La contraseña es requerida.
-  </div>
-
-  <button type="submit" [disabled]="loginForm.invalid">Ingresar</button>
-</form>
+<p>login works!</p>

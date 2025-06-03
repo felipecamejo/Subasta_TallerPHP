@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -17,10 +18,13 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\MensajeController;
 
 
+Route::post('/login-with-google', [SocialAuthController::class, 'loginWithGoogle']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 
 // Ruta pública para login
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/register', [AuthController::class, 'register']);
 
 // Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {

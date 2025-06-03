@@ -8,6 +8,7 @@ use App\Models\Lote;
 use App\Models\Puja;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -110,6 +111,39 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
+        
+        //Pablo
+        $clienteUsuario = Usuario::create([
+            'nombre' => 'Steven Spielberg',
+            'cedula' => '11111111',
+            'email' => 'spielberg@example.com',
+            'telefono' => '099111111',
+            'imagen' => null,
+            'contrasenia' => Hash::make('123456'),
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+        ]);
+
+        Cliente::create([
+            'usuario_id' => $clienteUsuario->id,
+            'calificacion' => 5,
+        ]);
+
+        $rematadorUsuario = Usuario::create([
+            'nombre' => 'Rematador Derremate',
+            'cedula' => '22222222',
+            'email' => 'rematador@example.com',
+            'telefono' => '099222222',
+            'imagen' => null,
+            'contrasenia' => Hash::make('123456'),
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+        ]);
+
+        Rematador::create([
+            'usuario_id' => $rematadorUsuario->id,
+            'matricula' => 'MAT1234',
+        ]);
 
     }
 }
