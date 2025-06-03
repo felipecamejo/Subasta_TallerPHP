@@ -14,7 +14,6 @@ export const routes: Routes = [
     { path: 'perfil/:id', component: PerfilComponent },
     { path: 'estadisticas', component: EstadisticasComponent },
     { path: 'casa-remates', component: CasaRemateComponent },
-    { path: 'stream/:id', component: StreamComponent },
     { path: 'registro', component: RegisterComponent },
     { path: '', redirectTo: 'registro', pathMatch: 'full' }, 
 ];
