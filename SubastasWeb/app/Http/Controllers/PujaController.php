@@ -78,7 +78,7 @@ class PujaController extends Controller
             $pujas = Puja::with(['cliente', 'lote', 'factura'])->get();
 
             $dtos = $pujas->map(function ($puja) {
-                $visited = []; // Fresh visited array for each puja
+                $visited = []; 
                 return Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
             });
 
@@ -148,10 +148,8 @@ class PujaController extends Controller
                 'lote_id' => $request->lote_id,
             ]);
 
-            // Only load specific relationships to avoid circular references
             $puja->load(['cliente.usuario', 'lote', 'factura']);
 
-            // Use fresh visited array and limited depth for new puja creation
             $visited = [];
             $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
 
@@ -207,7 +205,7 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $visited = []; // Fresh visited array
+            $visited = []; 
             $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth); 
 
             return response()->json($dto);
@@ -297,7 +295,6 @@ class PujaController extends Controller
                 'factura_id',
             ]);
             
-            // Map montoTotal to monto for the model
             if ($request->has('montoTotal')) {
                 $updateData['monto'] = $request->montoTotal;
             }
@@ -308,7 +305,7 @@ class PujaController extends Controller
 
             $puja->load(['cliente', 'lote', 'factura']);
 
-            $visited = []; // Fresh visited array
+            $visited = []; 
             $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
 
             return response()->json($dto);
