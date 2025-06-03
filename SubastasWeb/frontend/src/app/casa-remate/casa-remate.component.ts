@@ -43,7 +43,9 @@ export class CasaRemateComponent {
     rematador: {
       usuario: {
         id: 0,
-        nombre: ''
+        nombre: '',
+        imagen: '',
+        email: ''
       },
       matricula: ''
     },
