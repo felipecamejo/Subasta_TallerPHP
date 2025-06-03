@@ -123,24 +123,54 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   anteriorLote(): void {
-    if (this.indexLotes > 0) {
+    if (this.indexLotes > 0 && this.subasta) {
       this.indexLotes--;
-      this.cargarPujas(this.indexLotes);
+      this.subasta.loteIndex = this.indexLotes;
+      this.subastaService.updateSubasta(this.subasta).subscribe({
+        next: () => {
+          console.log('Subasta actualizada con el lote anterior');
+          this.cargarPujas(this.indexLotes);
+        },
+        error: (err) => {
+          console.error('Error al actualizar subasta con el lote anterior:', err);
+          // Revertir cambio en caso de error
+          this.indexLotes++;
+          if (this.subasta) this.subasta.loteIndex = this.indexLotes;
+        }
+      });
     }
   }
 
   siguienteLote(): void {
-    if (this.indexLotes < this.lotes.length - 1) {
+    if (this.indexLotes < this.lotes.length - 1 && this.subasta) {
       this.indexLotes++;
-      this.cargarPujas(this.indexLotes);
+      this.subasta.loteIndex = this.indexLotes;
+      this.subastaService.updateSubasta(this.subasta).subscribe({
+        next: () => {
+          console.log('Subasta actualizada con el siguiente lote');
+          this.cargarPujas(this.indexLotes);
+        },
+        error: (err) => {
+          console.error('Error al actualizar subasta con el siguiente lote:', err);
+          // Revertir cambio en caso de error
+          this.indexLotes--;
+          if (this.subasta) this.subasta.loteIndex = this.indexLotes;
+        }
+      });
     }
   }
 
   cargarPujas(loteIndex: number): void {
-    this.pujas = (this.lotes[this.indexLotes]?.pujas as pujaDto[]) || [];
+    // Validar que el índice esté dentro de los límites
+    if (loteIndex < 0 || loteIndex >= this.lotes.length) {
+      console.warn('Índice de lote fuera de rango:', loteIndex);
+      return;
+    }
+
+    this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
     this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
     if (this.pujaActual === 0) {
-      this.pujaActual = Number(this.lotes[this.indexLotes].pujaMinima);
+      this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
     }
     this.pujaRapida = Number(this.pujaActual) + 1;
     this.pujaComun = null;
@@ -160,6 +190,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.subasta = data;
         this.boton = this.subasta.activa;
+        this.indexLotes = this.subasta.loteIndex || 0;
 
         this.lotes = (this.subasta.lotes || []).map(lote => ({
           ...lote,

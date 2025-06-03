@@ -13,6 +13,7 @@ export interface subastaDto {
     longitud: number;
     latitud: number;
     videoId: string | null;
+    loteIndex: number;
 
     lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos'>[];
 

@@ -450,6 +450,7 @@ class Mapper {
 
         $dto = new DtoSubasta(
             $subasta->id,
+            $subasta->loteIndex,
             $subasta->videoId,
             $subasta->activa,
             $subasta->nombre,
@@ -477,6 +478,7 @@ class Mapper {
             'latitud' => $dto->latitud,
             'longitud' => $dto->longitud,
             'videoId' => $dto->videoId,
+            'loteIndex' => $dto->loteIndex,
         ]);
     }
 

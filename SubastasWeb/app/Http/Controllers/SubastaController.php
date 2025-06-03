@@ -154,7 +154,8 @@ class SubastaController extends Controller
      *             @OA\Property(property="rematador_id", type="integer"),
      *             @OA\Property(property="latitud", type="number", format="float"),
      *             @OA\Property(property="longitud", type="number", format="float"),
-     *             @OA\Property(property="videoId", type="string", nullable=true)
+     *             @OA\Property(property="videoId", type="string", nullable=true),
+     *             @OA\Property(property="loteIndex", type="integer", minimum=0, nullable=true)
      *         )
      *     ),
      *     @OA\Response(response=200, description="Subasta actualizada"),
@@ -180,6 +181,7 @@ class SubastaController extends Controller
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
             'videoId'         => 'nullable|string|max:255',
+            'loteIndex'       => 'required|integer|min:0',
         ]);
 
         $subasta->update($request->only([
@@ -191,7 +193,8 @@ class SubastaController extends Controller
             'rematador_id',
             'latitud',
             'longitud',
-            'videoId'
+            'videoId',
+            'loteIndex'
         ])); 
 
         return response()->json($subasta->load(['casaremate', 'rematador',]));
