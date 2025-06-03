@@ -26,7 +26,7 @@
         }
 
         public function pujas() {
-            return $this->hasMany(Puja::class, 'cliente_id');
+            return $this->hasMany(Puja::class, 'cliente_id', 'usuario_id');
         }
 
         public function notificaciones() {

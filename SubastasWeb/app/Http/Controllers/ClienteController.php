@@ -147,13 +147,13 @@ class ClienteController extends Controller
 
      /**
      * @OA\Get(
-     *     path="/api/clientes/{id}",
-     *     summary="Obtener un cliente por ID",
+     *     path="/api/clientes/{usuario_id}",
+     *     summary="Obtener un cliente por su usuario_id",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente",
+     *         description="ID del usuario asociado al cliente",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -167,32 +167,37 @@ class ClienteController extends Controller
      *     )
      * )
     */
-    public function show($id)
+    public function show($usuario_id)
     {
-        $cliente = Cliente::with('usuario')->find($id);
+        $cliente = Cliente::with(['usuario', 'pujas' => function($query) {
+            $query->with(['lote', 'factura']);
+        }, 'notificaciones'])->find($usuario_id);
+        
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
-        return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth));
+
+        $visited = [];
+        return response()->json(Mapper::fromModelCliente($cliente, $visited, 1));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $usuario_id)
     {
         //
     }
 
     /**
      * @OA\Put(
-     *     path="/api/clientes/{cliente}",
+     *     path="/api/clientes/{usuario_id}",
      *     summary="Actualizar un cliente",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="cliente",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente a actualizar",
+     *         description="ID del usuario asociado al cliente a actualizar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -214,9 +219,9 @@ class ClienteController extends Controller
      *     @OA\Response(response=404, description="Cliente no encontrado")
      * )
     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $usuario_id)
     {
-       $cliente = Cliente::find($id);
+       $cliente = Cliente::find($usuario_id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
@@ -258,13 +263,13 @@ class ClienteController extends Controller
 
  /**
      * @OA\Delete(
-     *     path="/api/clientes/{id}",
-     *     summary="Eliminar un cliente por ID",
+     *     path="/api/clientes/{usuario_id}",
+     *     summary="Eliminar un cliente por usuario_id",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente a eliminar",
+     *         description="ID del usuario asociado al cliente a eliminar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -278,9 +283,9 @@ class ClienteController extends Controller
      *     )
      * )
      */
-    public function destroy(string $id)
+    public function destroy(string $usuario_id)
     {
-         $cliente = Cliente::find($id);
+         $cliente = Cliente::find($usuario_id);
 
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);

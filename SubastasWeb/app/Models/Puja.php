@@ -21,7 +21,7 @@ class Puja extends Model {
 
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+        return $this->belongsTo(Cliente::class, 'cliente_id', 'usuario_id');
     }
 
     public function lote(){
