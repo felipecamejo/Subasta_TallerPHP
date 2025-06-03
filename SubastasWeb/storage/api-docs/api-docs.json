@@ -200,6 +200,211 @@
                 }
             }
         },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Iniciar sesión",
+                "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "test@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token generado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOi..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciales inválidas"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Cerrar sesión",
+                "description": "Revoca el token del usuario autenticado",
+                "operationId": "logoutUser",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sesión cerrada con éxito"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "operationId": "8a56853624e025573120a09a4c75d468",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "telefono",
+                                    "contrasenia",
+                                    "tipo"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Juan Pérez"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@example.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "098765432"
+                                    },
+                                    "imagen": {
+                                        "type": "string",
+                                        "example": "foto.png",
+                                        "nullable": true
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.6037,
+                                        "nullable": true
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -58.3816,
+                                        "nullable": true
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "rematador"
+                                        ],
+                                        "example": "rematador"
+                                    },
+                                    "matricula": {
+                                        "type": "string",
+                                        "example": "ABC123",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario registrado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario registrado exitosamente"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcDEF123..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Datos inválidos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/casa-remates": {
             "get": {
                 "tags": [
@@ -1856,6 +2061,66 @@
                 }
             }
         },
+        "/api/auth/redirect/google": {
+            "get": {
+                "tags": [
+                    "Autenticación Social"
+                ],
+                "summary": "Redirigir a Google para iniciar sesión",
+                "description": "Esta ruta redirige al usuario a Google para el inicio de sesión.",
+                "operationId": "redirectToGoogle",
+                "parameters": [
+                    {
+                        "name": "rol",
+                        "in": "query",
+                        "description": "Rol del usuario: cliente o rematador",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cliente",
+                                "rematador"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirección a Google"
+                    }
+                }
+            }
+        },
+        "/api/auth/callback/google": {
+            "get": {
+                "tags": [
+                    "Autenticación Social"
+                ],
+                "summary": "Callback de Google después del login",
+                "description": "Procesa el usuario de Google y lo registra como cliente o rematador",
+                "operationId": "handleGoogleCallback",
+                "responses": {
+                    "200": {
+                        "description": "Usuario autenticado y rol asignado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "rol": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/subastas": {
             "get": {
                 "tags": [
@@ -2454,12 +2719,20 @@
             "description": "API para gestionar vendedores"
         },
         {
+            "name": "Autenticación",
+            "description": "Autenticación"
+        },
+        {
             "name": "Facturas",
             "description": "Facturas"
         },
         {
             "name": "Pujas",
             "description": "Pujas"
+        },
+        {
+            "name": "Autenticación Social",
+            "description": "Autenticación Social"
         }
     ]
 }
