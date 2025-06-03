@@ -1,7 +1,7 @@
 <main class="w-full">
     <article class="w-full flex flex-wrap article-1">
         <span class="titulo">Subastas</span>
-        <p-button class="boton" icon="pi pi-map-marker" severity="secondary"/>
+        <p-button class="boton" icon="pi pi-map-marker" severity="secondary" (click)="mostrarMapa()"/>
         <p-select 
             [options]="categorias" 
             [(ngModel)]="selectedCategory" 
@@ -35,4 +35,15 @@
             </div>
         </article>
     </ng-container>
+    
+    <p-dialog 
+        header="Mapa de Subastas" 
+        [(visible)]="mostrandoMapa" 
+        [modal]="true" 
+        [style]="{width: '80vw', height: '80vh'}"
+        [closable]="true"
+        (onShow)="onMapDialogShow()"
+        (onHide)="onMapDialogHide()">
+        <div id="mapaContainer" style="height: calc(80vh - 120px); width: 100%; border-radius: 8px;"></div>
+    </p-dialog>
 </main>

@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
@@ -8,15 +8,22 @@ import { SubastaService } from '../../services/subasta.service';
 import { subastaDto } from '../../models/subastaDto';
 import { categoriaDto } from '../../models/categoriaDto';
 import { CategoriaService } from '../../services/categoria.service';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-buscador-remates',
   standalone: true,
-  imports: [CommonModule, ButtonModule, SelectModule, FormsModule],
+  imports: [CommonModule, ButtonModule, SelectModule, FormsModule, DialogModule],
   templateUrl: './buscador-remates.component.html',
   styleUrl: './buscador-remates.component.scss'
 })
-export class BuscadorRematesComponent {
+export class BuscadorRematesComponent implements AfterViewInit {
+
+  mostrandoMapa: boolean = false;
+
+  mostrarMapa() {
+    this.mostrandoMapa = true;
+  }
 
   filtros = [
     { name: 'Todos', value: 0 },
@@ -34,7 +41,8 @@ export class BuscadorRematesComponent {
     private route: ActivatedRoute,
     private subastaService: SubastaService,
     private categoriaService: CategoriaService,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   categoriaDefault: categoriaDto = {
@@ -48,6 +56,7 @@ export class BuscadorRematesComponent {
   subastas: subastaDto[] = [];
   categorias: categoriaDto[] = [];
   categoriasLoading: boolean = true;
+  mapaLoading: boolean = true;
   
   selectedCategory: number = 0;
   selectedFiltro: number = 0;
@@ -164,12 +173,22 @@ export class BuscadorRematesComponent {
   }
 
   ngOnInit() {
+
     this.subastaService.getSubastas().subscribe({
       next: (data) => {
         this.subastas = data;
+        
+        // Actualizar marcadores del mapa si ya está inicializado
+        if (this.map) {
+          this.addSubastaMarkers();
+        }
+        
+        this.mapaLoading = false;
+        console.log('Carga de subastas completada');
       }
       , error: (error) => {
         console.error('Error al cargar las subastas:', error);
+        this.mapaLoading = false;
       }
     });
     
@@ -201,4 +220,118 @@ export class BuscadorRematesComponent {
       }
     });
   }
+
+  //-------------------------mapa-----------------------
+
+  clientelatLng = { lat: -33.4489, lng: -70.6693 }; 
+
+  map: any;
+  clienteMarker: any;
+  subastaMarkers: any[] = [];
+  L: any;
+
+  clienteIcon: any;
+  subastaIcon: any;
+
+  ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => {
+        if (this.mostrandoMapa && !this.map) {
+          this.loadLeafletAndInitialize();
+        }
+      }, 100);
+    }
+  }
+
+  async loadLeafletAndInitialize(): Promise<void> {
+    if (!this.L) {
+      this.L = await import('leaflet');
+      
+      this.clienteIcon = this.L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+      });
+
+      this.subastaIcon = this.L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+      });
+    }
+    
+    this.initializeMap();
+  }
+
+  initializeMap(): void {
+    if (!this.L || !isPlatformBrowser(this.platformId)) return;
+
+    if (this.map) {
+      this.map.remove();
+    }
+
+    this.map = this.L.map('mapaContainer').setView([this.clientelatLng.lat, this.clientelatLng.lng], 13);
+
+    this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    this.clienteMarker = this.L.marker([this.clientelatLng.lat, this.clientelatLng.lng], { icon: this.clienteIcon })
+      .addTo(this.map)
+      .bindPopup('Tu ubicación')
+      .openPopup();
+
+    this.addSubastaMarkers();
+  }
+
+  addSubastaMarkers(): void {
+    if (!this.map) return;
+
+    this.subastaMarkers.forEach(marker => {
+      this.map!.removeLayer(marker);
+    });
+    this.subastaMarkers = [];
+
+    this.subastas.forEach(subasta => {
+      if (subasta.latitud && subasta.longitud) {
+        const marker = this.L.marker([subasta.latitud, subasta.longitud], { icon: this.subastaIcon })
+          .addTo(this.map!)
+          .bindTooltip(this.getNombreSubasta(subasta), { 
+            permanent: false, 
+            direction: 'top',
+            offset: [0, -30]
+          })
+          .on('click', () => {
+            this.irStreamSubasta(subasta);
+          });
+        
+        this.subastaMarkers.push(marker);
+      }
+    });
+  }
+
+  irStreamSubasta(subasta: subastaDto): void {
+    this.router.navigate(['/stream', subasta.id]);
+  }
+
+  onMapDialogShow(): void {
+    setTimeout(() => {
+      if (this.mostrandoMapa) {
+        this.loadLeafletAndInitialize();
+      }
+    }, 200);
+  }
+
+  onMapDialogHide(): void {
+    this.mostrandoMapa = false;
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+  }
+
 }
