@@ -6,7 +6,7 @@ import { pujaDto } from '../models/pujaDto';
 
 interface PujaRequest {
   fechaHora: string;
-  montoTotal: number;
+  monto: number;
   cliente_id: number | null;
   lote_id: number;
 }

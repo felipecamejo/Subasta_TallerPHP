@@ -78,7 +78,8 @@ class PujaController extends Controller
             $pujas = Puja::with(['cliente', 'lote', 'factura'])->get();
 
             $dtos = $pujas->map(function ($puja) {
-                return Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+                $visited = []; // Fresh visited array for each puja
+                return Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
             });
 
             return response()->json($dtos);
@@ -133,7 +134,7 @@ class PujaController extends Controller
     {
         $request->validate( [
             'fechaHora' => 'required|date',
-            'montoTotal' => 'required|numeric',
+            'monto' => 'required|numeric',
             'cliente_id' => 'nullable|exists:clientes,usuario_id',
             'lote_id' => 'required|exists:lotes,id',
         ]);
@@ -142,14 +143,17 @@ class PujaController extends Controller
         try {
             $puja = Puja::create([
                 'fechaHora' => $request->fechaHora,
-                'monto' => $request->montoTotal,
+                'monto' => $request->monto,
                 'cliente_id' => $request->cliente_id,
                 'lote_id' => $request->lote_id,
             ]);
 
-            $puja->load(['cliente', 'lote', 'factura']);
+            // Only load specific relationships to avoid circular references
+            $puja->load(['cliente.usuario', 'lote', 'factura']);
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+            // Use fresh visited array and limited depth for new puja creation
+            $visited = [];
+            $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
 
             return response()->json($dto, 201);
         } catch (\Throwable $e) {
@@ -203,7 +207,8 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth); 
+            $visited = []; // Fresh visited array
+            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth); 
 
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -267,7 +272,7 @@ class PujaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
-            'montoTotal' => 'sometimes|required|numeric',
+            'monto' => 'sometimes|required|numeric',
             'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
             'lote_id' => 'sometimes|required|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
@@ -286,6 +291,7 @@ class PujaController extends Controller
 
             $updateData = $request->only([
                 'fechaHora',
+                'monto',
                 'cliente_id',
                 'lote_id',
                 'factura_id',
@@ -302,7 +308,8 @@ class PujaController extends Controller
 
             $puja->load(['cliente', 'lote', 'factura']);
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+            $visited = []; // Fresh visited array
+            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
 
             return response()->json($dto);
         } catch (\Throwable $e) {

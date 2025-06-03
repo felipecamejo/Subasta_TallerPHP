@@ -189,9 +189,18 @@ class Mapper {
             }
 
             // Load pujas with limited depth to avoid recursion
-            if ($depth !== 0) {
+            if ($depth !== 0 && $cliente->relationLoaded('pujas')) {
                 $pujasCollection = $cliente->pujas ?? collect();
                 $dto->pujas = $pujasCollection->map(function($puja) use (&$visited) {
+                    // Avoid infinite recursion by checking if we're already processing this puja
+                    if (isset($visited['puja'][$puja->id])) {
+                        // Return a minimal puja representation to avoid full recursion
+                        return [
+                            'id' => $puja->id,
+                            'fechaHora' => $puja->fechaHora,
+                            'monto' => $puja->monto
+                        ];
+                    }
                     return Mapper::fromModelPuja($puja, $visited, 0);
                 })->toArray();
             }
@@ -271,33 +280,47 @@ class Mapper {
             if ($subastaModel) {
                 $dtoSubasta = new DtoSubasta(
                     $subastaModel->id,
-                    $subastaModel->nombre,
+                    $subastaModel->loteIndex,
+                    $subastaModel->videoId,
                     $subastaModel->activa,
+                    $subastaModel->nombre,
                     $subastaModel->duracionMinutos,
                     $subastaModel->fecha,
-                    $subastaModel->longitud,
+                    null, 
+                    null, 
                     $subastaModel->latitud,
-                    [], // No lotes to avoid circular reference
-                    null, // No casaremate
-                    null  // No rematador
+                    $subastaModel->longitud,
+                    []
                 );
             }
         }
 
         $pujas = [];
         if ($depth === null || $depth > 0) {
-            $pujasCollection = $lote->pujas ?? collect();
-            $pujas = $pujasCollection->map(function($puja) use (&$visited, $depth) {
-                return Mapper::fromModelPuja($puja, $visited, $depth !== null ? $depth - 1 : null);
-            })->toArray();
+            if ($lote->relationLoaded('pujas')) {
+                $pujasCollection = $lote->pujas ?? collect();
+                $pujas = $pujasCollection->map(function($puja) use (&$visited, $depth) {
+                    if (isset($visited['puja'][$puja->id])) {
+                        return [
+                            'id' => $puja->id,
+                            'fechaHora' => $puja->fechaHora,
+                            'monto' => $puja->monto
+                        ];
+                    }
+                    return Mapper::fromModelPuja($puja, $visited, $depth !== null ? $depth - 1 : null);
+                })->toArray();
+            }
         }
 
         $articulos = [];
         if ($depth === null || $depth > 0) {
-            $articulosCollection = $lote->articulos ?? collect();
-            $articulos = $articulosCollection->map(function($articulo) use (&$visited, $depth) {
-                return Mapper::fromModelArticulo($articulo, $visited, $depth !== null ? $depth - 1 : null);
-            })->toArray();
+            // Only process articulos if the relationship is loaded
+            if ($lote->relationLoaded('articulos')) {
+                $articulosCollection = $lote->articulos ?? collect();
+                $articulos = $articulosCollection->map(function($articulo) use (&$visited, $depth) {
+                    return Mapper::fromModelArticulo($articulo, $visited, $depth !== null ? $depth - 1 : null);
+                })->toArray();
+            }
         }
 
         $dto = new DtoLote(
@@ -351,35 +374,29 @@ class Mapper {
             return $visited['puja'][$puja->id];
         }
 
-        // Create basic DTO first to prevent circular references
         $dto = new DtoPuja(
             $puja->id,
             $puja->fechaHora,
             $puja->monto,
-            null, // lote
-            null, // factura
-            null  // cliente
+            null, 
+            null, 
+            null  
         );
         
-        // Store it in visited immediately
         $visited['puja'][$puja->id] = $dto;
 
-        // Now load relationships if depth allows
         if ($depth === null || $depth > 0) {
             $nextDepth = $depth !== null ? $depth - 1 : null;
 
-            // Load lote
-            if ($puja->lote) {
+            if ($puja->relationLoaded('lote') && $puja->lote) {
                 $dto->lote_id = Mapper::fromModelLote($puja->lote, $visited, $nextDepth);
             }
 
-            // Load factura
-            if ($puja->factura) {
+            if ($puja->relationLoaded('factura') && $puja->factura) {
                 $dto->factura_id = Mapper::fromModelFactura($puja->factura, $visited, $nextDepth);
             }
 
-            // Load cliente with depth 0 to avoid recursion
-            if ($puja->cliente && $depth !== 0) {
+            if ($puja->relationLoaded('cliente') && $puja->cliente && $depth !== 0) {
                 $dto->cliente = Mapper::fromModelCliente($puja->cliente, $visited, 0);
             }
         }
