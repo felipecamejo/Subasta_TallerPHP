@@ -11,10 +11,10 @@ import { RegisterComponent } from './register/register.component';
 export const routes: Routes = [
     { path: 'stream/:id', component: StreamComponent },
     { path: 'buscadorRemates', component: BuscadorRematesComponent},
-    { path: 'perfil/:id', loadComponent: () => PerfilComponent },
-    { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
-    { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
-    { path: 'stream/:id', loadComponent: () => StreamComponent },
+    { path: 'perfil/:id', component: PerfilComponent },
+    { path: 'estadisticas', component: EstadisticasComponent },
+    { path: 'casa-remates', component: CasaRemateComponent },
+    { path: 'stream/:id', component: StreamComponent },
     { path: 'registro', component: RegisterComponent },
     { path: '', redirectTo: 'registro', pathMatch: 'full' }, 
 ];
