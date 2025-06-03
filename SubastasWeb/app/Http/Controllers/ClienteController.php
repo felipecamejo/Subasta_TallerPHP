@@ -147,13 +147,13 @@ class ClienteController extends Controller
 
      /**
      * @OA\Get(
-     *     path="/api/clientes/{id}",
-     *     summary="Obtener un cliente por ID",
+     *     path="/api/clientes/{usuario_id}",
+     *     summary="Obtener un cliente por su usuario_id",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente",
+     *         description="ID del usuario asociado al cliente",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -169,11 +169,16 @@ class ClienteController extends Controller
     */
     public function show($usuario_id)
     {
-        $cliente = Cliente::with('usuario')->find($usuario_id);
+        $cliente = Cliente::with(['usuario', 'pujas' => function($query) {
+            $query->with(['lote', 'factura']);
+        }, 'notificaciones'])->find($usuario_id);
+        
         if (!$cliente) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
-        return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth));
+
+        $visited = [];
+        return response()->json(Mapper::fromModelCliente($cliente, $visited, 1));
     }
 
     /**
@@ -186,13 +191,13 @@ class ClienteController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/clientes/{cliente}",
+     *     path="/api/clientes/{usuario_id}",
      *     summary="Actualizar un cliente",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="cliente",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente a actualizar",
+     *         description="ID del usuario asociado al cliente a actualizar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -258,13 +263,13 @@ class ClienteController extends Controller
 
  /**
      * @OA\Delete(
-     *     path="/api/clientes/{id}",
-     *     summary="Eliminar un cliente por ID",
+     *     path="/api/clientes/{usuario_id}",
+     *     summary="Eliminar un cliente por usuario_id",
      *     tags={"Cliente"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
-     *         description="ID del cliente a eliminar",
+     *         description="ID del usuario asociado al cliente a eliminar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),

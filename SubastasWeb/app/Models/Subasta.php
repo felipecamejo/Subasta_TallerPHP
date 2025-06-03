@@ -29,7 +29,7 @@ class Subasta extends Model
     }
 
     public function rematador() {
-        return $this->belongsTo(Rematador::class, 'rematador_id', 'usuario_id');
+        return $this->belongsTo(Rematador::class, 'rematador_id', 'usuario_id')->withDefault();
     }
     public function lotes() {
         return $this->hasMany(Lote::class);

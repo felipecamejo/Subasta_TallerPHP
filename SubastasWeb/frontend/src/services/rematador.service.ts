@@ -19,8 +19,8 @@ export class RematadorService {
     return this.http.post<string>(`${this.urlService.baseUrl}${this.endpoint}/crear`, rematador);
   }
 
-  seleccionarRematador(id: number): Observable<string> {
-    return this.http.get<string>(`${this.urlService.baseUrl}${this.endpoint}/${id}/seleccionar`);
+  seleccionarRematador(id: number): Observable<rematadorDto> {
+    return this.http.get<rematadorDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}`);
   }
 
   editarRematador(rematador: rematadorDto): Observable<string> {

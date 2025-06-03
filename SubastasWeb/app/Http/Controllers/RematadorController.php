@@ -167,7 +167,7 @@ class RematadorController extends Controller
     */
     public function show($usuario_id)
     {
-        $rematador = Rematador::with('usuario')->find($usuario_id);
+        $rematador = Rematador::with(['usuario', 'subastas', 'casasRemate'])->find($usuario_id);
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }

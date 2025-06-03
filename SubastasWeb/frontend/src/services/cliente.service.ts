@@ -19,8 +19,8 @@ export class ClienteService {
     return this.http.post<string>(`${this.urlService.baseUrl}${this.endpoint}/crear`, cliente);
   }
 
-  seleccionarCliente(id: number): Observable<string> {
-    return this.http.post<string>(`${this.urlService.baseUrl}${this.endpoint}/seleccionar`, id);
+  seleccionarCliente(id: number): Observable<clienteDto> {
+    return this.http.get<clienteDto>(`${this.urlService.baseUrl}${this.endpoint}/${id}`);
   }
 
   editarCliente(cliente: clienteDto): Observable<string> {
