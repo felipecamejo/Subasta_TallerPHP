@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PLATFORM_ID } from '@angular/core';
 import * as L from 'leaflet';
+import { AuthService, RegistroData } from '../services/auth.service';
 
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const pass = group.get('contrasenia')?.value;
@@ -26,7 +27,8 @@ export class RegisterComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -40,15 +42,15 @@ export class RegisterComponent implements OnInit {
         contrasenia: ['', [Validators.required, Validators.minLength(6)]],
         confirmarContrasenia: ['', Validators.required]
       }, { validators: passwordMatchValidator }),
-      rol: ['', Validators.required],
+      tipo: ['', Validators.required],  // Aquí es "tipo"
       matricula: [''],
       latitud: [null, Validators.required],
       longitud: [null, Validators.required]
     });
 
-    this.form.get('rol')?.valueChanges.subscribe(rol => {
+    this.form.get('tipo')?.valueChanges.subscribe(tipo => {
       const matricula = this.form.get('matricula');
-      if (rol === 'rematador') {
+      if (tipo === 'rematador') {
         matricula?.setValidators([Validators.required]);
       } else {
         matricula?.clearValidators();
@@ -64,16 +66,15 @@ export class RegisterComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       const L = (await import('leaflet')).default;
 
-(() => {
-  // Borra _getIconUrl ignorando TS
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+      // Configurar iconos leaflet
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
-    iconUrl: 'assets/leaflet/marker-icon.png',
-    shadowUrl: 'assets/leaflet/marker-shadow.png',
-  });
-})();
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+        iconUrl: 'assets/leaflet/marker-icon.png',
+        shadowUrl: 'assets/leaflet/marker-shadow.png',
+      });
+
       this.map = L.map('map').setView(this.defaultLatLng, 13);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -107,21 +108,32 @@ export class RegisterComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.valid) {
-      const formValue = {
+      const formValue: RegistroData = {
         nombre: this.form.value.nombre,
         cedula: this.form.value.cedula,
         email: this.form.value.email,
         telefono: this.form.value.telefono,
         imagen: this.form.value.imagen,
         contrasenia: this.form.value.contraseniaGroup.contrasenia,
-        rol: this.form.value.rol,
+        tipo: this.form.value.tipo,  // Aquí "tipo" coincide con el backend
         matricula: this.form.value.matricula,
         latitud: this.form.value.latitud,
         longitud: this.form.value.longitud
       };
 
       console.log('Enviar al backend:', formValue);
-      // Aquí llamas a tu servicio para enviar datos
+
+      this.authService.register(formValue).subscribe({
+        next: (response) => {
+          console.log('Registro exitoso:', response);
+          alert('Registro completado con éxito');
+          this.form.reset();
+        },
+        error: (error) => {
+          console.error('Error en el registro:', error);
+          alert('Error al registrar: ' + (error.error?.message || error.message));
+        }
+      });
     } else {
       this.form.markAllAsTouched();
     }

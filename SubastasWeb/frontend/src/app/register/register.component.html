@@ -20,14 +20,14 @@
     <input type="text" id="telefono" class="form-control" formControlName="telefono">
   </div>
 
-  <div class="mb-3">
-    <label for="rol" class="form-label">Rol</label>
-    <select id="rol" class="form-select" formControlName="rol">
-      <option value="">Seleccione un rol</option>
-      <option value="cliente">Cliente</option>
-      <option value="rematador">Rematador</option>
-    </select>
-  </div>
+ <div class="mb-3">
+  <label for="tipo" class="form-label">Rol</label>
+  <select id="tipo" class="form-select" formControlName="tipo">
+    <option value="">Seleccione un rol</option>
+    <option value="cliente">Cliente</option>
+    <option value="rematador">Rematador</option>
+  </select>
+</div>
 
   <div class="mb-3" *ngIf="form.get('rol')?.value === 'rematador'">
     <label for="matricula" class="form-label">Matrícula</label>
