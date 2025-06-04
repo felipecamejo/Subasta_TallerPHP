@@ -6,7 +6,7 @@ import { LoginComponent } from './login/login.component';
 import { EstadisticasComponent } from './estadisticas/estadisticas.component';
 import { CasaRemateComponent } from './casa-remate/casa-remate.component';
 import { RegisterComponent } from './register/register.component';
-
+import { HomeComponent } from './home/home.component';  // Importalo
 
 export const routes: Routes = [
     { path: 'stream/:id', component: StreamComponent },
@@ -15,6 +15,7 @@ export const routes: Routes = [
     { path: 'estadisticas', component: EstadisticasComponent },
     { path: 'casa-remates', component: CasaRemateComponent },
     { path: 'registro', component: RegisterComponent },
-    { path: '', redirectTo: 'registro', pathMatch: 'full' }, 
+    { path: 'login', component: LoginComponent },
+    { path: '', component: HomeComponent },  // Ahora la raíz carga HomeComponent
 ];
 
