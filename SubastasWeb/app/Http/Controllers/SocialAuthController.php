@@ -115,22 +115,62 @@ class SocialAuthController extends Controller
     }
 public function loginWithGoogle(Request $request)
 {
-    $request->validate([
+    $rules = [
         'token' => 'required|string',
-        'rol' => 'required|in:cliente,rematador',
-        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
-    ]);
+    ];
+
+    // Si envían rol, validamos rol y matrícula
+    if ($request->has('rol')) {
+        $rules['rol'] = 'required|in:cliente,rematador';
+        $rules['matricula'] = 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula';
+    }
+
+    $validated = $request->validate($rules);
 
     $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
 
     $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
 
-    if (!$usuario) {
-        // Usuario nuevo
+    if ($usuario) {
+        // Usuario existe: solo login
+        // Opcional: verificar si envían rol y coincide con el rol guardado para prevenir conflictos
+
+        // Obtener rol guardado
+        $tieneCliente = (bool) $usuario->cliente;
+        $tieneRematador = (bool) $usuario->rematador;
+
+        if ($request->has('rol')) {
+            $rolEnviado = $request->rol;
+            if (($rolEnviado === 'cliente' && !$tieneCliente) ||
+                ($rolEnviado === 'rematador' && !$tieneRematador)) {
+                return response()->json(['error' => 'El rol enviado no coincide con el registrado'], 400);
+            }
+        }
+
+        // Definir rol para enviar al frontend
+        $rol = $tieneCliente ? 'cliente' : ($tieneRematador ? 'rematador' : null);
+
+        $token = $usuario->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'usuario' => $usuario->load(['cliente', 'rematador']),
+            'rol' => $rol,
+        ]);
+    } else {
+        // Usuario NO existe: requiere rol para crear
+        if (!$request->has('rol')) {
+            return response()->json([
+                'error' => 'Usuario no registrado. Debe enviar rol para registrarse.'
+            ], 404);
+        }
+
+        // Crear usuario nuevo
         $usuario = Usuario::create([
             'nombre' => $googleUser->getName(),
             'email' => $googleUser->getEmail(),
-            'cedula' => '', // Adaptá según tu lógica
+            'cedula' => '',
             'telefono' => '',
             'imagen' => $googleUser->getAvatar(),
             'contrasenia' => bcrypt(Str::random(16)),
@@ -141,20 +181,21 @@ public function loginWithGoogle(Request $request)
                 'usuario_id' => $usuario->id,
                 'matricula' => $request->matricula,
             ]);
-        } else if ($request->rol === 'cliente') {
+        } elseif ($request->rol === 'cliente') {
             Cliente::create([
                 'usuario_id' => $usuario->id,
             ]);
         }
+
+        $token = $usuario->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'usuario' => $usuario->load(['cliente', 'rematador']),
+            'rol' => $request->rol,
+        ]);
     }
-
-    $token = $usuario->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-        'usuario' => $usuario->load(['rematador', 'cliente']),
-    ]);
 }
 
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PLATFORM_ID } from '@angular/core';
+import { GoogleLoginComponent } from '../google-login/google-login.component';  // <-- Importa tu componente GoogleLogin
 import * as L from 'leaflet';
 import { AuthService, RegistroData } from '../services/auth.service';
 
@@ -14,7 +15,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,  GoogleLoginComponent],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })

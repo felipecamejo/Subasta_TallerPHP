@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { SocialLoginModule, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
 import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
+import { GoogleLoginComponent } from './google-login/google-login.component';
 
 import { AppComponent } from './app.component';
 import { RegisterComponent } from './register/register.component';
@@ -11,7 +12,8 @@ import { RegisterComponent } from './register/register.component';
 @NgModule({
   declarations: [
     AppComponent,
-    RegisterComponent
+    RegisterComponent,
+     GoogleLoginComponent
   ],
   imports: [
     BrowserModule,
