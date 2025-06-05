@@ -325,6 +325,7 @@ class Mapper {
 
         $dto = new DtoLote(
             $lote->id,
+            $lote->umbral,
             $lote->valorBase,
             $lote->pujaMinima,
             $dtoSubasta,

@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
 
         Lote::create([
             'id' => 1,
+            'umbral' => 200,
             'valorBase' => 200,
             'pujaMinima' => 210,
             'subasta_id' => 1,
@@ -60,6 +61,7 @@ class DatabaseSeeder extends Seeder
 
         Lote::create([
             'id' => 2,
+            'umbral' => 0,
             'valorBase' => 0,
             'pujaMinima' => 10,
             'subasta_id' => 1,
