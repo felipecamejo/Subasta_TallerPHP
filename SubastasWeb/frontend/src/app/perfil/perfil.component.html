@@ -101,7 +101,7 @@
     <h3>Prueba de Pago PayPal</h3>
     <div class="payment-container">
       <p>Monto de prueba: $10.00</p>
-      <app-paypal [amount]={{ monto }}></app-paypal>
+      <app-paypal [amount]="10"></app-paypal> <!-- hay que agregar variable monto para cargar el monto de la puja ganadora -->
     </div>
   </section>
 
