@@ -12,6 +12,7 @@
 
         protected $fillable = [ 
             'nombre',
+            'estado',
             'imagenes', 
             'especificacion', 
             'disponibilidad', 

@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 
+use App\Models\Articulo;
 use App\Models\CasaRemate;
+use App\Models\Categoria;
 use App\Models\Subasta;
 use App\Models\Lote;
 use App\Models\Puja;
@@ -130,7 +132,45 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        
+        Categoria::create([
+            'id' => 1,
+            'nombre' => 'Electrónica',
+            'categoria_padre_id' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Categoria::create([
+            'id' => 2,
+            'nombre' => 'Telefonos',
+            'categoria_padre_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Categoria::create([
+            'id' => 3,
+            'nombre' => 'Muebles',
+            'categoria_padre_id' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $articulo = Articulo::create([
+            'nombre' => 'iPhone 14 Pro Max',
+            'estado' => 'EXCELENTE',
+            'imagenes' => 'iphone14pro.jpg',
+            'especificacion' => 'iPhone 14 Pro Max 256GB, Color Azul Alpino, Batería al 95%, Incluye cargador original y caja',
+            'disponibilidad' => true,
+            'condicion' => 'Como nuevo, sin rayones ni golpes',
+            'vendedor_id' => null,
+            'lote_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $articulo->categorias()->attach(2);
+
         //Pablo
         $clienteUsuario = Usuario::create([
             'nombre' => 'Steven Spielberg',

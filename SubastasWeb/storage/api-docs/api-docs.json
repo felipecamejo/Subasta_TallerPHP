@@ -2380,14 +2380,14 @@
                 }
             }
         },
-        "/api/subastas/enviarMail": {
+        "/api/subastas/enviaMail": {
             "post": {
                 "tags": [
                     "Subastas"
                 ],
                 "summary": "Envía una notificación por email",
                 "description": "Envía un email de notificación con asunto y mensaje personalizados",
-                "operationId": "5d2b894650dd967d299593e18e628ee5",
+                "operationId": "7d63d54067a5d94e4d07337c9f5d4e7c",
                 "requestBody": {
                     "required": true,
                     "content": {

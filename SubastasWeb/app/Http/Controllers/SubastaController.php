@@ -34,10 +34,17 @@ class SubastaController extends Controller
      */
     public function index() {
         try {
-            $subasta = Subasta::with(['casaRemate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
+            $subastas = Subasta::with([
+                'casaRemate', 
+                'rematador', 
+                'lotes.pujas.cliente.usuario', 
+                'lotes.articulos.categorias',
+                'lotes.articulos.vendedor'
+            ])->get();
             
-            $dto = $subasta->map(function ($subasta) {
-                return Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth);
+            $dto = $subastas->map(function ($subasta) {
+                $visited = [];
+                return Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth);
             });
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -124,14 +131,21 @@ class SubastaController extends Controller
      * )
      */
     public function show($id){
-
-        $subasta = Subasta::with(['casaRemate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
+        /** @var Subasta|null $subasta */
+        $subasta = Subasta::with([
+            'casaRemate', 
+            'rematador', 
+            'lotes.pujas.cliente.usuario', 
+            'lotes.articulos.categorias',
+            'lotes.articulos.vendedor'
+        ])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth));
+        $visited = [];
+        return response()->json(Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth));
     }
 
     /**

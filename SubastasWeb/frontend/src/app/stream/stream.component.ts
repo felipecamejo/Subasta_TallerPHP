@@ -438,24 +438,6 @@ export class StreamComponent implements OnInit, OnDestroy {
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
           
-          if (this.subasta?.casaremate?.email) {
-            const mail: mailDto = {
-              email: this.subasta.casaremate.email,
-              asunto: `Umbral superado en la subasta ${this.subasta?.nombre || ''}`,
-              mensaje: `El umbral de ${this.lotes[this.indexLotes].umbral} ha sido superado por la puja de ${data.monto} en el lote ${this.lotes[this.indexLotes].id}.`
-            }
-
-            this.subastaService.enviarMail(mail).subscribe({
-              next: () => {
-                console.log('Correo enviado exitosamente');
-              },
-              error: (err) => {
-                console.error('Error al enviar correo:', err);
-              }
-            });
-          } else {
-            console.warn('No se pudo enviar el correo: email de casa de remate no disponible');
-          }
         }
 
         this.actualizarDatosSinSobrescribir();

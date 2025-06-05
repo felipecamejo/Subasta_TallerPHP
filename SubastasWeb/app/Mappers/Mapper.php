@@ -55,6 +55,7 @@ class Mapper {
 
         $dto = new DtoArticulo(
             $articulo->id,
+            $articulo->estado,
             $articulo->nombre,
             $articulo->imagenes,
             $articulo->especificacion,
@@ -72,6 +73,7 @@ class Mapper {
     public static function toModelArticulo(DtoArticulo $dto): Articulo{
         return new Articulo([
             'nombre' => $dto->nombre,
+            'estado' => $dto->estado,
             'imagenes' => $dto->imagenes,
             'especificacion' => $dto->especificacion,
             'disponibilidad' => $dto->disponibilidad,
