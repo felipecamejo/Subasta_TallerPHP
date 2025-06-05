@@ -429,6 +429,22 @@ export class StreamComponent implements OnInit, OnDestroy {
       next: (data) => {
         console.log('Puja creada exitosamente:', data);
 
+        // Actualizar inmediatamente los valores locales
+        this.pujaActual = data.monto;
+        this.pujaRapida = data.monto + 1;
+        this.pujaComun = null;
+
+        // Agregar la nueva puja al array local para actualización inmediata
+        const nuevaPuja: pujaDto = {
+          id: data.id,
+          fechaHora: new Date(data.fechaHora),
+          monto: data.monto,
+          lote: this.lotes[this.indexLotes],
+          factura: null as any,
+          cliente: null as any
+        };
+        this.pujas.push(nuevaPuja);
+
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
           
@@ -451,8 +467,8 @@ export class StreamComponent implements OnInit, OnDestroy {
             console.warn('No se pudo enviar el correo: email de casa de remate no disponible');
           }
         }
-        this.actualizarDatos();
-        this.cargarPujas(this.indexLotes);
+
+        this.actualizarDatosSinSobrescribir();
         this.limpiarCamposPuja();
       },
       error: (err) => {
@@ -484,9 +500,38 @@ export class StreamComponent implements OnInit, OnDestroy {
     });
   }
 
+  private actualizarDatosSinSobrescribir(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    
+    this.subastaService.getSubasta(id).subscribe({
+      next: (data) => {
+        this.subasta = data;
+        this.lotes = (this.subasta.lotes || []).map(lote => ({
+          ...lote,
+          subasta: {
+            id: this.subasta!.id,
+            fecha: this.subasta!.fecha,
+            duracionMinutos: this.subasta!.duracionMinutos,
+            nombre: this.subasta!.nombre
+          }
+        }));
+        
+        // Actualizar solo el array de pujas sin recalcular pujaActual y pujaRapida
+        const loteIndex = this.indexLotes;
+        if (loteIndex >= 0 && loteIndex < this.lotes.length) {
+          this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
+          // No recalcular pujaActual y pujaRapida aquí, mantener los valores ya actualizados
+        }
+      },
+      error: (err) => {
+        console.error('Error al actualizar datos:', err);
+      }
+    });
+  }
+
   private limpiarCamposPuja(): void {
-    this.pujaRapida = null;
     this.pujaComun = null;
+    // No limpiar pujaRapida aquí, ya que se actualiza en enviarPuja
   }
 }
 
