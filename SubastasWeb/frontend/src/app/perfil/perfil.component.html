@@ -96,5 +96,14 @@
       </ng-template>
     </p-table>
   </section>
+
+  <section class="payment-section">
+    <h3>Prueba de Pago PayPal</h3>
+    <div class="payment-container">
+      <p>Monto de prueba: $10.00</p>
+      <app-paypal [amount]={{ monto }}></app-paypal>
+    </div>
+  </section>
+
 </div>
 
