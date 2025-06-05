@@ -1,4 +1,15 @@
-<app-header></app-header>
+<!-- ───────────────────────────────────────────────────────────────────────────
+     Botón de inicio de sesión con Google.
+     Cuando el usuario NO está registrado, expulsa evento "usuarioNoRegistrado"
+     con { nombre, email, imagen }. 
+   ─────────────────────────────────────────────────────────────────────────── -->
+<app-google-login (usuarioNoRegistrado)="rellenarFormulario($event)"></app-google-login>
 
-<router-outlet></router-outlet>
-<app-footer></app-footer>
+<!-- ───────────────────────────────────────────────────────────────────────────
+     Mostrar <app-register> solo si ya recibimos datos de Google.
+     El formulario de registro (RegisterComponent) recibirá [datosGoogle].
+   ─────────────────────────────────────────────────────────────────────────── -->
+<app-register
+  *ngIf="mostrarFormularioExtra"
+  [datosGoogle]="datosParaForm">
+</app-register>

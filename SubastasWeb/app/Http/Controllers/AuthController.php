@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Rematador;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Google\Client as GoogleClient;
 
 class AuthController extends Controller
 {
@@ -162,54 +163,52 @@ public function register(Request $request)
     ], 201);
 }
 
+
 public function loginWithGoogle(Request $request)
 {
-    $request->validate([
-        'token' => 'required|string',
-        'rol' => 'required|in:cliente,rematador',
-        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+    $request->validate(['token' => 'required|string']);
+
+    // 1) Verificar y decodificar el ID‐token recibido desde el frontend
+    $googleClient = new GoogleClient([
+        'client_id' => config('services.google.client_id') 
     ]);
 
-    $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+    // La función verifyIdToken() valida la firma del JWT y devuelve el "payload" con info del usuario
+    $payload = $googleClient->verifyIdToken($request->token);
 
-    $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
-
-    if (!$usuario) {
-        // Usuario nuevo
-        $usuario = Usuario::create([
-            'nombre' => $googleUser->getName(),
-            'email' => $googleUser->getEmail(),
-            'cedula' => '', // Adaptá según tu lógica
-            'telefono' => '',
-            'imagen' => $googleUser->getAvatar(),
-            'contrasenia' => bcrypt(Str::random(16)),
-        ]);
-
-        if ($request->rol === 'rematador') {
-            Rematador::create([
-                'usuario_id' => $usuario->id,
-                'matricula' => $request->matricula,
-            ]);
-        } else if ($request->rol === 'cliente') {
-            Cliente::create([
-                'usuario_id' => $usuario->id,
-            ]);
-        }
+    if (! $payload) {
+        return response()->json(['error' => 'Token de Google inválido'], 401);
     }
 
-    $token = $usuario->createToken('auth_token')->plainTextToken;
+    // 2) Extraer datos del "payload"
+    $email  = $payload['email'];
+    $nombre = $payload['name'];
+    $imagen = $payload['picture']; // URL de la foto del perfil en Google
 
-    $usuario->load(['rematador', 'cliente']);
+    // 3) Buscar/crear usuario en tu base de datos
+    $usuario = Usuario::firstWhere('email', $email);
 
-    // Determinar el rol actual
-    $rol = $usuario->rematador ? 'rematador' : 'cliente';
+    if ($usuario) {
+        // Ya existe: genero token y devuelvo datos
+        $token = $usuario->createToken('auth_token')->plainTextToken;
+        $rol   = $usuario->rematador ? 'rematador' : 'cliente';
 
+        return response()->json([
+            'registrado'   => true,
+            'access_token' => $token,
+            'usuario_id'   => $usuario->id,
+            'rol'          => $rol,
+            'usuario'      => $usuario->makeHidden(['contrasenia']),
+        ]);
+    }
+
+    // 4) Usuario nuevo: devolvemos los datos básicos para que el frontend
+    //    muestre el formulario prellenado (y el usuario lo complete).
     return response()->json([
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-        'usuario_id' => $usuario->id,
-        'rol' => $rol,
-        'usuario' => $usuario,
+        'registrado' => false,
+        'nombre'     => $nombre,
+        'email'      => $email,
+        'imagen'     => $imagen
     ]);
 }
 

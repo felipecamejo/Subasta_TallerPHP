@@ -1,73 +1,21 @@
-<!-- Botón de Google Sign-In -->
-<app-google-login></app-google-login>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <!-- Campos del formulario (nombre, cedula, email, etc) -->
+  <!-- … -->
 
+  <!-- Solo si mostrarFormularioExtra = true mostramos el mapa y lat/lng -->
+  <div *ngIf="mostrarFormularioExtra">
+    <h3>Seleccioná ubicación en el mapa</h3>
+    <div id="map" style="height: 300px; margin-bottom: 15px;"></div>
 
-
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="container mt-4">
-
-  <div class="mb-3">
-    <label for="nombre" class="form-label">Nombre</label>
-    <input type="text" id="nombre" class="form-control" formControlName="nombre">
-  </div>
-
-  <div class="mb-3">
-    <label for="email" class="form-label">Email</label>
-    <input type="email" id="email" class="form-control" formControlName="email">
-  </div>
-
-  <div class="mb-3">
-    <label for="cedula" class="form-label">Cédula</label>
-    <input type="text" id="cedula" class="form-control" formControlName="cedula">
-  </div>
-
-  <div class="mb-3">
-    <label for="telefono" class="form-label">Teléfono</label>
-    <input type="text" id="telefono" class="form-control" formControlName="telefono">
-  </div>
-
- <div class="mb-3">
-  <label for="tipo" class="form-label">Rol</label>
-  <select id="tipo" class="form-select" formControlName="tipo">
-    <option value="">Seleccione un rol</option>
-    <option value="cliente">Cliente</option>
-    <option value="rematador">Rematador</option>
-  </select>
-</div>
-
-  <div class="mb-3" *ngIf="form.get('rol')?.value === 'rematador'">
-    <label for="matricula" class="form-label">Matrícula</label>
-    <input type="text" id="matricula" class="form-control" formControlName="matricula">
-  </div>
-
-  <!-- Grupo de contraseña -->
-  <div formGroupName="contraseniaGroup">
-    <div class="mb-3">
-      <label for="contrasenia" class="form-label">Contraseña</label>
-      <input type="password" id="contrasenia" class="form-control" formControlName="contrasenia">
+    <div>
+      <label>Latitud:</label>
+      <input formControlName="latitud" type="number" step="any" readonly />
     </div>
-
-    <div class="mb-3">
-      <label for="confirmarContrasenia" class="form-label">Confirmar Contraseña</label>
-      <input type="password" id="confirmarContrasenia" class="form-control" formControlName="confirmarContrasenia">
+    <div>
+      <label>Longitud:</label>
+      <input formControlName="longitud" type="number" step="any" readonly />
     </div>
-
-
-
-  <div class="text-danger mb-2" *ngIf="form.get('contraseniaGroup')?.errors?.['mismatch']">
-  Las contraseñas no coinciden.
-</div>
-</div>  
-
-  <!-- Coordenadas y mapa -->
-  <div class="mb-3">
-    <label class="form-label">Ubicación (opcional)</label>
-    <div id="map" style="height: 300px;"></div>
-    <input type="hidden" formControlName="latitud">
-    <input type="hidden" formControlName="longitud">
-    <p class="form-text">
-      Latitud: {{ form.get('latitud')?.value }}, Longitud: {{ form.get('longitud')?.value }}
-    </p>
   </div>
 
-  <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Registrarse</button>
+  <button type="submit">Registrar</button>
 </form>

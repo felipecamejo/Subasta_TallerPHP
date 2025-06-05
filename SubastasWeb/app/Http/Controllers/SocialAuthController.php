@@ -8,6 +8,8 @@ use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
 use Illuminate\Support\Facades\Hash;
+use Exception;
+use Google\Client as GoogleClient;
 use Illuminate\Support\Str;
 
 class SocialAuthController extends Controller
@@ -114,88 +116,63 @@ class SocialAuthController extends Controller
         ]);
     }
 public function loginWithGoogle(Request $request)
-{
-    $rules = [
-        'token' => 'required|string',
-    ];
+    {
+        try {
+            $request->validate([
+                'token' => 'required|string',
+            ]);
 
-    // Si envían rol, validamos rol y matrícula
-    if ($request->has('rol')) {
-        $rules['rol'] = 'required|in:cliente,rematador';
-        $rules['matricula'] = 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula';
-    }
+            // 1) Instanciamos Google_Client con el CLIENT_ID que definiste en .env
+            $googleClient = new GoogleClient([
+                'client_id' => config('services.google.client_id'),
+            ]);
 
-    $validated = $request->validate($rules);
+            // 2) Verificamos y decodificamos el ID-token JWT que envía el frontend
+            $payload = $googleClient->verifyIdToken($request->token);
 
-    $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
-
-    $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
-
-    if ($usuario) {
-        // Usuario existe: solo login
-        // Opcional: verificar si envían rol y coincide con el rol guardado para prevenir conflictos
-
-        // Obtener rol guardado
-        $tieneCliente = (bool) $usuario->cliente;
-        $tieneRematador = (bool) $usuario->rematador;
-
-        if ($request->has('rol')) {
-            $rolEnviado = $request->rol;
-            if (($rolEnviado === 'cliente' && !$tieneCliente) ||
-                ($rolEnviado === 'rematador' && !$tieneRematador)) {
-                return response()->json(['error' => 'El rol enviado no coincide con el registrado'], 400);
+            if (! $payload) {
+                // Si no es válido o está expirado, devolvemos 401
+                return response()->json(['error' => 'Token de Google inválido'], 401);
             }
-        }
 
-        // Definir rol para enviar al frontend
-        $rol = $tieneCliente ? 'cliente' : ($tieneRematador ? 'rematador' : null);
+            // 3) Extraemos los datos que necesitamos del payload
+            $email  = $payload['email'];
+            $nombre = $payload['name'];
+            $imagen = $payload['picture'] ?? '';
 
-        $token = $usuario->createToken('auth_token')->plainTextToken;
+            // 4) Buscamos si ya existe un usuario con ese email
+            $usuario = Usuario::firstWhere('email', $email);
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'usuario' => $usuario->load(['cliente', 'rematador']),
-            'rol' => $rol,
-        ]);
-    } else {
-        // Usuario NO existe: requiere rol para crear
-        if (!$request->has('rol')) {
+            if ($usuario) {
+                // 5a) Usuario ya registrado: generamos token Sanctum y devolvemos datos
+                $token = $usuario->createToken('auth_token')->plainTextToken;
+                $rol   = $usuario->rematador ? 'rematador' : 'cliente';
+
+                return response()->json([
+                    'registrado'   => true,
+                    'access_token' => $token,
+                    'usuario_id'   => $usuario->id,
+                    'rol'          => $rol,
+                    'usuario'      => $usuario->makeHidden(['contrasenia']),
+                ]);
+            }
+
+            // 5b) Usuario NO existe: devolvemos los datos para prellenar el formulario
             return response()->json([
-                'error' => 'Usuario no registrado. Debe enviar rol para registrarse.'
-            ], 404);
-        }
-
-        // Crear usuario nuevo
-        $usuario = Usuario::create([
-            'nombre' => $googleUser->getName(),
-            'email' => $googleUser->getEmail(),
-            'cedula' => '',
-            'telefono' => '',
-            'imagen' => $googleUser->getAvatar(),
-            'contrasenia' => bcrypt(Str::random(16)),
-        ]);
-
-        if ($request->rol === 'rematador') {
-            Rematador::create([
-                'usuario_id' => $usuario->id,
-                'matricula' => $request->matricula,
+                'registrado' => false,
+                'nombre'     => $nombre,
+                'email'      => $email,
+                'imagen'     => $imagen,
             ]);
-        } elseif ($request->rol === 'cliente') {
-            Cliente::create([
-                'usuario_id' => $usuario->id,
-            ]);
+
+        } catch (Exception $e) {
+            // En desarrollo, devolvemos la excepción en JSON para depurar
+            return response()->json([
+                'error'   => 'Excepción en loginWithGoogle',
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ], 500);
         }
-
-        $token = $usuario->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'usuario' => $usuario->load(['cliente', 'rematador']),
-            'rol' => $request->rol,
-        ]);
     }
-}
 
 }
