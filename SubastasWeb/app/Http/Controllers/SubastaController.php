@@ -7,6 +7,8 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mappers\Mapper;
+use App\Mail\NotificacionCorreo;
+use Illuminate\Support\Facades\Mail;
 
 
 /**
@@ -287,4 +289,38 @@ class SubastaController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/subastas/enviar-email",
+     *     summary="Envía una notificación por email",
+     *     description="Envía un email de notificación con asunto y mensaje personalizados",
+     *     tags={"Subastas"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "asunto", "mensaje"},
+     *             @OA\Property(property="email", type="string", format="email", description="Dirección de email del destinatario"),
+     *             @OA\Property(property="asunto", type="string", description="Asunto del email"),
+     *             @OA\Property(property="mensaje", type="string", description="Contenido del mensaje")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Email enviado exitosamente"),
+     *     @OA\Response(response=422, description="Error de validación"),
+     *     @OA\Response(response=500, description="Error interno del servidor")
+     * )
+     */
+    public function enviarEmailNotificacion(Request $request){
+        $request->validate([
+            'email' => 'required|email',
+            'asunto' => 'required|string|max:255',
+            'mensaje' => 'required|string'
+        ]);
+
+        try {
+            Mail::to($request->email)->send(new NotificacionCorreo($request->asunto, $request->mensaje));
+            return response()->json(['message' => 'Email enviado exitosamente']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al enviar el email: ' . $e->getMessage()], 500);
+        }
+    }
 }
