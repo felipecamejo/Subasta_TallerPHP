@@ -14,6 +14,7 @@ import { PujaService } from '../../services/puja.service'
 import { pujaDto } from '../../models/pujaDto';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DialogModule } from 'primeng/dialog';
+import { mailDto } from '../../models/mailDto';
 
 
 interface PujaRequest {
@@ -52,6 +53,8 @@ export class StreamComponent implements OnInit, OnDestroy {
   
   indexLotes: number = 0;
   
+  umbralSuperado: boolean = false;
+
   videoUrl: SafeResourceUrl | null = null;
 
   public timerState: TimerState = {
@@ -126,6 +129,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (this.indexLotes > 0 && this.subasta) {
       this.indexLotes--;
       this.subasta.loteIndex = this.indexLotes;
+      this.umbralSuperado = false; 
       this.subastaService.updateSubasta(this.subasta).subscribe({
         next: () => {
           console.log('Subasta actualizada con el lote anterior');
@@ -145,6 +149,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (this.indexLotes < this.lotes.length - 1 && this.subasta) {
       this.indexLotes++;
       this.subasta.loteIndex = this.indexLotes;
+      this.umbralSuperado = false;
       this.subastaService.updateSubasta(this.subasta).subscribe({
         next: () => {
           console.log('Subasta actualizada con el siguiente lote');
@@ -423,6 +428,29 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.pujaService.crearPuja(puja).subscribe({
       next: (data) => {
         console.log('Puja creada exitosamente:', data);
+
+        if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
+          this.umbralSuperado = true;
+          
+          if (this.subasta?.casaremate?.email) {
+            const mail: mailDto = {
+              email: this.subasta.casaremate.email,
+              asunto: `Umbral superado en la subasta ${this.subasta?.nombre || ''}`,
+              mensaje: `El umbral de ${this.lotes[this.indexLotes].umbral} ha sido superado por la puja de ${data.monto} en el lote ${this.lotes[this.indexLotes].id}.`
+            }
+
+            this.subastaService.enviarMail(mail).subscribe({
+              next: () => {
+                console.log('Correo enviado exitosamente');
+              },
+              error: (err) => {
+                console.error('Error al enviar correo:', err);
+              }
+            });
+          } else {
+            console.warn('No se pudo enviar el correo: email de casa de remate no disponible');
+          }
+        }
         this.actualizarDatos();
         this.cargarPujas(this.indexLotes);
         this.limpiarCamposPuja();

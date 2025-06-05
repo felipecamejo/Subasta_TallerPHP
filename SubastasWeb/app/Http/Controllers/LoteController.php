@@ -74,12 +74,14 @@ class LoteController extends Controller{
             'valorBase' => 'required|numeric',
             'pujaMinima' => 'required|numeric',
             'subasta_id' => 'nullable|exists:subastas,id',
+            'umbral' => 'nullable|numeric|min:0', 
         ]);
         
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
             'subasta_id' => $request->subasta_id,
+            'umbral' => $request->umbral ?? 0, 
         ]);
         
         $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);

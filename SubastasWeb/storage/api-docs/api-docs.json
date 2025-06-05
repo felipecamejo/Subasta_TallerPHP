@@ -1401,7 +1401,7 @@
                                                 "type": "string",
                                                 "format": "date-time"
                                             },
-                                            "montoTotal": {
+                                            "monto": {
                                                 "type": "number",
                                                 "format": "float"
                                             },
@@ -1492,8 +1492,7 @@
                             "schema": {
                                 "required": [
                                     "fechaHora",
-                                    "montoTotal",
-                                    "cliente_id",
+                                    "monto",
                                     "lote_id"
                                 ],
                                 "properties": {
@@ -1502,14 +1501,15 @@
                                         "format": "date-time",
                                         "example": "2025-05-26T14:00:00Z"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 1500.5
                                     },
                                     "cliente_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "lote_id": {
                                         "type": "integer",
@@ -1659,7 +1659,7 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float"
                                     },
@@ -2380,14 +2380,14 @@
                 }
             }
         },
-        "/api/subastas/enviar-email": {
+        "/api/subastas/enviarMail": {
             "post": {
                 "tags": [
                     "Subastas"
                 ],
                 "summary": "Envía una notificación por email",
                 "description": "Envía un email de notificación con asunto y mensaje personalizados",
-                "operationId": "8a507d5b11aa9f5e0cbf182dd7e1e56f",
+                "operationId": "5d2b894650dd967d299593e18e628ee5",
                 "requestBody": {
                     "required": true,
                     "content": {

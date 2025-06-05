@@ -291,7 +291,7 @@ class SubastaController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/subastas/enviar-email",
+     *     path="/api/subastas/enviarMail",
      *     summary="Envía una notificación por email",
      *     description="Envía un email de notificación con asunto y mensaje personalizados",
      *     tags={"Subastas"},

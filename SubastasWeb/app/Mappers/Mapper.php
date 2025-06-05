@@ -343,6 +343,7 @@ class Mapper {
             'valorBase' => $dto->valorBase,
             'pujaMinima' => $dto->pujaMinima,
             'subasta_id' => $dto->subasta->id ?? null,
+            'umbral' => $dto->umbral,
         ]);
     }
 
@@ -420,7 +421,7 @@ class Mapper {
             return $visited['subasta'][$subasta->id];
         }
 
-        $casaremateModel = CasaRemate::find($subasta->casaremate_id);
+        $casaremateModel = CasaRemate::find($subasta->casa_remate_id);
         $dtoCasaRemate = ($casaremateModel instanceof CasaRemate && ($depth === null || $depth > 0))
             ? Mapper::fromModelCasaRemate($casaremateModel, $visited, $depth !== null ? $depth - 1 : null)
             : null;

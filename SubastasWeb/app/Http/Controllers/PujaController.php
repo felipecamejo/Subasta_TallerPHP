@@ -34,7 +34,7 @@ class PujaController extends Controller
      *                 type="object",
      *                 @OA\Property(property="id", type="integer"),
      *                 @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *                 @OA\Property(property="montoTotal", type="number", format="float"),
+     *                 @OA\Property(property="monto", type="number", format="float"),
      *                 @OA\Property(
      *                     property="cliente",
      *                     type="object",
@@ -101,10 +101,10 @@ class PujaController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"fechaHora", "montoTotal", "cliente_id", "lote_id"},
+     *             required={"fechaHora", "monto", "lote_id"},
      *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-05-26T14:00:00Z"),
-     *             @OA\Property(property="montoTotal", type="number", format="float", example=1500.50),
-     *             @OA\Property(property="cliente_id", type="integer", example=1),
+     *             @OA\Property(property="monto", type="number", format="float", example=1500.50),
+     *             @OA\Property(property="cliente_id", type="integer", example=1, nullable=true),
      *             @OA\Property(property="lote_id", type="integer", example=2)
      *         )
      *     ),
@@ -235,7 +235,7 @@ class PujaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *             @OA\Property(property="montoTotal", type="number", format="float"),
+     *             @OA\Property(property="monto", type="number", format="float"),
      *             @OA\Property(property="cliente_id", type="integer"),
      *             @OA\Property(property="lote_id", type="integer"),
      *             @OA\Property(property="factura_id", type="integer")
@@ -271,8 +271,9 @@ class PujaController extends Controller
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
             'monto' => 'sometimes|required|numeric',
-            'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
-            'lote_id' => 'sometimes|required|exists:lotes,id',
+            'montoTotal' => 'sometimes|required|numeric',
+            'cliente_id' => 'nullable|exists:clientes,usuario_id',
+            'lote_id' => 'nullable|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
         ]);
 
@@ -294,10 +295,6 @@ class PujaController extends Controller
                 'lote_id',
                 'factura_id',
             ]);
-            
-            if ($request->has('montoTotal')) {
-                $updateData['monto'] = $request->montoTotal;
-            }
 
             $puja->fill($updateData);
 

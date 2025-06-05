@@ -3,9 +3,13 @@
 namespace Database\Seeders;
 
 
+use App\Models\CasaRemate;
 use App\Models\Subasta;
 use App\Models\Lote;
 use App\Models\Puja;
+use App\Models\Usuario;
+use App\Models\Cliente;
+use App\Models\Rematador;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +21,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void {
 
+        CasaRemate::create([
+            'id' => 1,
+            'nombre' => 'Casa de Remates Aurora',
+            'idFiscal' => '212345670018',
+            'email' => 'cocoarodri@gmail.com',
+            'telefono' => '099123456',
+            'calificacion' => [4.5, 4.8, 4.2, 5.0, 4.7],
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         Subasta::create([
             'id' => 1,
             'nombre' => 'alexis',
@@ -27,7 +44,7 @@ class DatabaseSeeder extends Seeder
             'longitud' => -50.1645000,
             'videoId' => 'DN8P7kukaGo',
             'rematador_id' => null,
-            'casa_remate_id' => null,
+            'casa_remate_id' => 1,
             'loteIndex' => 0,
             'created_at' => now(),
             'updated_at' => now(),

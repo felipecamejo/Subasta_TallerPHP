@@ -10,7 +10,7 @@ class DtoLote{
     public $pujaMinima;
     public $subasta;
     public $umbral;
-    public
+    
     /** @var DtoPuja[] */
     public array $pujas;
 
