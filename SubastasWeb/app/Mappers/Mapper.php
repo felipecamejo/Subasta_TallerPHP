@@ -40,12 +40,12 @@ class Mapper {
             ? Mapper::fromModelVendedor($vendedorModel, $visited, $depth !== null ? $depth - 1 : null)
             : null;
 
-        $categorias = [];
+        $categoria = null;
         if ($depth === null || $depth > 0) {
-            $categoriasCollection = $articulo->categorias ?? collect();
-            $categorias = $categoriasCollection->map(function($categoria) use (&$visited, $depth) {
-                return Mapper::fromModelCategoria($categoria, $visited, $depth !== null ? $depth - 1 : null);
-            })->toArray();
+            $categoriaModel = $articulo->categoria;
+            $categoria = ($categoriaModel instanceof Categoria)
+                ? Mapper::fromModelCategoria($categoriaModel, $visited, $depth !== null ? $depth - 1 : null)
+                : null;
         }
 
         $loteModel = Lote::find($articulo->lote_id);
@@ -62,7 +62,7 @@ class Mapper {
             $articulo->disponibilidad,
             $articulo->condicion,
             $dtoVendedor,
-            $categorias,
+            $categoria,
             $dtoLote
             
         );
@@ -79,7 +79,8 @@ class Mapper {
             'disponibilidad' => $dto->disponibilidad,
             'condicion' => $dto->condicion,
             'vendedor_id' => $dto->vendedor->id ?? null,
-            'lote_id' => $dto->lote->id ?? null
+            'lote_id' => $dto->lote->id ?? null,
+            'categoria_id' => $dto->categoria->id ?? null
         ]);
     }
 
@@ -142,9 +143,11 @@ class Mapper {
             $categoriasHijas = $categoriasHijasCollection->map(function($categoriaHija) use (&$visited, $depth) {
                 return Mapper::fromModelCategoria($categoriaHija, $visited, $depth !== null ? $depth - 1 : null);
             })->toArray();
+            
+            // Para evitar recursión infinita, cargamos los artículos con profundidad limitada
             $articulosCollection = $categoria->articulos ?? collect();
-            $articulos = $articulosCollection->map(function($articulo) use (&$visited) {
-                return Mapper::fromModelArticulo($articulo, $visited);
+            $articulos = $articulosCollection->map(function($articulo) use (&$visited, $depth) {
+                return Mapper::fromModelArticulo($articulo, $visited, $depth !== null ? max(0, $depth - 1) : 0);
             })->toArray();
         }
 

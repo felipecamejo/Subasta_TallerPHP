@@ -30,7 +30,7 @@ class LoteController extends Controller{
     */
     public function index(){
         try {
-            $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
+            $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->get();
 
             $dtos = $lote->map(function ($lote) {
                 return Mapper::fromModelLote($lote, $this->visited, $this->maxDepth);
@@ -84,7 +84,7 @@ class LoteController extends Controller{
             'umbral' => $request->umbral ?? 0, 
         ]);
         
-        $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);
+        $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->find($lote->id);
         
         return response()->json(Mapper::fromModelLote($lote, $this->visited, $this->maxDepth), 201);
     }

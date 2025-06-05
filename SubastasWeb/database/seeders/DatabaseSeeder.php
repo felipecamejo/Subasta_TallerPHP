@@ -165,11 +165,12 @@ class DatabaseSeeder extends Seeder
             'condicion' => 'Como nuevo, sin rayones ni golpes',
             'vendedor_id' => null,
             'lote_id' => 1,
+            'categoria_id' => 2, 
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $articulo->categorias()->attach(2);
+        $articulo->save();
 
         //Pablo
         $clienteUsuario = Usuario::create([

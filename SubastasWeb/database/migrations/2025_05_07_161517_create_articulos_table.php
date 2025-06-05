@@ -23,6 +23,7 @@ return new class extends Migration
             
             $table->foreignId('vendedor_id')->nullable()->constrained('vendedores')->onDelete('cascade');
             $table->foreignId('lote_id')->nullable()->constrained('lotes')->onDelete('cascade');
+            $table->foreignId('categoria_id')->nullable()->constrained('categorias')->onDelete('set null');
 
             $table->timestamps();
         });

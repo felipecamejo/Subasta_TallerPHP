@@ -18,13 +18,14 @@
             'disponibilidad', 
             'condicion', 
             'vendedor_id',
-            'lote_id'
+            'lote_id',
+            'categoria_id'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-        public function categorias() {
-            return $this->belongsToMany(Categoria::class, 'articulo_categoria', 'articulo_id', 'categoria_id');
+        public function categoria() {
+            return $this->belongsTo(Categoria::class);
         }
 
         public function vendedor() {

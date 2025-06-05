@@ -38,7 +38,7 @@ class SubastaController extends Controller
                 'casaRemate', 
                 'rematador', 
                 'lotes.pujas.cliente.usuario', 
-                'lotes.articulos.categorias',
+                'lotes.articulos.categoria',
                 'lotes.articulos.vendedor'
             ])->get();
             
@@ -136,7 +136,7 @@ class SubastaController extends Controller
             'casaRemate', 
             'rematador', 
             'lotes.pujas.cliente.usuario', 
-            'lotes.articulos.categorias',
+            'lotes.articulos.categoria',
             'lotes.articulos.vendedor'
         ])->find($id);
 

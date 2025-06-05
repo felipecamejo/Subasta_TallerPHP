@@ -13,5 +13,5 @@ export interface articuloDto {
     condicion: string;
     vendedor: Pick<vendedorDto, 'id' | 'nombre'>;
     lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
-    categorias: Pick<categoriaDto, 'id' | 'nombre' | 'categoria_padre'>[];
+    categoria: Pick<categoriaDto, 'id' | 'nombre' | 'categoria_padre'>;
 }
