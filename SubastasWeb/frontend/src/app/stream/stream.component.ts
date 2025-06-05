@@ -137,7 +137,6 @@ export class StreamComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al actualizar subasta con el lote anterior:', err);
-          // Revertir cambio en caso de error
           this.indexLotes++;
           if (this.subasta) this.subasta.loteIndex = this.indexLotes;
         }
@@ -157,7 +156,6 @@ export class StreamComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al actualizar subasta con el siguiente lote:', err);
-          // Revertir cambio en caso de error
           this.indexLotes--;
           if (this.subasta) this.subasta.loteIndex = this.indexLotes;
         }
@@ -166,7 +164,6 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   cargarPujas(loteIndex: number): void {
-    // Validar que el índice esté dentro de los límites
     if (loteIndex < 0 || loteIndex >= this.lotes.length) {
       console.warn('Índice de lote fuera de rango:', loteIndex);
       return;
@@ -207,6 +204,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           }
         }));
 
+        console.log('Lotes cargados:', this.lotes);
 
         
         if(this.subasta.videoId && this.subasta.videoId.trim() !== '') {
@@ -254,7 +252,6 @@ export class StreamComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al actualizar subasta:', err);
-        // Revertir cambios en caso de error
         this.boton = false;
         this.subasta!.activa = false;
       }
@@ -262,7 +259,6 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   iniciarTimer() {
-    // Evitar múltiples inicializaciones
     if (this.timerState.timerActivo) {
       console.warn('Timer ya está activo, ignorando nueva inicialización');
       return;
@@ -301,19 +297,15 @@ export class StreamComponent implements OnInit, OnDestroy {
           const ahora = Date.now();
           
           if (ahora < fechaInicio) {
-            // Subasta aún no ha comenzado
             const diff = Math.floor((fechaInicio - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
             this.timerState.timer = this.formatearTiempo(diff);
           } else if (ahora <= fechaFin) {
-            // Subasta en progreso
             const diff = Math.floor((fechaFin - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
             this.timerState.timer = this.formatearTiempo(diff);
           } else {
-            // Subasta finalizada
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
             this.detenerTimer();
             
-            // Marcar la subasta como inactiva
             if (this.subasta && this.subasta.activa) {
               this.subasta.activa = false;
               this.boton = false;
@@ -429,12 +421,10 @@ export class StreamComponent implements OnInit, OnDestroy {
       next: (data) => {
         console.log('Puja creada exitosamente:', data);
 
-        // Actualizar inmediatamente los valores locales
         this.pujaActual = data.monto;
         this.pujaRapida = data.monto + 1;
         this.pujaComun = null;
 
-        // Agregar la nueva puja al array local para actualización inmediata
         const nuevaPuja: pujaDto = {
           id: data.id,
           fechaHora: new Date(data.fechaHora),
@@ -516,11 +506,9 @@ export class StreamComponent implements OnInit, OnDestroy {
           }
         }));
         
-        // Actualizar solo el array de pujas sin recalcular pujaActual y pujaRapida
         const loteIndex = this.indexLotes;
         if (loteIndex >= 0 && loteIndex < this.lotes.length) {
           this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
-          // No recalcular pujaActual y pujaRapida aquí, mantener los valores ya actualizados
         }
       },
       error: (err) => {
@@ -531,7 +519,6 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   private limpiarCamposPuja(): void {
     this.pujaComun = null;
-    // No limpiar pujaRapida aquí, ya que se actualiza en enviarPuja
   }
 }
 

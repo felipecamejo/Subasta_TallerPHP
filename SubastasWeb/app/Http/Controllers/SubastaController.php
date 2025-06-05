@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class SubastaController extends Controller
 {
-    public $maxDepth = 3;
+    public $maxDepth = 2;
     public $visited = [];
     /**
      * @OA\Get(
@@ -34,7 +34,7 @@ class SubastaController extends Controller
      */
     public function index() {
         try {
-            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
+            $subasta = Subasta::with(['casaRemate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
             
             $dto = $subasta->map(function ($subasta) {
                 return Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth);
@@ -125,7 +125,7 @@ class SubastaController extends Controller
      */
     public function show($id){
 
-        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
+        $subasta = Subasta::with(['casaRemate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
@@ -199,7 +199,7 @@ class SubastaController extends Controller
             'loteIndex'
         ])); 
 
-        return response()->json($subasta->load(['casaremate', 'rematador',]));
+        return response()->json($subasta->load(['casaRemate', 'rematador',]));
     }
 
     /**
@@ -291,7 +291,7 @@ class SubastaController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/subastas/enviarMail",
+     *     path="/api/subastas/enviaMail",
      *     summary="Envía una notificación por email",
      *     description="Envía un email de notificación con asunto y mensaje personalizados",
      *     tags={"Subastas"},
