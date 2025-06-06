@@ -1,3 +1,4 @@
+
 // src/app/register/register.component.ts
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import {
@@ -127,4 +128,4 @@ export class RegisterComponent {
         });
     }
   }
-}
+
