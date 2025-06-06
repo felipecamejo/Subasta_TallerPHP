@@ -1,68 +1,52 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../services/auth.service'; // Ajustá si está en otra ruta
+import { HttpClient } from '@angular/common/http';
+import { GoogleLoginComponent } from '../google-login/google-login.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  template: `
-    <h2>Iniciar sesión</h2>
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <label>Email:</label>
-      <input type="email" formControlName="email" />
-      <br />
-
-      <label>Contraseña:</label>
-      <input type="password" formControlName="password" />
-      <br />
-
-      <button type="submit">Ingresar</button>
-    </form>
-
-    <br />
-    <a routerLink="/register">¿No tenés cuenta? Registrate</a>
-  `,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, GoogleLoginComponent],
+  templateUrl: './login.component.html'
 })
 export class LoginComponent {
   form: FormGroup;
+  mostrarFormulario = false;
+  datosExtras = {
+    rol: 'cliente',
+    matricula: '',
+    token: ''
+  };
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService
-  ) {
+  constructor(private fb: FormBuilder, private http: HttpClient) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
+      password: ['', Validators.required]
     });
   }
 
   onSubmit() {
     if (this.form.valid) {
-      const datos = this.form.value;
-      console.log('Login con', datos);
+      console.log('Login tradicional:', this.form.value);
+      // llamada a tu backend para login tradicional
+    }
+  }
 
-      this.authService.login(datos).subscribe({
-        next: (res) => {
-          console.log('Login exitoso', res);
+  mostrarFormularioRegistro(token: string) {
+    this.mostrarFormulario = true;
+    this.datosExtras.token = token;
+  }
 
-          // Guardar datos en localStorage
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('usuario_id', res.usuario_id.toString());
-          localStorage.setItem('usuario_rol', res.rol);
-
-          alert('Bienvenido/a');
-
-          // Opcional: redireccionar
-          // this.router.navigate(['/inicio']);
+  enviarRegistroConGoogle() {
+    this.http.post('http://localhost:8000/api/login-with-google', this.datosExtras)
+      .subscribe({
+        next: res => {
+          console.log('✅ Registro completo con Google', res);
         },
-        error: (err) => {
-          console.error('Error de login', err);
-          alert('Credenciales inválidas');
+        error: err => {
+          console.error('❌ Error al registrar con Google', err);
         }
       });
-    }
   }
 }
