@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../services/auth.service'; // Ajustá si está en otra ruta
 
 @Component({
   selector: 'app-login',
@@ -11,30 +12,57 @@ import { RouterModule } from '@angular/router';
     <h2>Iniciar sesión</h2>
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <label>Email:</label>
-      <input formControlName="email" type="email" />
+      <input type="email" formControlName="email" />
       <br />
+
       <label>Contraseña:</label>
-      <input formControlName="password" type="password" />
+      <input type="password" formControlName="password" />
       <br />
-      <button type="submit">Entrar</button>
+
+      <button type="submit">Ingresar</button>
     </form>
+
     <br />
-    <a routerLink="/registro">¿No tenés cuenta? Registrate</a>
-  `
+    <a routerLink="/register">¿No tenés cuenta? Registrate</a>
+  `,
 })
 export class LoginComponent {
   form: FormGroup;
 
-  constructor(private _formBuilder: FormBuilder) {
-    this.form = this._formBuilder.group({
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService
+  ) {
+    this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
   onSubmit() {
     if (this.form.valid) {
-      console.log('Login con', this.form.value);
+      const datos = this.form.value;
+      console.log('Login con', datos);
+
+      this.authService.login(datos).subscribe({
+        next: (res) => {
+          console.log('Login exitoso', res);
+
+          // Guardar datos en localStorage
+          localStorage.setItem('token', res.token);
+          localStorage.setItem('usuario_id', res.usuario_id.toString());
+          localStorage.setItem('usuario_rol', res.rol);
+
+          alert('Bienvenido/a');
+
+          // Opcional: redireccionar
+          // this.router.navigate(['/inicio']);
+        },
+        error: (err) => {
+          console.error('Error de login', err);
+          alert('Credenciales inválidas');
+        }
+      });
     }
   }
 }
