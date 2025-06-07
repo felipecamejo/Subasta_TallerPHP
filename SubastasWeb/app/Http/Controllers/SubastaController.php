@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Mail;
  */
 class SubastaController extends Controller
 {
-    public $maxDepth = 2;
+    public $maxDepth = 3;
     public $visited = [];
     /**
      * @OA\Get(
