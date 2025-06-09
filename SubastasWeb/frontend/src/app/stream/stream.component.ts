@@ -539,12 +539,17 @@ export class StreamComponent implements OnInit, OnDestroy {
   private setupWebSocketConnection(): void {
     if (!this.subasta?.id) return;
 
+    console.log('🧪 WebSocket conectado?', this.websocketService.isConnected());
+    console.log('🧪 Socket ID:', this.websocketService.getSocketId());
+
     // Unirse a la subasta en WebSocket
     this.websocketService.joinAuction(
       this.subasta.id,
       this.clienteID || 0, // temporal, debería venir del usuario logueado
       'Usuario' // temporal, debería venir del usuario logueado
     );
+
+    console.log('🧪 Enviado join_auction para subasta:', this.subasta.id);
 
     // Escuchar nuevas pujas en tiempo real
     const bidSubscription = this.websocketService.onBidReceived().subscribe({
@@ -588,8 +593,18 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   private handleNewBidFromWebSocket(bidData: any): void {
+     console.log('🧪 PUJA RECIBIDA VIA WEBSOCKET:', bidData);
+    console.log('🧪 Lote actual:', this.lotes[this.indexLotes]?.id);
+    console.log('🧪 Puja es para lote actual?', bidData.loteId === this.lotes[this.indexLotes]?.id);
+
+
     // Solo actualizar si la puja es para el lote actual
-    if (bidData.loteId !== this.lotes[this.indexLotes]?.id) return;
+    if (bidData.loteId !== this.lotes[this.indexLotes]?.id){ 
+      console.log('🧪 Puja ignorada: no es para el lote actual');
+      return;
+    } 
+
+    console.log('🧪 Actualizando puja actual de', this.pujaActual, 'a', bidData.bidAmount);
 
     // Actualizar puja actual
     if (bidData.bidAmount > this.pujaActual) {
@@ -627,6 +642,13 @@ export class StreamComponent implements OnInit, OnDestroy {
   private sendWebSocketBid(puja: PujaRequest): void {
     if (!this.subasta?.id) return;
 
+    console.log('🧪 ENVIANDO PUJA VIA WEBSOCKET:', {
+      subastaId: this.subasta.id,
+      clienteID: this.clienteID || 999,
+      monto: puja.monto,
+      loteId: puja.lote_id
+    });
+
     this.websocketService.sendBid(
       this.subasta.id,
       this.clienteID || 0,
@@ -634,6 +656,8 @@ export class StreamComponent implements OnInit, OnDestroy {
       puja.monto,
       puja.lote_id
     );
+
+    console.log('🧪 Puja enviada via WebSocket ✅');
   }
 
   private sendLoteChangeToWebSocket(): void {
