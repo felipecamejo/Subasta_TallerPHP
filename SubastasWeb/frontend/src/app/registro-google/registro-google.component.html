@@ -1,0 +1,32 @@
+<div class="p-4 max-w-xl mx-auto">
+  <h2>Completa tu registro</h2>
+
+  <img *ngIf="imagenUrl" [src]="imagenUrl" alt="avatar" width="100" class="rounded-full mb-4" />
+
+  <form [formGroup]="form" (ngSubmit)="enviar()">
+    <label>Nombre:</label>
+    <input type="text" formControlName="nombre" class="form-control" />
+
+    <label>Email:</label>
+    <input type="email" formControlName="email" class="form-control" disabled />
+
+    <label>Cédula:</label>
+    <input type="text" formControlName="cedula" class="form-control" />
+
+    <label>Teléfono:</label>
+    <input type="text" formControlName="telefono" class="form-control" />
+
+    <div *ngIf="rol === 'rematador'">
+      <label>Matrícula:</label>
+      <input type="text" formControlName="matricula" class="form-control" />
+    </div>
+
+    <label>Ubicación:</label>
+    <!-- 👇 Aquí insertás el componente del mapa -->
+    <app-leaflet-map
+      (ubicacionSeleccionada)="onUbicacionSeleccionada($event.lat, $event.lng)">
+    </app-leaflet-map>
+
+    <button type="submit" [disabled]="form.invalid">Finalizar registro</button>
+  </form>
+</div>

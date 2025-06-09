@@ -1,1 +1,15 @@
-<p>register works!</p>
+<h2>Registro</h2>
+
+<form [formGroup]="form" (ngSubmit)="registrarse()">
+  <!-- Todos los campos de tu formulario -->
+  <button type="submit">Registrarme</button>
+</form>
+
+<hr>
+<p>o</p>
+
+<!-- Botón de Google -->
+<app-google-login (usuarioNuevo)="completarRegistroGoogle($event)"></app-google-login>
+
+<!-- Enlace a Login -->
+<p>¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>

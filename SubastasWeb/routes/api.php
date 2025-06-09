@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\LoginWithGoogleController;
 use App\Http\Controllers\MensajeController;
 use App\Http\Controllers\CasaRemateController;
 use App\Http\Controllers\SubastaController;
@@ -20,8 +19,8 @@ use App\Http\Controllers\VendedorController;
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login-with-google', [LoginWithGoogleController::class, 'login']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
+Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {

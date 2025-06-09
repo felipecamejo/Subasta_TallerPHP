@@ -1,52 +1,57 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { GoogleLoginComponent } from '../google-login/google-login.component';
 
 @Component({
-  selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, GoogleLoginComponent],
-  templateUrl: './login.component.html'
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent],
 })
 export class LoginComponent {
   form: FormGroup;
-  mostrarFormulario = false;
-  datosExtras = {
-    rol: 'cliente',
-    matricula: '',
-    token: ''
-  };
+  error: string = '';
+  mostrarFormulario: boolean = false;
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private router: Router
+  ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
-  onSubmit() {
-    if (this.form.valid) {
-      console.log('Login tradicional:', this.form.value);
-      // llamada a tu backend para login tradicional
-    }
-  }
+  login() {
+    if (this.form.invalid) return;
 
-  mostrarFormularioRegistro(token: string) {
-    this.mostrarFormulario = true;
-    this.datosExtras.token = token;
-  }
+    const datos = this.form.value;
 
-  enviarRegistroConGoogle() {
-    this.http.post('http://localhost:8000/api/login-with-google', this.datosExtras)
-      .subscribe({
-        next: res => {
-          console.log('✅ Registro completo con Google', res);
-        },
-        error: err => {
-          console.error('❌ Error al registrar con Google', err);
+    this.http.post('http://localhost:8000/api/login', datos).subscribe({
+      next: (res: any) => {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('usuario_id', res.usuario_id);
+        localStorage.setItem('rol', res.rol);
+
+        if (res.rol === 'cliente') {
+          this.router.navigate(['/dashboard-cliente']);
+        } else if (res.rol === 'rematador') {
+          this.router.navigate(['/dashboard-rematador']);
         }
-      });
+      },
+      error: () => {
+        this.error = 'Email o contraseña incorrectos';
+      },
+    });
+  }
+
+  mostrarFormularioRegistro(usuarioGoogle: any) {
+    console.log('Usuario nuevo desde Google:', usuarioGoogle);
+    this.router.navigate(['/registro'], { state: { usuarioGoogle } });
   }
 }
