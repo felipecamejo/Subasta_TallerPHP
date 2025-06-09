@@ -7,6 +7,7 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mappers\Mapper;
+use Illuminate\Support\Facades\Http;
 
 /**
  * @OA\Tag(
@@ -152,6 +153,9 @@ class PujaController extends Controller
 
             $visited = [];
             $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
+
+            // Notificar al WebSocket sobre la nueva puja
+            $this->notifyWebSocket($puja);
 
             return response()->json($dto, 201);
         } catch (\Throwable $e) {
@@ -369,6 +373,49 @@ class PujaController extends Controller
             ], 500);
         }
 
+    }
+
+    /**
+     * Notifica al WebSocket server sobre una nueva puja
+     */
+    private function notifyWebSocket($puja)
+    {
+        try {
+            // Asegurar que tenemos las relaciones cargadas
+            $puja->load(['lote.subasta', 'cliente.usuario']);
+            
+            // Obtener la subasta asociada al lote
+            $lote = $puja->lote;
+            $subasta = $lote ? $lote->subasta : null;
+            
+            if (!$subasta) {
+                \Log::error('No se pudo encontrar la subasta para la puja: ' . $puja->id);
+                return;
+            }
+            
+            // Obtener información del usuario
+            $cliente = $puja->cliente;
+            $usuario = $cliente ? $cliente->usuario : null;
+            
+            $bidData = [
+                'auctionId' => $subasta->id,
+                'bidData' => [
+                    'userId' => $cliente ? $cliente->usuario_id : null,
+                    'userName' => $usuario ? $usuario->nombre : 'Usuario Anónimo',
+                    'bidAmount' => $puja->monto,
+                    'timestamp' => $puja->fechaHora,
+                    'loteId' => $puja->lote_id,
+                    'pujaId' => $puja->id
+                ]
+            ];
+
+            // Enviar notificación al WebSocket server
+            Http::timeout(5)->post('http://localhost:3001/api/notify-bid', $bidData);
+            
+        } catch (\Exception $e) {
+            // Log error but don't fail the puja creation
+            \Log::error('Error notificando WebSocket: ' . $e->getMessage());
+        }
     }
 
 }

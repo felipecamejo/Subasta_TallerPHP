@@ -1,0 +1,154 @@
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+const server = http.createServer(app);
+
+app.use(cors({
+    origin: ["http://localhost:4200", "http://localhost:8000"],
+    credentials: true
+}));
+
+app.use(express.json());
+
+const io = socketIo(server, {
+    cors: {
+        origin: ["http://localhost:4200", "http://localhost:8000"],
+        methods: ["GET", "POST"]
+    }
+});
+
+const connectedUsers = new Map();
+const auctionRooms = new Map();
+const chatRooms = new Map();
+
+io.on('connection', (socket) => {
+    console.log('Usuario conectado:', socket.id);
+
+    socket.on('join_auction', (data) => {
+        const { auctionId, userId, userName } = data;
+        socket.join(`auction_${auctionId}`);
+        
+        if (!auctionRooms.has(auctionId)) {
+            auctionRooms.set(auctionId, new Set());
+        }
+        auctionRooms.get(auctionId).add({ userId, userName, socketId: socket.id });
+        
+        socket.emit('joined_auction', { auctionId });
+        socket.to(`auction_${auctionId}`).emit('user_joined', { userName, usersCount: auctionRooms.get(auctionId).size });
+        console.log(`Usuario ${userName} se unió a la subasta ${auctionId}`);
+    });    
+    
+    socket.on('leave_auction', (data) => {
+        const { auctionId, userId, userName } = data;
+        socket.leave(`auction_${auctionId}`);
+        
+        if (auctionRooms.has(auctionId)) {
+            const users = auctionRooms.get(auctionId);
+            for (let user of users) {
+                if (user.userId === userId) {
+                    users.delete(user);
+                    break;
+                }
+            }
+            socket.to(`auction_${auctionId}`).emit('user_left', { 
+                userName, 
+                usersCount: users.size 
+            });
+        }
+        
+        console.log(`Usuario ${userName} salió de la subasta ${auctionId}`);
+    });
+
+    socket.on('new_bid', (data) => {
+        const { auctionId, userId, userName, bidAmount, timestamp, loteId } = data;
+        
+        console.log('Nueva puja recibida:', data);
+        
+        if (!auctionId || !userId || !bidAmount || !loteId) {
+            socket.emit('error', { message: 'Datos de puja incompletos' });
+            return;
+        }
+        
+        io.to(`auction_${auctionId}`).emit('bid_received', {
+            auctionId,
+            userId,
+            userName,
+            bidAmount,
+            timestamp,
+            loteId
+        });
+    });
+
+    socket.on('join_chat', (data) => {
+        const { chatId, userId, userName } = data;
+        socket.join(`chat_${chatId}`);
+        connectedUsers.set(socket.id, { userId, userName, chatId });
+        
+        console.log(`Usuario ${userName} se unió al chat ${chatId}`);
+    });
+
+    socket.on('send_message', (data) => {
+        const { chatId, fromUserId, toUserId, message, timestamp, fromUserName } = data;
+        
+        io.to(`chat_${chatId}`).emit('new_message', {
+            fromUserId,
+            toUserId,
+            message,
+            timestamp,
+            fromUserName
+        });
+        
+        console.log(`Mensaje enviado en chat ${chatId}: ${message}`);
+    });
+
+    socket.on('auction_timer_update', (data) => {
+        const { auctionId, timerData } = data;
+        socket.to(`auction_${auctionId}`).emit('timer_updated', timerData);
+    });
+
+    socket.on('lote_changed', (data) => {
+        const { auctionId, newLoteIndex, loteData } = data;
+        io.to(`auction_${auctionId}`).emit('lote_updated', {
+            newLoteIndex,
+            loteData
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Usuario desconectado:', socket.id);
+        
+        for (let [auctionId, users] of auctionRooms.entries()) {
+            for (let user of users) {
+                if (user.socketId === socket.id) {
+                    users.delete(user);
+                    socket.to(`auction_${auctionId}`).emit('user_left', { 
+                        userName: user.userName, 
+                        usersCount: users.size 
+                    });
+                    break;
+                }
+            }
+        }
+        
+        connectedUsers.delete(socket.id);
+    });
+});
+
+app.post('/api/notify-bid', (req, res) => {
+    const { auctionId, bidData } = req.body;
+    
+    io.to(`auction_${auctionId}`).emit('bid_received', {
+        auctionId,
+        ...bidData
+    });
+    
+    res.json({ success: true });
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`Servidor WebSocket ejecutándose en puerto ${PORT}`);
+});

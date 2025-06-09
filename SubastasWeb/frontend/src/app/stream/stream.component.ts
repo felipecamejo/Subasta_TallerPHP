@@ -15,6 +15,7 @@ import { pujaDto } from '../../models/pujaDto';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DialogModule } from 'primeng/dialog';
 import { mailDto } from '../../models/mailDto';
+import { WebsocketService } from '../../services/webSocketService';
 
 
 interface PujaRequest {
@@ -64,6 +65,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   
   private subastaSubscription?: Subscription;
   private timerInitialized: boolean = false;
+  private websocketSubscriptions: Subscription[] = [];
   boton: boolean = false;
 
   pujaActual: number = 0;
@@ -83,6 +85,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private subastaService: SubastaService,
     private pujaService: PujaService,
+    private websocketService: WebsocketService
   ) {
   }
 
@@ -134,6 +137,7 @@ export class StreamComponent implements OnInit, OnDestroy {
         next: () => {
           console.log('Subasta actualizada con el lote anterior');
           this.cargarPujas(this.indexLotes);
+          this.sendLoteChangeToWebSocket(); // Notificar via WebSocket
         },
         error: (err) => {
           console.error('Error al actualizar subasta con el lote anterior:', err);
@@ -153,6 +157,7 @@ export class StreamComponent implements OnInit, OnDestroy {
         next: () => {
           console.log('Subasta actualizada con el siguiente lote');
           this.cargarPujas(this.indexLotes);
+          this.sendLoteChangeToWebSocket(); // Notificar via WebSocket
         },
         error: (err) => {
           console.error('Error al actualizar subasta con el siguiente lote:', err);
@@ -224,6 +229,9 @@ export class StreamComponent implements OnInit, OnDestroy {
             this.iniciarTimer();
           });
         }
+
+        // Configurar WebSocket
+        this.setupWebSocketConnection();
       },
       error: (err) => {
         console.error('Error al cargar subasta:', err);
@@ -304,6 +312,11 @@ export class StreamComponent implements OnInit, OnDestroy {
             this.timerState.timer = this.formatearTiempo(diff);
           } else {
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+
+            /*if(this.clienteID ==) {
+              
+            } */
+
             this.detenerTimer();
             
             if (this.subasta && this.subasta.activa) {
@@ -349,6 +362,19 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.detenerTimer();
     this.subastaSubscription?.unsubscribe();
     this.timerInitialized = false;
+
+    // Limpiar suscripciones WebSocket
+    this.websocketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.websocketSubscriptions = [];
+
+    // Salir de la subasta WebSocket
+    if (this.subasta?.id) {
+      this.websocketService.leaveAuction(
+        this.subasta.id,
+        this.clienteID || 0,
+        'Usuario'
+      );
+    }
   }
 
   //-------------------------------------------pujas--------------------------------------
@@ -414,12 +440,18 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.enviarPuja(puja);
   }
 
+  clienteID: number | null = null;
+
   private enviarPuja(puja: PujaRequest): void {
     console.log('Enviando puja:', puja);
+    this.clienteID = puja.cliente_id;
+
+    // Enviar via WebSocket primero para respuesta inmediata
+    this.sendWebSocketBid(puja);
 
     this.pujaService.crearPuja(puja).subscribe({
       next: (data) => {
-        console.log('Puja creada exitosamente:', data);
+        console.log('Puja creada exitosamente en BD:', data);
 
         this.pujaActual = data.monto;
         this.pujaRapida = data.monto + 1;
@@ -437,7 +469,6 @@ export class StreamComponent implements OnInit, OnDestroy {
 
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
-          
         }
 
         this.actualizarDatosSinSobrescribir();
@@ -501,6 +532,123 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   private limpiarCamposPuja(): void {
     this.pujaComun = null;
+  }
+
+  // ==================== WEBSOCKET INTEGRATION ====================
+
+  private setupWebSocketConnection(): void {
+    if (!this.subasta?.id) return;
+
+    // Unirse a la subasta en WebSocket
+    this.websocketService.joinAuction(
+      this.subasta.id,
+      this.clienteID || 0, // temporal, debería venir del usuario logueado
+      'Usuario' // temporal, debería venir del usuario logueado
+    );
+
+    // Escuchar nuevas pujas en tiempo real
+    const bidSubscription = this.websocketService.onBidReceived().subscribe({
+      next: (bidData) => {
+        console.log('Nueva puja recibida via WebSocket:', bidData);
+        this.handleNewBidFromWebSocket(bidData);
+      },
+      error: (err) => console.error('Error en WebSocket bid:', err)
+    });
+
+    // Escuchar usuarios que se unen
+    const userJoinedSubscription = this.websocketService.onUserJoined().subscribe({
+      next: (userData) => {
+        console.log('Usuario se unió:', userData);
+        // Aquí puedes mostrar notificaciones de usuarios conectados
+      }
+    });
+
+    // Escuchar cambios de lote
+    const loteUpdateSubscription = this.websocketService.onLoteUpdated().subscribe({
+      next: (loteData) => {
+        console.log('Lote actualizado via WebSocket:', loteData);
+        this.handleLoteUpdateFromWebSocket(loteData);
+      }
+    });
+
+    // Escuchar actualizaciones del timer
+    const timerSubscription = this.websocketService.onTimerUpdated().subscribe({
+      next: (timerData) => {
+        console.log('Timer actualizado via WebSocket:', timerData);
+        // Sincronizar timer si es necesario
+      }
+    });
+
+    this.websocketSubscriptions.push(
+      bidSubscription,
+      userJoinedSubscription,
+      loteUpdateSubscription,
+      timerSubscription
+    );
+  }
+
+  private handleNewBidFromWebSocket(bidData: any): void {
+    // Solo actualizar si la puja es para el lote actual
+    if (bidData.loteId !== this.lotes[this.indexLotes]?.id) return;
+
+    // Actualizar puja actual
+    if (bidData.bidAmount > this.pujaActual) {
+      this.pujaActual = bidData.bidAmount;
+      this.pujaRapida = bidData.bidAmount + 1;
+
+      // Crear nueva puja para mostrar en la lista
+      const nuevaPuja: pujaDto = {
+        id: Date.now(), // temporal
+        fechaHora: new Date(bidData.timestamp),
+        monto: bidData.bidAmount,
+        lote: this.lotes[this.indexLotes],
+        factura: null as any,
+        cliente: null as any
+      };
+
+      this.pujas.push(nuevaPuja);
+
+      // Verificar umbral
+      if (this.lotes[this.indexLotes].umbral < bidData.bidAmount && !this.umbralSuperado) {
+        this.umbralSuperado = true;
+      }
+    }
+  }
+
+  private handleLoteUpdateFromWebSocket(loteData: any): void {
+    // Actualizar índice de lote si cambió
+    if (loteData.newLoteIndex !== this.indexLotes) {
+      this.indexLotes = loteData.newLoteIndex;
+      this.cargarPujas(this.indexLotes);
+      this.umbralSuperado = false;
+    }
+  }
+
+  private sendWebSocketBid(puja: PujaRequest): void {
+    if (!this.subasta?.id) return;
+
+    this.websocketService.sendBid(
+      this.subasta.id,
+      this.clienteID || 0,
+      'Usuario', // temporal
+      puja.monto,
+      puja.lote_id
+    );
+  }
+
+  private sendLoteChangeToWebSocket(): void {
+    if (!this.subasta?.id) return;
+
+    const loteData = {
+      loteId: this.lotes[this.indexLotes]?.id,
+      loteInfo: this.lotes[this.indexLotes]
+    };
+
+    this.websocketService.sendLoteChange(
+      this.subasta.id,
+      this.indexLotes,
+      loteData
+    );
   }
 }
 
