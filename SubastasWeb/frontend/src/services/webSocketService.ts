@@ -44,41 +44,46 @@ export class WebsocketService {
     this.socket = io('http://localhost:3001');
     this.setupConnectionEvents();
   }
-
   private setupConnectionEvents() {
     this.socket.on('connect', () => {
-      console.log('Conectado al servidor WebSocket');
+      console.log('✅ Conectado al servidor WebSocket');
+      console.log('🔗 Socket ID:', this.socket.id);
       this.connectionStatus.next(true);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Desconectado del servidor WebSocket:', reason);
+      console.log('❌ Desconectado del servidor WebSocket:', reason);
       this.connectionStatus.next(false);
       
       // Reconexión automática si no fue desconexión manual
       if (reason !== 'io client disconnect') {
         setTimeout(() => {
-          console.log('Intentando reconectar...');
+          console.log('🔄 Intentando reconectar...');
           this.socket.connect();
         }, 3000);
       }
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Error de conexión WebSocket:', error);
+      console.error('🚨 Error de conexión WebSocket:', error);
       this.connectionStatus.next(false);
     });
-  }
 
+    // Log de todos los eventos recibidos
+    this.socket.onAny((eventName, ...args) => {
+      console.log(`📨 Evento recibido: ${eventName}`, args);
+    });
+  }
   joinAuction(auctionId: number, userId: number, userName: string) {
+    console.log('🔗 Enviando join_auction:', { auctionId, userId, userName });
     this.socket.emit('join_auction', { auctionId, userId, userName });
   }
 
   leaveAuction(auctionId: number, userId: number, userName: string) {
     this.socket.emit('leave_auction', { auctionId, userId, userName });
   }
-
   sendBid(auctionId: number, userId: number, userName: string, bidAmount: number, loteId: number) {
+    console.log('💰 Enviando bid:', { auctionId, userId, userName, bidAmount, loteId });
     this.socket.emit('new_bid', {
       auctionId,
       userId,
@@ -112,10 +117,13 @@ export class WebsocketService {
       this.socket.on('lote_updated', (data: LoteData) => observer.next(data));
     });
   }
-
   onAuctionJoined(): Observable<{ auctionId: number }> {
     return new Observable(observer => {
-      this.socket.on('joined_auction', (data: { auctionId: number }) => observer.next(data));
+      console.log('👂 Escuchando evento joined_auction...');
+      this.socket.on('joined_auction', (data: { auctionId: number }) => {
+        console.log('📨 Evento joined_auction recibido:', data);
+        observer.next(data);
+      });
     });
   }
 
@@ -150,10 +158,19 @@ export class WebsocketService {
   sendTimerUpdate(auctionId: number, timerData: any) {
     this.socket.emit('auction_timer_update', { auctionId, timerData });
   }
-
   onTimerUpdated(): Observable<any> {
     return new Observable(observer => {
       this.socket.on('timer_updated', (data: any) => observer.next(data));
+    });
+  }
+
+  onAuctionStateSync(): Observable<any> {
+    return new Observable(observer => {
+      console.log('👂 Escuchando sincronización de estado...');
+      this.socket.on('auction_state_sync', (data: any) => {
+        console.log('🔄 Estado de subasta sincronizado:', data);
+        observer.next(data);
+      });
     });
   }
 

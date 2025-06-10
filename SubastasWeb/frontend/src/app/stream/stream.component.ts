@@ -408,7 +408,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     return {
       fechaHora: new Date().toISOString(),
       monto: monto,
-      cliente_id: null,
+      cliente_id: 1, // Usar un cliente ID válido temporal en lugar de null
       lote_id: Number(this.lotes[this.indexLotes].id)
     };
   }
@@ -443,7 +443,15 @@ export class StreamComponent implements OnInit, OnDestroy {
   clienteID: number | null = null;
 
   private enviarPuja(puja: PujaRequest): void {
-    console.log('Enviando puja:', puja);
+    console.log('🔍 Enviando puja completa:', puja);
+    console.log('🔍 Datos de la puja:', {
+      fechaHora: puja.fechaHora,
+      monto: puja.monto,
+      cliente_id: puja.cliente_id,
+      lote_id: puja.lote_id,
+      loteActual: this.lotes[this.indexLotes]
+    });
+    
     this.clienteID = puja.cliente_id;
 
     // Enviar via WebSocket primero para respuesta inmediata
@@ -542,14 +550,26 @@ export class StreamComponent implements OnInit, OnDestroy {
     console.log('🧪 WebSocket conectado?', this.websocketService.isConnected());
     console.log('🧪 Socket ID:', this.websocketService.getSocketId());
 
-    // Unirse a la subasta en WebSocket
-    this.websocketService.joinAuction(
-      this.subasta.id,
-      this.clienteID || 0, // temporal, debería venir del usuario logueado
-      'Usuario' // temporal, debería venir del usuario logueado
-    );
+    // Esperar un poco para que la conexión se establezca
+    setTimeout(() => {
+      console.log('🧪 WebSocket conectado después del timeout?', this.websocketService.isConnected());
+      
+      // Unirse a la subasta en WebSocket
+      this.websocketService.joinAuction(
+        this.subasta!.id!,
+        this.clienteID || 999, // temporal, debería venir del usuario logueado
+        'TestUser' // temporal, debería venir del usuario logueado
+      );
 
-    console.log('🧪 Enviado join_auction para subasta:', this.subasta.id);
+      console.log('🧪 Enviado join_auction para subasta:', this.subasta!.id);
+    }, 1000);
+
+    // Escuchar confirmación de unión a subasta
+    const auctionJoinedSubscription = this.websocketService.onAuctionJoined().subscribe({
+      next: (data) => {
+        console.log('✅ Confirmación: Te uniste a la subasta', data.auctionId);
+      }
+    });
 
     // Escuchar nuevas pujas en tiempo real
     const bidSubscription = this.websocketService.onBidReceived().subscribe({
@@ -584,11 +604,21 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Escuchar sincronización de estado
+    const stateSubscription = this.websocketService.onAuctionStateSync().subscribe({
+      next: (stateData) => {
+        console.log('🔄 Sincronizando estado de la subasta:', stateData);
+        this.handleAuctionStateSync(stateData);
+      }
+    });
+
     this.websocketSubscriptions.push(
+      auctionJoinedSubscription,
       bidSubscription,
       userJoinedSubscription,
       loteUpdateSubscription,
-      timerSubscription
+      timerSubscription,
+      stateSubscription
     );
   }
 
@@ -639,6 +669,54 @@ export class StreamComponent implements OnInit, OnDestroy {
     }
   }
 
+  private handleAuctionStateSync(stateData: any): void {
+    console.log('🔄 Aplicando sincronización de estado:', stateData);
+    
+    // Sincronizar índice de lote si es diferente
+    if (stateData.loteIndex !== undefined && stateData.loteIndex !== this.indexLotes) {
+      console.log(`🔄 Sincronizando lote: ${this.indexLotes} → ${stateData.loteIndex}`);
+      this.indexLotes = stateData.loteIndex;
+      this.cargarPujas(this.indexLotes);
+      this.umbralSuperado = false;
+    }
+    
+    // Sincronizar puja actual si hay una más reciente
+    if (stateData.lastBidData && stateData.lastBidData.loteId === this.lotes[this.indexLotes]?.id) {
+      const bidData = stateData.lastBidData;
+      console.log(`🔄 Sincronizando última puja: ${bidData.bidAmount}`);
+      
+      if (bidData.bidAmount > this.pujaActual) {
+        this.pujaActual = bidData.bidAmount;
+        this.pujaRapida = bidData.bidAmount + 1;
+        
+        // Agregar la puja a la lista si no existe
+        const existingBid = this.pujas.find(p => 
+          p.monto === bidData.bidAmount && 
+          Math.abs(new Date(p.fechaHora).getTime() - new Date(bidData.timestamp).getTime()) < 5000
+        );
+        
+        if (!existingBid) {
+          const nuevaPuja: pujaDto = {
+            id: Date.now(), // temporal
+            fechaHora: new Date(bidData.timestamp),
+            monto: bidData.bidAmount,
+            lote: this.lotes[this.indexLotes],
+            factura: null as any,
+            cliente: null as any
+          };
+          this.pujas.push(nuevaPuja);
+          
+          // Verificar umbral
+          if (this.lotes[this.indexLotes].umbral < bidData.bidAmount && !this.umbralSuperado) {
+            this.umbralSuperado = true;
+          }
+          
+          console.log('✅ Puja sincronizada agregada a la lista');
+        }
+      }
+    }
+  }
+
   private sendWebSocketBid(puja: PujaRequest): void {
     if (!this.subasta?.id) return;
 
@@ -651,7 +729,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     this.websocketService.sendBid(
       this.subasta.id,
-      this.clienteID || 0,
+      this.clienteID || 999, // Usar 999 en lugar de 0 para evitar que sea falsy
       'Usuario', // temporal
       puja.monto,
       puja.lote_id
@@ -667,6 +745,12 @@ export class StreamComponent implements OnInit, OnDestroy {
       loteId: this.lotes[this.indexLotes]?.id,
       loteInfo: this.lotes[this.indexLotes]
     };
+
+    console.log('📡 Enviando cambio de lote via WebSocket:', {
+      auctionId: this.subasta.id,
+      newLoteIndex: this.indexLotes,
+      loteData
+    });
 
     this.websocketService.sendLoteChange(
       this.subasta.id,

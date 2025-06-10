@@ -23,6 +23,7 @@ const io = socketIo(server, {
 const connectedUsers = new Map();
 const auctionRooms = new Map();
 const chatRooms = new Map();
+const auctionStates = new Map(); // Nuevo: almacenar estado actual de cada subasta
 
 io.on('connection', (socket) => {
     console.log('Usuario conectado:', socket.id);
@@ -36,10 +37,24 @@ io.on('connection', (socket) => {
         }
         auctionRooms.get(auctionId).add({ userId, userName, socketId: socket.id });
         
+        // Enviar confirmación
         socket.emit('joined_auction', { auctionId });
+        
+        // Enviar estado actual de la subasta si existe
+        if (auctionStates.has(auctionId)) {
+            const currentState = auctionStates.get(auctionId);
+            socket.emit('auction_state_sync', {
+                auctionId,
+                currentBid: currentState.currentBid,
+                loteIndex: currentState.loteIndex,
+                lastBidData: currentState.lastBidData
+            });
+            console.log(`Enviando estado actual a ${userName} para subasta ${auctionId}:`, currentState);
+        }
+        
         socket.to(`auction_${auctionId}`).emit('user_joined', { userName, usersCount: auctionRooms.get(auctionId).size });
         console.log(`Usuario ${userName} se unió a la subasta ${auctionId}`);
-    });    
+    });
     
     socket.on('leave_auction', (data) => {
         const { auctionId, userId, userName } = data;
@@ -60,9 +75,7 @@ io.on('connection', (socket) => {
         }
         
         console.log(`Usuario ${userName} salió de la subasta ${auctionId}`);
-    });
-
-    socket.on('new_bid', (data) => {
+    });    socket.on('new_bid', (data) => {
         const { auctionId, userId, userName, bidAmount, timestamp, loteId } = data;
         
         console.log('Nueva puja recibida:', data);
@@ -72,6 +85,22 @@ io.on('connection', (socket) => {
             return;
         }
         
+        // Actualizar estado de la subasta
+        if (!auctionStates.has(auctionId)) {
+            auctionStates.set(auctionId, {});
+        }
+        
+        const auctionState = auctionStates.get(auctionId);
+        auctionState.currentBid = bidAmount;
+        auctionState.lastBidData = {
+            userId,
+            userName,
+            bidAmount,
+            timestamp,
+            loteId
+        };
+        
+        // Enviar a todos los usuarios conectados
         io.to(`auction_${auctionId}`).emit('bid_received', {
             auctionId,
             userId,
@@ -80,6 +109,8 @@ io.on('connection', (socket) => {
             timestamp,
             loteId
         });
+        
+        console.log(`Estado actualizado para subasta ${auctionId}:`, auctionState);
     });
 
     socket.on('join_chat', (data) => {
@@ -107,14 +138,25 @@ io.on('connection', (socket) => {
     socket.on('auction_timer_update', (data) => {
         const { auctionId, timerData } = data;
         socket.to(`auction_${auctionId}`).emit('timer_updated', timerData);
-    });
-
-    socket.on('lote_changed', (data) => {
+    });    socket.on('lote_changed', (data) => {
         const { auctionId, newLoteIndex, loteData } = data;
+        
+        // Actualizar estado de la subasta
+        if (!auctionStates.has(auctionId)) {
+            auctionStates.set(auctionId, {});
+        }
+        
+        const auctionState = auctionStates.get(auctionId);
+        auctionState.loteIndex = newLoteIndex;
+        auctionState.currentBid = null; // Reset al cambiar de lote
+        auctionState.lastBidData = null;
+        
         io.to(`auction_${auctionId}`).emit('lote_updated', {
             newLoteIndex,
             loteData
         });
+        
+        console.log(`Lote actualizado para subasta ${auctionId}:`, auctionState);
     });
 
     socket.on('disconnect', () => {

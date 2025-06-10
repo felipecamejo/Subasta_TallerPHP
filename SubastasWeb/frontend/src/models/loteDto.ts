@@ -9,5 +9,5 @@ export interface loteDto {
     umbral: number;
     subasta: Pick<subastaDto, 'id' | 'fecha' | 'duracionMinutos'| 'nombre'>;
     pujas: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
-    articulos: Pick<articuloDto, 'id' | 'nombre' | 'imagen'| 'categorias' | 'estado'>[];
+    articulos: Pick<articuloDto, 'id' | 'nombre' | 'imagen'| 'categoria' | 'estado'>[];
 }   

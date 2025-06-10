@@ -195,9 +195,9 @@ export class BuscadorRematesComponent implements AfterViewInit {
     const subastasFiltradas = this.subastas.filter(subasta =>
       subasta.lotes?.some(lote =>
         lote.articulos?.some(articulo =>
-          articulo.categorias?.some(categoria => 
-            categoria.id && categoriasValidas.includes(categoria.id)
-          )
+          articulo.categoria && 
+          articulo.categoria.id && 
+          categoriasValidas.includes(articulo.categoria.id)
         )
       )
     );
