@@ -11,6 +11,23 @@
     margin: 0 auto;
   }
 
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    i {
+      font-size: 1.5rem;
+      color: #2196f3;
+    }
+    
+    span {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #495057;
+    }
+  }
+
   .menu {
     display: flex;
     list-style: none;
@@ -32,8 +49,38 @@
     }
   }
 
-  app-notificaciones {
-    margin-left: auto;
+  .right-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    i {
+      font-size: 1.2rem;
+      color: #495057;
+      cursor: pointer;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: #2196f3;
+      }
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    app-notificaciones {
+      margin: 0;
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  .header {
+    .social-icons {
+      display: none;
+    }
   }
 }
 
@@ -52,8 +99,10 @@
       gap: 1rem;
     }
 
-    app-notificaciones {
-      margin: 0;
+    .right-section {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
     }
   }
 }
