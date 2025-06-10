@@ -16,3 +16,14 @@
     <i class="pi pi-facebook"></i>
   </div>
 </header>
+
+<div class="header">
+  <nav>
+    <ul class="menu">
+      <li *ngFor="let item of items">
+        <a [routerLink]="item.routerLink">{{ item.label }}</a>
+      </li>
+    </ul>
+    <app-notificaciones></app-notificaciones>
+  </nav>
+</div>

@@ -4,62 +4,51 @@ import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
 import { DialogModule } from 'primeng/dialog';
 import { Subscription } from 'rxjs';
+import { NotificacionService } from '../../services/notificacion.service';
+import { notificacionUsuarioDto } from '../../models/notificacionDto';
 
 @Component({
   selector: 'app-notificaciones',
   standalone: true,
-  imports: [CommonModule, ButtonModule, BadgeModule, DialogModule],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    BadgeModule,
+    DialogModule
+  ],
   templateUrl: './notificaciones.component.html',
   styleUrl: './notificaciones.component.scss'
 })
 export class NotificacionesComponent implements OnInit, OnDestroy {
- 
+  notificaciones: notificacionUsuarioDto[] = [];
   contadorNoLeidas: number = 0;
   mostrarDropdown: boolean = false;
-  
-  // Propiedades para el modal
   mostrarDialog: boolean = false;
-  notificacionSeleccionada: NotificacionUsuarioDto | null = null;
-    private subscriptions: Subscription = new Subscription();
-
+  notificacionSeleccionada: notificacionUsuarioDto | null = null;
+  private subscriptions: Subscription = new Subscription();
   constructor(
-    private notificacionService: NotificacionService,
-    private securityService: SecurityService
+    private notificacionService: NotificacionService
   ) {}
-
   ngOnInit(): void {
-    // Solo inicializar si el usuario está autenticado
-    if (!this.securityService.isLoggedIn()) {
-      return;
-    }
-
-    // Suscribirse a las notificaciones
     this.subscriptions.add(
-      this.notificacionService.notificaciones$.subscribe((notificaciones: NotificacionUsuarioDto[]) => {
+      this.notificacionService.notificaciones$.subscribe((notificaciones: notificacionUsuarioDto[]) => {
         this.notificaciones = notificaciones;
       })
     );
 
-    // Suscribirse al contador
     this.subscriptions.add(
       this.notificacionService.contador$.subscribe((contador: number) => {
         this.contadorNoLeidas = contador;
       })
     );
 
-    // Inicializar el servicio
     this.notificacionService.inicializar();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-  }
-
-  /**
-   * Verifica si el usuario está autenticado
-   */
-  get estaAutenticado(): boolean {
-    return this.securityService.isLoggedIn();
+  }  get estaAutenticado(): boolean {
+    return true; // Siempre mostramos las notificaciones mientras no haya autenticación
   }
 
   toggleDropdown(): void {
@@ -70,17 +59,11 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     this.mostrarDropdown = false;
   }
 
-  marcarComoLeida(notificacion: NotificacionUsuarioDto): void {
-    // Seleccionar la notificación para mostrar en el modal
+  marcarComoLeida(notificacion: notificacionUsuarioDto): void {
     this.notificacionSeleccionada = notificacion;
-    
-    // Abrir el dialog
     this.mostrarDialog = true;
-    
-    // Cerrar el dropdown
     this.cerrarDropdown();
     
-    // Marcar como leída si no está leída
     if (!notificacion.leido && notificacion.id) {
       this.notificacionService.marcarLeidaYActualizar(notificacion.id);
     }
@@ -124,7 +107,6 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Método para formatear fecha completa en el modal
   formatearFechaCompleta(fechaHora: any): string {
     if (!fechaHora) return 'Sin fecha';
     
@@ -135,32 +117,23 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      minute: '2-digit'
     });
   }
-  // Método para obtener el título de la primera notificación
-  obtenerTitulo(notificacionUsuario: NotificacionUsuarioDto): string {
-    if (notificacionUsuario.notificaciones && notificacionUsuario.notificaciones.length > 0) {
-      return notificacionUsuario.notificaciones[0].titulo || 'Sin título';
-    }
-    return 'Sin título';
+
+  obtenerTitulo(notificacion: notificacionUsuarioDto): string {
+    if (!notificacion) return 'Sin título';
+    return notificacion.titulo || 'Sin título';
   }
 
-  // Método para obtener el mensaje de la primera notificación
-  obtenerMensaje(notificacionUsuario: NotificacionUsuarioDto): string {
-    if (notificacionUsuario.notificaciones && notificacionUsuario.notificaciones.length > 0) {
-      return notificacionUsuario.notificaciones[0].mensaje || 'Sin mensaje';
-    }
-    return 'Sin mensaje';
+  obtenerMensaje(notificacion: notificacionUsuarioDto): string {
+    if (!notificacion) return 'Sin mensaje';
+    return notificacion.mensaje || 'Sin mensaje';
   }
 
-  // Método para obtener la fecha de la primera notificación
-  obtenerFecha(notificacionUsuario: NotificacionUsuarioDto): any {
-    if (notificacionUsuario.notificaciones && notificacionUsuario.notificaciones.length > 0) {
-      return notificacionUsuario.notificaciones[0].fechaHora;
-    }
-    return null;
+  obtenerFecha(notificacion: notificacionUsuarioDto): any {
+    if (!notificacion) return null;
+    return notificacion.fechaHora;
   }
 }
 

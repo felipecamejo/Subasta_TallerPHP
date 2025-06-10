@@ -300,7 +300,10 @@ class Mapper {
         $clientesCollection = $notificacion->clientes ?? collect();
         $dto = new DtoNotificacion(
             $notificacion->id,
+            $notificacion->titulo,
             $notificacion->mensaje,
+            $notificacion->fecha_hora,
+            $notificacion->es_mensaje_chat,
             $clientesCollection->map(function($cliente) use (&$visited) {
                 return Mapper::fromModelCliente($cliente, $visited);
             })->toArray()
@@ -311,7 +314,10 @@ class Mapper {
 
     public static function toModelNotificacion(DtoNotificacion $dto): Notificacion {
         return new Notificacion([
+            'titulo' => $dto->titulo,
             'mensaje' => $dto->mensaje,
+            'fecha_hora' => $dto->fechaHora,
+            'es_mensaje_chat' => $dto->esMensajeChat
         ]);
     }
 

@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('notificaciones', function (Blueprint $table) {
             $table->id();
-
+            $table->string('titulo');
             $table->string('mensaje');
-
+            $table->boolean('es_mensaje_chat')->default(false);
+            $table->timestamp('fecha_hora')->useCurrent();
             $table->timestamps();
         });
     }

@@ -10,8 +10,16 @@
         protected $table = 'notificaciones'; 
 
         protected $fillable = [ 
-            'mensaje'
+            'titulo',
+            'mensaje',
+            'fecha_hora',
+            'es_mensaje_chat'
         ]; 
+
+        protected $casts = [
+            'es_mensaje_chat' => 'boolean',
+            'fecha_hora' => 'datetime'
+        ];
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 

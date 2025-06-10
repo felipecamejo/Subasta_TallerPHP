@@ -61,14 +61,14 @@
 <!-- Modal de detalle de notificación -->
 <p-dialog 
   [header]="'Notificación'"
-  [(visible)]="mostrarDialog" 
+  [visible]="mostrarDialog"
   [modal]="true" 
   [breakpoints]="{ '1199px': '65vw', '575px': '90vw' }" 
-  [style]="{ width: '65vw', height: '75vh'}" 
+  [style]="{ width: '50vw' }"
   [draggable]="false" 
-  [resizable]="true"
+  [resizable]="false"
   [closable]="true"
-  (onHide)="cerrarDialog()">
+  (visibleChange)="cerrarDialog()">
     <div *ngIf="notificacionSeleccionada" class="notification-modal-content">
     <div class="modal-header-info">
       <h3 class="modal-title">{{ obtenerTitulo(notificacionSeleccionada) }}</h3>

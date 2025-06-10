@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreign('cliente_id')->references('usuario_id')->on('clientes')->onDelete('cascade');
 
             $table->foreignId('notificacion_id')->nullable()->references('id')->on('notificaciones')->onDelete('cascade');
+            $table->boolean('leido')->default(false);
             $table->timestamps();
         });
     }
