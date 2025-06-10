@@ -32,9 +32,9 @@ export class BuscadorRematesComponent implements AfterViewInit {
   ];
 
   Estado = [
-    { name: 'Santiago', value: 0},
-    { name: 'Valparaíso', value: 1},
-    { name: 'Concepción', value: 2},
+    { name: 'Todos', value: -1},
+    { name: 'Excelente', value: 0},
+    { name: 'Usado', value: 1},
   ];
 
   constructor(
@@ -60,7 +60,7 @@ export class BuscadorRematesComponent implements AfterViewInit {
   
   selectedCategory: number = 0;
   selectedFiltro: number = 0;
-  selectedEstado: number = 0;
+  selectedEstado: number = -1;
 
   subastasPorFiltro(subastas: subastaDto[]): subastaDto[] {
     
@@ -87,9 +87,42 @@ export class BuscadorRematesComponent implements AfterViewInit {
     return subastas;
   }
 
+  subastasPorEstado(subastas: subastaDto[]): subastaDto[] {
+    if (!subastas || subastas.length === 0) {
+      return subastas;
+    }
+
+    if (this.selectedEstado === -1) {
+      // Mostrar todas las subastas (opción "Todos")
+      return subastas;
+    } else if (this.selectedEstado === 0) {
+      // Filtrar por EXCELENTE - solo mostrar subastas que tengan al menos un artículo con estado EXCELENTE
+      return subastas.filter(subasta =>
+        subasta.lotes?.some(lote =>
+          lote.articulos?.some(articulo =>
+            articulo.estado === 'EXCELENTE'
+          )
+        )
+      );
+    } else if (this.selectedEstado === 1) {
+      // Filtrar por USADO - solo mostrar subastas que tengan al menos un artículo con estado USADO
+      return subastas.filter(subasta =>
+        subasta.lotes?.some(lote =>
+          lote.articulos?.some(articulo =>
+            articulo.estado === 'USADO'
+          )
+        )
+      );
+    }
+
+    // Fallback: devolver todas las subastas si el valor no es reconocido
+    return subastas;
+  }
+
   get subastasPorGrupo(): any[][] {
     let subastasFiltradas = this.getSubastasPorCategoria();
     subastasFiltradas = this.subastasPorFiltro(subastasFiltradas);
+    subastasFiltradas = this.subastasPorEstado(subastasFiltradas);
 
     if (!subastasFiltradas || subastasFiltradas.length === 0) {
       return [];
@@ -162,9 +195,9 @@ export class BuscadorRematesComponent implements AfterViewInit {
     const subastasFiltradas = this.subastas.filter(subasta =>
       subasta.lotes?.some(lote =>
         lote.articulos?.some(articulo =>
-          articulo.categorias?.some(categoria => 
-            categoria.id && categoriasValidas.includes(categoria.id)
-          )
+          articulo.categoria && 
+          articulo.categoria.id && 
+          categoriasValidas.includes(articulo.categoria.id)
         )
       )
     );

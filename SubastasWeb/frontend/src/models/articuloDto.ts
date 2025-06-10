@@ -1,4 +1,5 @@
 import { categoriaDto } from './categoriaDto';
+import { estadoEnum } from './estadoEnum';
 import { loteDto } from './loteDto';
 import { vendedorDto } from './vendedorDto';
 
@@ -8,8 +9,9 @@ export interface articuloDto {
     imagen: string;
     especificacion: string;
     disponibilidad: boolean;
+    estado: estadoEnum;
     condicion: string;
     vendedor: Pick<vendedorDto, 'id' | 'nombre'>;
     lote: Pick<loteDto, 'id' |'valorBase' | 'pujaMinima'>;
-    categorias: Pick<categoriaDto, 'id' | 'nombre' | 'categoria_padre'>[];
+    categoria: Pick<categoriaDto, 'id' | 'nombre' | 'categoria_padre'>;
 }

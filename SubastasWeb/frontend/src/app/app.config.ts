@@ -13,7 +13,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }), 
     provideRouter(routes), 
-    provideClientHydration(withEventReplay()),
+    // provideClientHydration(withEventReplay()), // Desactivado temporalmente para development
     provideHttpClient(),
     provideAnimationsAsync(),
     providePrimeNG({
