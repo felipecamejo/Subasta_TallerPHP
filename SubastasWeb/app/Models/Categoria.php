@@ -23,7 +23,7 @@
         }
 
         public function articulos() {
-            return $this->belongsToMany(Articulo::class, 'articulo_categoria', 'categoria_id', 'articulo_id');
+            return $this->hasMany(Articulo::class);
         }
 
     }

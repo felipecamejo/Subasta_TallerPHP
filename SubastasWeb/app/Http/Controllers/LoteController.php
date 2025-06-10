@@ -30,7 +30,7 @@ class LoteController extends Controller{
     */
     public function index(){
         try {
-            $lote = Lote::with(['pujas', 'articulos', 'subasta'])->get();
+            $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->get();
 
             $dtos = $lote->map(function ($lote) {
                 return Mapper::fromModelLote($lote, $this->visited, $this->maxDepth);
@@ -74,15 +74,17 @@ class LoteController extends Controller{
             'valorBase' => 'required|numeric',
             'pujaMinima' => 'required|numeric',
             'subasta_id' => 'nullable|exists:subastas,id',
+            'umbral' => 'nullable|numeric|min:0', 
         ]);
         
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
             'subasta_id' => $request->subasta_id,
+            'umbral' => $request->umbral ?? 0, 
         ]);
         
-        $lote = Lote::with(['pujas', 'articulos', 'subasta'])->find($lote->id);
+        $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->find($lote->id);
         
         return response()->json(Mapper::fromModelLote($lote, $this->visited, $this->maxDepth), 201);
     }
@@ -121,29 +123,4 @@ class LoteController extends Controller{
         return response()->json(['Mensaje' => "Lote eliminado correctamente. id: $id"], 200);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/lotes/lotesSubasta/{id}",
-     *     summary="Obtener los lotes de una Subasta por ID",
-     *     tags={"Subastas"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(response=200, description="Lotes encontrados"),
-     *     @OA\Response(response=404, description="Subasta no encontrada")
-     * )
-    */
-    public function lotesSubasta($id){
-
-        $subasta = Subasta::with('lotes')->find($id);
-
-        if (!$subasta) {
-            return response()->json(['message' => 'Subasta no encontrada'], 404);
-        }
-
-        return response()->json($subasta->lotes); 
-    }
 }

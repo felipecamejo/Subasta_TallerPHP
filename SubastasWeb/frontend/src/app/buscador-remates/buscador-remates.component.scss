@@ -4,65 +4,167 @@ main {
     padding-right: 10vw;
     margin-top: 80px;
     display: block; 
-    color:#242424
+    color:#242424;
+    
+    @media (max-width: 768px) {
+        padding-left: 5vw;
+        padding-right: 5vw;
+        margin-top: 60px;
+    }
+    
+    @media (max-width: 480px) {
+        padding-left: 3vw;
+        padding-right: 3vw;
+        margin-top: 40px;
+    }
 }
 
 .titulo {
     font-size: 2.2rem;
     font-weight: bold;
+    
+    @media (max-width: 768px) {
+        font-size: 1.8rem;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 1.5rem;
+    }
 }
 
 .boton {
-    width: 2.2vw;
-    min-height: 25px;
+    width: 4vw;
+    min-width: 40px;
+    min-height: 30px;
     padding: 0 0.3vw;
-    background: #444444;
-    color: #FFFFFF;
-    border-color: #444444;
-    border-width: 1px;
-    border-style: solid;
     border-radius: 6px;
-    font-weight: 300;
-    font-size: 1.2rem;
+    font-weight: 500;
+    font-size: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-}
-
-.boton:hover {
-    background: #dad5d5;
-    color: #1a1919;
-    border-color: #ece5e5;
-}
-
-select {
-    background: #444444;
-    color: #FFFFFF;
-    border-color: #444444;
+    
+    @media (max-width: 768px) {
+        width: 6vw;
+        min-width: 35px;
+        font-size: 1.5rem;
+    }
+    
+    @media (max-width: 480px) {
+        width: 8vw;
+        min-width: 30px;
+        font-size: 1.2rem;
+    }
 }
 
 .rectangle {
 	width: 335px;
+	max-width: calc(33.333% - 20px);
 	height: 332px;
 	padding: 12px 12px 12px 12px;
 	background: #e7e4e4;
 	border-radius: 16px 16px 16px 16px;
-    margin-bottom: 24px; // agrega separación entre rectángulos
-    border: 1px solid #414141; /* gris claro */
+    margin-bottom: 24px;
+    margin-right: 20px;
+    border: 1px solid #414141;
+    flex: 0 0 auto;
+    
+    @media (max-width: 1200px) {
+        max-width: calc(50% - 20px);
+        width: auto;
+    }
+    
+    @media (max-width: 768px) {
+        max-width: calc(100% - 20px);
+        width: auto;
+        margin-right: 0;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    @media (max-width: 480px) {
+        height: auto;
+        min-height: 280px;
+        padding: 8px;
+    }
 }
 
 .article-1 {
     gap: 2vw;
     margin-bottom: 50px;
+    
+    @media (max-width: 768px) {
+        gap: 3vw;
+        margin-bottom: 30px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    @media (max-width: 480px) {
+        gap: 4vw;
+        margin-bottom: 20px;
+    }
 }
 
 .article-subastas {
     gap: 4vw;
+    justify-content: flex-start;
+    
+    @media (max-width: 1200px) {
+        gap: 2vw;
+        justify-content: space-around;
+    }
+    
+    @media (max-width: 768px) {
+        gap: 1vw;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 img {
     height: 275px;
-    border: 0.5px solid #414141; /* gris claro */
+    width: 100%;
+    object-fit: cover;
+    border: 0.5px solid #414141;
+    
+    @media (max-width: 480px) {
+        height: 200px;
+    }
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.leaflet-marker-icon {
+    margin-left: -12px !important;
+    margin-top: -41px !important;
+}
+
+.leaflet-popup-content {
+    text-align: center;
+    font-family: 'Source Sans 3', sans-serif;
+}
+
+.leaflet-popup-content button {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 8px;
+    transition: background-color 0.3s;
+}
+
+.leaflet-popup-content button:hover {
+    background: #0056b3;
 }
 

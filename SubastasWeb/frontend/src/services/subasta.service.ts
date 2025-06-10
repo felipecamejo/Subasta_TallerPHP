@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { UrlService } from './url.service';
 import { subastaDto } from '../models/subastaDto';
+import { mailDto } from '../models/mailDto';
 
 @Injectable({
   providedIn: 'root',
@@ -27,6 +28,11 @@ export class SubastaService {
     );
   }
 
+  getSubastas(): Observable<subastaDto[]> {
+    return this.http.get<subastaDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
+  }
 
-
+  enviarMail(mail : mailDto): Observable<any> {
+    return this.http.post<any>(`${this.urlService.baseUrl}/subastas/enviarMail`, mail);
+  }
 }

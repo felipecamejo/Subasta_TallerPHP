@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
         
             $table->string('nombre');
-            $table->integer('duracionMinutos')->default(0);
+            $table->integer('duracionMinutos');
             $table->boolean('activa');
             $table->dateTime('fecha');
             $table->decimal('latitud', 10, 7);
             $table->decimal('longitud', 10, 7);
-
+            $table->string('videoId')->nullable();
+            $table->integer('loteIndex')->default(0);
         
             $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
             

@@ -16,12 +16,9 @@ export class LoteService {
     private urlService: UrlService,
   ) {}
 
-  getLotes(): Observable<loteDto> {
-    return this.http.get<loteDto>(`${this.urlService.baseUrl}${this.endpoint}`);
+  getLotes(): Observable<loteDto[]> {
+    return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
   }
 
-  getLotesSubasta(id : number): Observable<loteDto[]> {
-    return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}/lotesSubasta/${id}`);
-  }
 
 }

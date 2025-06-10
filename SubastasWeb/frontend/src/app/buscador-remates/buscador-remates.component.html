@@ -1,27 +1,49 @@
 <main class="w-full">
     <article class="w-full flex flex-wrap article-1">
         <span class="titulo">Subastas</span>
-        <p-button label="" class="boton pi pi-map-marker" severity="secondary"/>
-        <select name="city" [(ngModel)]="selectedCity" class="">
-            <option [ngValue]="null" disabled>Categoria</option>
-            <option *ngFor="let city of cities" [ngValue]="city">{{ city.name }}</option>
-        </select>
-        <select name="city" [(ngModel)]="selectedCity" class="">
-            <option [ngValue]="null" disabled>Filtro </option>
-            <option *ngFor="let city of cities" [ngValue]="city">{{ city.name }}</option>
-        </select>
-        <select name="city" [(ngModel)]="selectedCity" class="">
-            <option [ngValue]="null" disabled>Estado</option>
-            <option *ngFor="let city of cities" [ngValue]="city">{{ city.name }}</option>
-        </select>
+        <p-button class="boton" icon="pi pi-map-marker" severity="secondary" (click)="mostrarMapa()"/>
+        <p-select 
+            [options]="categorias" 
+            [(ngModel)]="selectedCategory" 
+            optionLabel="nombre" 
+            optionValue="id"
+            placeholder="Seleccionar categoría"
+            [loading]="categoriasLoading">
+        </p-select>
+        <p-select 
+            [options]="filtros" 
+            [(ngModel)]="selectedFiltro" 
+            optionLabel="name" 
+            optionValue="value"
+            placeholder="Filtro">
+        </p-select>
+        <p-select 
+            [options]="Estado" 
+            [(ngModel)]="selectedEstado" 
+            optionLabel="name" 
+            optionValue="value"
+            placeholder="Estado">
+        </p-select>
     </article>
     <ng-container *ngFor="let grupo of subastasPorGrupo">
         <article class="w-full flex flex-wrap article-subastas">
-            <div *ngFor="let subasta of grupo" class="rectangle mb-4">
-                <img [src]="subastas[0].imagen" class="w-full">
-                <span> {{ subasta.name }} </span>
-                <span> {{ subasta.informacion }} </span>
+            <div *ngFor="let subasta of grupo" 
+                 class="rectangle mb-4 cursor-pointer hover:shadow-lg transition-shadow" 
+                 (click)="irASubasta(subasta)">
+                <img [src]="getImagenSubasta(subasta)" class="w-full" alt="Imagen de subasta">
+                <span>{{ getNombreSubasta(subasta) }}</span>
             </div>
         </article>
     </ng-container>
+    
+    <p-dialog 
+        header="Mapa de Subastas" 
+        [(visible)]="mostrandoMapa" 
+        [modal]="true" 
+        [style]="{width: '80vw', height: '80vh'}"
+        [closable]="true"
+        (onShow)="onMapDialogShow()"
+        (onHide)="onMapDialogHide()">
+        <div id="mapaContainer" style="height: calc(80vh - 120px); width: 100%; border-radius: 8px;"></div>
+    </p-dialog>
 </main>

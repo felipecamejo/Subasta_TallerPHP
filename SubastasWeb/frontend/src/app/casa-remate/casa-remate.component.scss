@@ -7,6 +7,11 @@ main {
     color:#242424
 }
 
+::ng-deep .p-rating .p-rating-icon {
+  cursor: default !important; // quita la manito
+}
+
+
 .titulo {
     font-size: 1.5rem;
 }

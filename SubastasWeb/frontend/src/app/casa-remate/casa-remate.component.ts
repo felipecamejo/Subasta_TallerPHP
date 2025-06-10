@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { RatingModule } from 'primeng/rating';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { FormGroup, FormControl } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { NgModule } from '@angular/core';
@@ -10,18 +10,103 @@ import { FormsModule } from '@angular/forms';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { DialogModule } from 'primeng/dialog';
+import { CasaRematesService } from '../../services/casa-remates.service';
+import { casaRemateDto } from '../../models/casaRemateDto';
+import { MessageService } from 'primeng/api';
+
 
 
 @Component({
   selector: 'app-casa-remate',
+  standalone: true,
   imports: [DialogModule, InputGroupModule, InputGroupAddonModule, FormsModule, CommonModule, ButtonModule, RatingModule, ReactiveFormsModule, TableModule],
   templateUrl: './casa-remate.component.html',
-  styleUrl: './casa-remate.component.scss'
+  styleUrl: './casa-remate.component.scss',
+  providers: [MessageService]
 })
 export class CasaRemateComponent {
-  estrellas = new FormGroup({
-    value: new FormControl(2)  
-  });
+
+  // ACA PUEDO DECLARAR LAS VARIABLES QUE NECESITO PARA EL COMPONENTE
+  modoEdicion: boolean = false; // bandera para saber si estoy editando
+  listaCasaRemates: casaRemateDto[] = [];
+  promedioCalificacion: number = 0;
+  estrellas: FormGroup;
+  model: casaRemateDto = {
+    id: 0,
+    nombre: '',
+    idFiscal: '',
+    email: '',
+    telefono: '',
+    calificacion: [],
+    latitud: 0,
+    longitud: 0,
+    rematador: {
+      usuario: {
+        id: 0,
+        nombre: '',
+        imagen: '',
+        email: ''
+      },
+      matricula: ''
+    },
+    subastas: []
+  };
+  title: string = 'Casa de Remates';
+
+  constructor(
+    private _service: CasaRematesService,
+    private messageService: MessageService,
+    private fb: FormBuilder
+  ) {
+    // Creá el form aquí, con value 0 inicialmente
+    this.estrellas = this.fb.group({
+      value: [0]
+    });
+  }
+
+  ngOnInit(): void {
+    // Si estás editando, por ejemplo desde un route con ID:
+    this.getCasaRemate();
+    console.log("Casa de remate cargada:", this.model);
+  }
+  
+  getCasaRemate() {
+    this._service.getCasaRematesPorId(1).subscribe({
+      next: (data: any) => {
+        this.model = data;
+        // calculá el promedio luego de asignar los datos
+        this.promedioCalificacion = this.obtenerPromedio(this.model.calificacion);
+
+        // actualizá el form control
+        this.estrellas.patchValue({ value: this.promedioCalificacion });
+      },
+      error: (response: any) => {
+        //this._alertService.showError(`Error al obtener ${this.title}, ${response.message}`);
+      }
+    });
+  }
+
+  guardar(): void {
+    if (this.modoEdicion) {
+      this._service.putActualizarCasaRemates(this.model).subscribe(() => {
+        this.messageService.add({severity:'success', summary:'Éxito', detail:'Casa de remate actualizada'});
+      });
+    } else {
+      this._service.postCrearCasaRemates(this.model).subscribe(() => {
+        this.messageService.add({severity:'success', summary:'Éxito', detail:'Casa de remate creada'});
+      });
+    }
+  }
+
+  obtenerPromedio(calificaciones: number[]): number {
+    if (calificaciones.length === 0) {
+      return 0; 
+    }
+    const suma = calificaciones.reduce((a, b) => a + b, 0);
+    return suma / calificaciones.length;
+  }
+
+  
 
   totalRecords: number = 0;
 

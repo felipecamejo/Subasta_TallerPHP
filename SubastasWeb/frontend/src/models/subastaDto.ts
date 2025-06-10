@@ -2,19 +2,22 @@
 import { pujaDto } from './pujaDto';
 import { casaRemateDto } from './casaRemateDto';
 import { rematadorDto } from './rematadorDto';
+import { loteDto } from './loteDto';
 
 export interface subastaDto {
-    id: number;
+    id: number | null;
     nombre: string;
     activa: boolean;
     duracionMinutos: number;
     fecha: Date;
     longitud: number;
     latitud: number;
+    videoId: string | null;
+    loteIndex: number;
 
-    puja: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
+    lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos' | 'umbral'>[];
 
-    casaremate: Pick<casaRemateDto, 'id' | 'nombre'>;
+    casaremate: Pick<casaRemateDto, 'id' | 'nombre' | 'email'>;
 
     rematador: Pick<rematadorDto, 'usuario'>;
 }

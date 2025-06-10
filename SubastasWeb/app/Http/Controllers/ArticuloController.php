@@ -29,7 +29,7 @@ class ArticuloController extends Controller{
     */
     public function index(){
         try {
-            $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->get();
+            $articulo = Articulo::with(['categoria', 'vendedor', 'lote'])->get();
 
             $dtos = $articulo->map(function ($articulo) {
                 return Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth);
@@ -89,7 +89,7 @@ class ArticuloController extends Controller{
             'lote_id' => $request->lote_id,
         ]);
 
-        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($articulo->id);
+        $articulo = Articulo::with(['categoria', 'vendedor', 'lote'])->find($articulo->id);
 
         return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth), 201);
     }
@@ -117,7 +117,7 @@ class ArticuloController extends Controller{
      * )
     */
     public function show(string $id){
-        $articulo = Articulo::with(['categorias', 'vendedor', 'lote'])->find($id);
+        $articulo = Articulo::with(['categoria', 'vendedor', 'lote'])->find($id);
 
         if (!$articulo) {
             return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);

@@ -6,25 +6,78 @@ footer {
     padding-right: 5vw;
     padding-top: 50px;
     font-family: 'Source Sans 3', sans-serif;
+    
+    @media (max-width: 768px) {
+        height: auto;
+        padding: 30px 4vw 40px 4vw;
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    @media (max-width: 480px) {
+        padding: 20px 3vw 30px 3vw;
+        gap: 25px;
+        margin-top: 20px;
+    }
 }
 
 .padres {
     width: 14vw;
     flex-direction: column;
     gap: 8px;
+    
+    @media (max-width: 1024px) {
+        width: 20vw;
+    }
+    
+    @media (max-width: 768px) {
+        width: 100%;
+        gap: 12px;
+    }
+    
+    @media (max-width: 480px) {
+        gap: 10px;
+    }
 }
 
 .titulo {
     font-size: 1.5rem;
     margin-bottom: 5px;
     font-weight: bold;
+    
+    @media (max-width: 768px) {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+    }
 }
 
 .textos {
     flex-direction: column;
     gap: 15px;
+    
+    @media (max-width: 768px) {
+        gap: 12px;
+    }
+    
+    @media (max-width: 480px) {
+        gap: 10px;
+    }
 }
 
 .texto {
     padding-left: 0.5vw;
+    
+    @media (max-width: 768px) {
+        padding-left: 0;
+        font-size: 0.95rem;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.9rem;
+    }
 }

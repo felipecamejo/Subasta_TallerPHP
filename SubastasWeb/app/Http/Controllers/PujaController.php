@@ -7,6 +7,7 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mappers\Mapper;
+use Illuminate\Support\Facades\Http;
 
 /**
  * @OA\Tag(
@@ -34,7 +35,7 @@ class PujaController extends Controller
      *                 type="object",
      *                 @OA\Property(property="id", type="integer"),
      *                 @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *                 @OA\Property(property="montoTotal", type="number", format="float"),
+     *                 @OA\Property(property="monto", type="number", format="float"),
      *                 @OA\Property(
      *                     property="cliente",
      *                     type="object",
@@ -78,7 +79,8 @@ class PujaController extends Controller
             $pujas = Puja::with(['cliente', 'lote', 'factura'])->get();
 
             $dtos = $pujas->map(function ($puja) {
-                return Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+                $visited = []; 
+                return Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
             });
 
             return response()->json($dtos);
@@ -100,10 +102,10 @@ class PujaController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"fechaHora", "montoTotal", "cliente_id", "lote_id"},
+     *             required={"fechaHora", "monto", "lote_id"},
      *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-05-26T14:00:00Z"),
-     *             @OA\Property(property="montoTotal", type="number", format="float", example=1500.50),
-     *             @OA\Property(property="cliente_id", type="integer", example=1),
+     *             @OA\Property(property="monto", type="number", format="float", example=1500.50),
+     *             @OA\Property(property="cliente_id", type="integer", example=1, nullable=true),
      *             @OA\Property(property="lote_id", type="integer", example=2)
      *         )
      *     ),
@@ -131,30 +133,29 @@ class PujaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate( [
             'fechaHora' => 'required|date',
-            'montoTotal' => 'required|numeric',
-            'cliente_id' => 'required|exists:clientes,usuario_id',
+            'monto' => 'required|numeric',
+            'cliente_id' => 'nullable|exists:clientes,usuario_id',
             'lote_id' => 'required|exists:lotes,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errores' => $validator->errors()
-            ], 422);
-        }
 
         try {
             $puja = Puja::create([
                 'fechaHora' => $request->fechaHora,
-                'montoTotal' => $request->montoTotal,
+                'monto' => $request->monto,
                 'cliente_id' => $request->cliente_id,
                 'lote_id' => $request->lote_id,
             ]);
 
-            $puja->load(['cliente', 'lote', 'factura']);
+            $puja->load(['cliente.usuario', 'lote', 'factura']);
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+            $visited = [];
+            $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
+
+            // Notificar al WebSocket sobre la nueva puja
+            $this->notifyWebSocket($puja);
 
             return response()->json($dto, 201);
         } catch (\Throwable $e) {
@@ -208,7 +209,8 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth); 
+            $visited = []; 
+            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth); 
 
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -237,7 +239,7 @@ class PujaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *             @OA\Property(property="montoTotal", type="number", format="float"),
+     *             @OA\Property(property="monto", type="number", format="float"),
      *             @OA\Property(property="cliente_id", type="integer"),
      *             @OA\Property(property="lote_id", type="integer"),
      *             @OA\Property(property="factura_id", type="integer")
@@ -272,9 +274,10 @@ class PujaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
+            'monto' => 'sometimes|required|numeric',
             'montoTotal' => 'sometimes|required|numeric',
-            'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
-            'lote_id' => 'sometimes|required|exists:lotes,id',
+            'cliente_id' => 'nullable|exists:clientes,usuario_id',
+            'lote_id' => 'nullable|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
         ]);
 
@@ -289,19 +292,22 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $puja->fill($request->only([
+            $updateData = $request->only([
                 'fechaHora',
-                'montoTotal',
+                'monto',
                 'cliente_id',
                 'lote_id',
                 'factura_id',
-            ]));
+            ]);
+
+            $puja->fill($updateData);
 
             $puja->save();
 
             $puja->load(['cliente', 'lote', 'factura']);
 
-            $dto = Mapper::fromModelPuja($puja, $this->visited, $this->maxDepth);
+            $visited = []; 
+            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
 
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -367,32 +373,49 @@ class PujaController extends Controller
             ], 500);
         }
 
-
     }
 
-/**
-     * @OA\Get(
-     *     path="/api/pujas/pujasLote/{id}",
-     *     summary="Obtener los lotes de una Subasta por ID",
-     *     tags={"Subastas"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(response=200, description="Pujas encontrados"),
-     *     @OA\Response(response=404, description="Lote no encontrada")
-     * )
-    */
-    public function pujasLote($id){
+    /**
+     * Notifica al WebSocket server sobre una nueva puja
+     */
+    private function notifyWebSocket($puja)
+    {
+        try {
+            // Asegurar que tenemos las relaciones cargadas
+            $puja->load(['lote.subasta', 'cliente.usuario']);
+            
+            // Obtener la subasta asociada al lote
+            $lote = $puja->lote;
+            $subasta = $lote ? $lote->subasta : null;
+            
+            if (!$subasta) {
+                \Log::error('No se pudo encontrar la subasta para la puja: ' . $puja->id);
+                return;
+            }
+            
+            // Obtener información del usuario
+            $cliente = $puja->cliente;
+            $usuario = $cliente ? $cliente->usuario : null;
+            
+            $bidData = [
+                'auctionId' => $subasta->id,
+                'bidData' => [
+                    'userId' => $cliente ? $cliente->usuario_id : null,
+                    'userName' => $usuario ? $usuario->nombre : 'Usuario Anónimo',
+                    'bidAmount' => $puja->monto,
+                    'timestamp' => $puja->fechaHora,
+                    'loteId' => $puja->lote_id,
+                    'pujaId' => $puja->id
+                ]
+            ];
 
-        $lote = Lote::with('pujas')->find($id);
-
-        if (!$lote) {
-            return response()->json(['message' => 'Lote no encontrada'], 404);
+            // Enviar notificación al WebSocket server
+            Http::timeout(5)->post('http://localhost:3001/api/notify-bid', $bidData);
+            
+        } catch (\Exception $e) {
+            // Log error but don't fail the puja creation
+            \Log::error('Error notificando WebSocket: ' . $e->getMessage());
         }
-
-        return response()->json($lote->pujas); 
     }
+
 }

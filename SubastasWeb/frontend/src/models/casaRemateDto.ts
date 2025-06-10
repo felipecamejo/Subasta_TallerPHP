@@ -2,7 +2,7 @@ import { rematadorDto } from './rematadorDto';
 import { subastaDto } from './subastaDto';
 
 export interface casaRemateDto {
-    id : number;
+    id : number | null;
     nombre: string;
     idFiscal: string;
     email: string;

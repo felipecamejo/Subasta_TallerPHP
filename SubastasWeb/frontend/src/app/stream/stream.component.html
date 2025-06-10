@@ -1,38 +1,60 @@
 <main class="w-full flex flex-wrap">
     <article class="article-1 col-12 md:col-6 flex">
-        <div class="video-player-1">
-        </div>
+        <iframe class="video-player-1" 
+            *ngIf="videoUrl && videoUrl !== null; else noVideo"
+            [src]="videoUrl"
+            frameborder="0"
+            allowfullscreen
+            loading="lazy"
+            title="Stream de la subasta"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        </iframe>
+        <ng-template #noVideo>
+            <div class="no-video-placeholder">
+                <p>Stream no disponible</p>
+                <p>ID de video actual: {{ subasta?.videoId || 'No configurado' }}</p>
+                <input type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video" />
+                <p-button label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
+            </div>
+        </ng-template>
     </article>
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
-            <p-button label="Iniciar" severity="secondary" (click)="iniciarSubasta()"/>
-            <span class="pi pi-clock"></span>
-            <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
+            <p-button label="Iniciar" severity="secondary" [disabled]="this.timerState.timerActivo" (click)="iniciarSubasta()"/>
+            <div class="clock-input-group">
+                <span class="pi pi-clock"></span>
+                <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
+            </div>
         </div>
 
         <hr class="w-full" />
         <div class="w-full subDiv" >
             <div class="w-full margin">
-                <p-button label="Anterior lote" severity="secondary" (click)="anteriorLote()"/>
-                <p-button label="Siguiente lote" severity="secondary" (click)="siguienteLote()"/>
+                <p-button label="Anterior lote" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="anteriorLote()"/>
+                <p-button label="Siguiente lote" severity="secondary"[disabled]="!this.timerState.timerActivo"  (click)="siguienteLote()"/>
             </div>
             
             <div class="w-full flex padrePujas margin">
-                <span class="subtitulo">Puja Actual:</span>
-                <input type="text" class="text-input" [value]="pujaActual === 0 ? '' : pujaActual" pInputText readonly/>
+                <div class="puja-input-group">
+                     <span class="subtitulo">Puja Actual:</span>
+                <input type="text" class="text-input" [value]="pujaActual" pInputText readonly/>
+                </div>
             </div>
 
             <div class="w-full margin">
                 <div class="w-full flex padrePujas">
-                    <p-button label="Puja Rapida" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" [value]="pujaRapida" pInputText readonly/>
+                    <div class="puja-input-group">
+                        <p-button label="Puja Rapida" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaRapida()"/>
+                        <input type="number" class="text-input" [value]="pujaActual+1" pInputText readonly/>
+                    </div>
                 </div>
 
                 <div class="w-full flex padrePujas margin">
-                    <p-button label="Puja" class="boton" severity="secondary"/>
-                    <input type="text" class="text-input" pInputText  />
-                    
+                    <div class="puja-input-group">
+                        <p-button label="Puja" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaComun()"/>
+                        <input type="number" class="text-input" [(ngModel)]="pujaComun" pInputText  />
+                    </div>
                 </div>
             </div>
         </div>
