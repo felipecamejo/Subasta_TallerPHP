@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Rematador;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -155,6 +156,12 @@ public function register(Request $request)
     }
 
     $token = $usuario->createToken('token-personal')->plainTextToken;
+
+    event(new Registered($usuario));
+
+    auth()->login($usuario);
+
+    $usuario->sendEmailVerificationNotification();
 
     return response()->json([
         'message' => 'Usuario registrado exitosamente',
