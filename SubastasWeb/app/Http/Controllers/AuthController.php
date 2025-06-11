@@ -159,13 +159,13 @@ public function register(Request $request)
 
     event(new Registered($usuario));
 
-    auth()->login($usuario);
-
-    $usuario->sendEmailVerificationNotification();
+    // auth()->login($usuario);
 
     return response()->json([
-        'message' => 'Usuario registrado exitosamente',
-        'token' => $token
+    'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
+    'token' => $token,
+    'usuario_id' => $usuario->id,
+    'email_verified' => $usuario->hasVerifiedEmail()
     ], 201);
 }
 

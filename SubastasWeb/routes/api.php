@@ -31,6 +31,14 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::post('/email/resend', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'El correo ya está verificado.'], 400);
+        }
+
+        return response()->json(['message' => 'Correo de verificación reenviado.']);
+    });
+
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);
     Route::apiResource('categorias', CategoriaController::class);
