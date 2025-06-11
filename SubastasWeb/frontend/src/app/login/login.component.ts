@@ -1,16 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { GoogleLoginComponent } from '../google-login/google-login.component';
 
 @Component({
   standalone: true,
   selector: 'app-login',
   templateUrl: './login.component.html',
-  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent,  RouterModule,],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    GoogleLoginComponent,
+    RouterModule
+  ]
 })
 export class LoginComponent {
   form: FormGroup;

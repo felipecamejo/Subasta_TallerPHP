@@ -46,4 +46,5 @@ Route::post('/casa-remates/{id}/calificar', [CasaRemateController::class, 'calif
 Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
 Route::apiResource('casa-remates', CasaRemateController::class);
 Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
+Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
 Route::apiResource('subastas', SubastaController::class);

@@ -7,6 +7,7 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mappers\Mapper;
+use Illuminate\Support\Facades\Http;
 
 /**
  * @OA\Tag(
@@ -34,7 +35,7 @@ class PujaController extends Controller
      *                 type="object",
      *                 @OA\Property(property="id", type="integer"),
      *                 @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *                 @OA\Property(property="montoTotal", type="number", format="float"),
+     *                 @OA\Property(property="monto", type="number", format="float"),
      *                 @OA\Property(
      *                     property="cliente",
      *                     type="object",
@@ -101,10 +102,10 @@ class PujaController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"fechaHora", "montoTotal", "cliente_id", "lote_id"},
+     *             required={"fechaHora", "monto", "lote_id"},
      *             @OA\Property(property="fechaHora", type="string", format="date-time", example="2025-05-26T14:00:00Z"),
-     *             @OA\Property(property="montoTotal", type="number", format="float", example=1500.50),
-     *             @OA\Property(property="cliente_id", type="integer", example=1),
+     *             @OA\Property(property="monto", type="number", format="float", example=1500.50),
+     *             @OA\Property(property="cliente_id", type="integer", example=1, nullable=true),
      *             @OA\Property(property="lote_id", type="integer", example=2)
      *         )
      *     ),
@@ -152,6 +153,9 @@ class PujaController extends Controller
 
             $visited = [];
             $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
+
+            // Notificar al WebSocket sobre la nueva puja
+            $this->notifyWebSocket($puja);
 
             return response()->json($dto, 201);
         } catch (\Throwable $e) {
@@ -235,7 +239,7 @@ class PujaController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="fechaHora", type="string", format="date-time"),
-     *             @OA\Property(property="montoTotal", type="number", format="float"),
+     *             @OA\Property(property="monto", type="number", format="float"),
      *             @OA\Property(property="cliente_id", type="integer"),
      *             @OA\Property(property="lote_id", type="integer"),
      *             @OA\Property(property="factura_id", type="integer")
@@ -271,8 +275,9 @@ class PujaController extends Controller
         $validator = Validator::make($request->all(), [
             'fechaHora' => 'sometimes|required|date',
             'monto' => 'sometimes|required|numeric',
-            'cliente_id' => 'sometimes|required|exists:clientes,usuario_id',
-            'lote_id' => 'sometimes|required|exists:lotes,id',
+            'montoTotal' => 'sometimes|required|numeric',
+            'cliente_id' => 'nullable|exists:clientes,usuario_id',
+            'lote_id' => 'nullable|exists:lotes,id',
             'factura_id' => 'nullable|exists:facturas,id',
         ]);
 
@@ -294,10 +299,6 @@ class PujaController extends Controller
                 'lote_id',
                 'factura_id',
             ]);
-            
-            if ($request->has('montoTotal')) {
-                $updateData['monto'] = $request->montoTotal;
-            }
 
             $puja->fill($updateData);
 
@@ -372,6 +373,49 @@ class PujaController extends Controller
             ], 500);
         }
 
+    }
+
+    /**
+     * Notifica al WebSocket server sobre una nueva puja
+     */
+    private function notifyWebSocket($puja)
+    {
+        try {
+            // Asegurar que tenemos las relaciones cargadas
+            $puja->load(['lote.subasta', 'cliente.usuario']);
+            
+            // Obtener la subasta asociada al lote
+            $lote = $puja->lote;
+            $subasta = $lote ? $lote->subasta : null;
+            
+            if (!$subasta) {
+                \Log::error('No se pudo encontrar la subasta para la puja: ' . $puja->id);
+                return;
+            }
+            
+            // Obtener información del usuario
+            $cliente = $puja->cliente;
+            $usuario = $cliente ? $cliente->usuario : null;
+            
+            $bidData = [
+                'auctionId' => $subasta->id,
+                'bidData' => [
+                    'userId' => $cliente ? $cliente->usuario_id : null,
+                    'userName' => $usuario ? $usuario->nombre : 'Usuario Anónimo',
+                    'bidAmount' => $puja->monto,
+                    'timestamp' => $puja->fechaHora,
+                    'loteId' => $puja->lote_id,
+                    'pujaId' => $puja->id
+                ]
+            ];
+
+            // Enviar notificación al WebSocket server
+            Http::timeout(5)->post('http://localhost:3001/api/notify-bid', $bidData);
+            
+        } catch (\Exception $e) {
+            // Log error but don't fail the puja creation
+            \Log::error('Error notificando WebSocket: ' . $e->getMessage());
+        }
     }
 
 }
