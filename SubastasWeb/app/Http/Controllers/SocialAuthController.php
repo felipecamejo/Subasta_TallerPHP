@@ -78,7 +78,8 @@ class SocialAuthController extends Controller
             'email' => $googleUser->getEmail(),
             'imagen' => $googleUser->getAvatar(),
             'rol' => $rol,
-            'nuevo' => true
+            'nuevo' => true,
+            'google_id' => $googleUser->getId(),
         ]);
 
         return redirect("http://localhost:4200/registro-google?$query");

@@ -213,5 +213,97 @@ public function loginWithGoogle(Request $request)
     ]);
 }
 
+/**
+ * @OA\Post(
+ *     path="/api/register-google-user",
+ *     summary="Registrar usuario con Google",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={
+ *                 "nombre", "cedula", "email", "telefono", "contrasenia",
+ *                 "latitud", "longitud", "rol", "google_id"
+ *             },
+ *             @OA\Property(property="nombre", type="string", example="Juan Pérez"),
+ *             @OA\Property(property="cedula", type="string", example="12345678"),
+ *             @OA\Property(property="email", type="string", format="email", example="juan@gmail.com"),
+ *             @OA\Property(property="telefono", type="string", example="099123456"),
+ *             @OA\Property(property="contrasenia", type="string", format="password", example="secreta123"),
+ *             @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
+ *             @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
+ *             @OA\Property(property="rol", type="string", enum={"cliente", "rematador"}, example="cliente"),
+ *             @OA\Property(property="google_id", type="string", example="1234567890abcdef"),
+ *             @OA\Property(property="matricula", type="string", nullable=true, example="MAT-987"),
+ *             @OA\Property(property="imagen", type="string", nullable=true, example="https://lh3.googleusercontent.com/a/...")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Usuario registrado exitosamente con Google",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Usuario registrado con Google exitosamente."),
+ *             @OA\Property(property="access_token", type="string", example="1|aVeryLongTokenHere"),
+ *             @OA\Property(property="usuario_id", type="integer", example=5),
+ *             @OA\Property(property="rol", type="string", example="cliente")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Error de validación",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     )
+ * )
+ */
+
+public function registerGoogleUser(Request $request)
+{
+    $data = $request->validate([
+        'nombre' => 'required|string|max:255',
+        'cedula' => 'required|string|max:255|unique:usuarios',
+        'email' => 'required|email|unique:usuarios',
+        'telefono' => 'required|string|max:255',
+        'contrasenia' => 'required|string|min:6',
+        'latitud' => 'required|numeric',
+        'longitud' => 'required|numeric',
+        'rol' => 'required|in:cliente,rematador',
+        'google_id' => 'required|string|unique:usuarios,google_id',
+        'matricula' => 'nullable|string|required_if:rol,rematador',
+        'imagen' => 'nullable|string'
+    ]);
+
+    $usuario = Usuario::create([
+        'nombre' => $data['nombre'],
+        'cedula' => $data['cedula'],
+        'email' => $data['email'],
+        'telefono' => $data['telefono'],
+        'contrasenia' => bcrypt($data['contrasenia']),
+        'latitud' => $data['latitud'],
+        'longitud' => $data['longitud'],
+        'imagen' => $data['imagen'] ?? null,
+        'google_id' => $data['google_id'],
+    ]);
+
+    if ($data['rol'] === 'cliente') {
+        Cliente::create(['usuario_id' => $usuario->id]);
+    } else {
+        Rematador::create([
+            'usuario_id' => $usuario->id,
+            'matricula' => $data['matricula'],
+        ]);
+    }
+
+    $token = $usuario->createToken('token-google')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Usuario registrado con Google exitosamente.',
+        'access_token' => $token,
+        'usuario_id' => $usuario->id,
+        'rol' => $data['rol'],
+    ]);
+}
+
 
 }

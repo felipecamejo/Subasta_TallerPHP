@@ -5,7 +5,8 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { GoogleLoginComponent } from './google-login/google-login.component';
-import { LoginGoogleComponent } from './login-google.component/login-google.component'; // ✅ este es el correcto
+import { LoginGoogleComponent } from './login-google.component/login-google.component'; 
+import { RegistroGoogleComponent } from './registro-google/registro-google.component';
 
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
@@ -21,6 +22,8 @@ export const routes: Routes = [
 
   // Callback desde el backend después de login con Google
   { path: 'login-google', component: LoginGoogleComponent },
+
+    { path: 'registro-google', component: RegistroGoogleComponent },
 
   // Dashboards por rol
   { path: 'dashboard-cliente', component: DashboardClienteComponent },
