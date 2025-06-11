@@ -22,6 +22,7 @@
             'contrasenia',
             'latitud',
             'longitud',
+            'google_id',
         ]; 
 
         protected $hidden = [
