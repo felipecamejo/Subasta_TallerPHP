@@ -1,0 +1,40 @@
+# Laravel
+/vendor
+/.env
+/.env.*.backup
+/.phpunit.result.cache
+/.phpunit.cache
+/storage/*.key
+/storage/pail
+/public/storage
+/public/hot
+/public/build
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+auth.json
+.phpactor.json
+.phpunit.result.cache
+
+# IDEs / Tools
+/.idea
+/.vscode
+/.nova
+/.fleet
+/.zed
+
+# Angular (frontend)
+/node_modules
+/dist
+/.angular
+/.output
+*.tsbuildinfo
+*.log
+
+# Otros archivos temporales
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
