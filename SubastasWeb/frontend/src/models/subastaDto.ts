@@ -15,9 +15,9 @@ export interface subastaDto {
     videoId: string | null;
     loteIndex: number;
 
-    lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos'>[];
+    lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos' | 'umbral'>[];
 
-    casaremate: Pick<casaRemateDto, 'id' | 'nombre'>;
+    casaremate: Pick<casaRemateDto, 'id' | 'nombre' | 'email'>;
 
     rematador: Pick<rematadorDto, 'usuario'>;
 }

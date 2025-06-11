@@ -21,7 +21,7 @@
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
-            <p-button label="Iniciar" severity="secondary" (click)="iniciarSubasta()"/>
+            <p-button label="Iniciar" severity="secondary" [disabled]="this.timerState.timerActivo" (click)="iniciarSubasta()"/>
             <div class="clock-input-group">
                 <span class="pi pi-clock"></span>
                 <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
@@ -31,8 +31,8 @@
         <hr class="w-full" />
         <div class="w-full subDiv" >
             <div class="w-full margin">
-                <p-button label="Anterior lote" severity="secondary" (click)="anteriorLote()"/>
-                <p-button label="Siguiente lote" severity="secondary" (click)="siguienteLote()"/>
+                <p-button label="Anterior lote" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="anteriorLote()"/>
+                <p-button label="Siguiente lote" severity="secondary"[disabled]="!this.timerState.timerActivo"  (click)="siguienteLote()"/>
             </div>
             
             <div class="w-full flex padrePujas margin">

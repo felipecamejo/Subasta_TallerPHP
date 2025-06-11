@@ -1401,7 +1401,7 @@
                                                 "type": "string",
                                                 "format": "date-time"
                                             },
-                                            "montoTotal": {
+                                            "monto": {
                                                 "type": "number",
                                                 "format": "float"
                                             },
@@ -1492,8 +1492,7 @@
                             "schema": {
                                 "required": [
                                     "fechaHora",
-                                    "montoTotal",
-                                    "cliente_id",
+                                    "monto",
                                     "lote_id"
                                 ],
                                 "properties": {
@@ -1502,14 +1501,15 @@
                                         "format": "date-time",
                                         "example": "2025-05-26T14:00:00Z"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 1500.5
                                     },
                                     "cliente_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "lote_id": {
                                         "type": "integer",
@@ -1659,7 +1659,7 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float"
                                     },
@@ -2279,6 +2279,11 @@
                                     "videoId": {
                                         "type": "string",
                                         "nullable": true
+                                    },
+                                    "loteIndex": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2371,6 +2376,57 @@
                     },
                     "422": {
                         "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/subastas/enviaMail": {
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Envía una notificación por email",
+                "description": "Envía un email de notificación con asunto y mensaje personalizados",
+                "operationId": "7d63d54067a5d94e4d07337c9f5d4e7c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "asunto",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "Dirección de email del destinatario",
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "asunto": {
+                                        "description": "Asunto del email",
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "description": "Contenido del mensaje",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email enviado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
                     }
                 }
             }

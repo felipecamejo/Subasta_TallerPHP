@@ -1,8 +1,9 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 
 // Componentes de autenticación
 import { LoginComponent } from './login/login.component';
+import { EstadisticasComponent } from './estadisticas/estadisticas.component';
+import { CasaRemateComponent } from './casa-remate/casa-remate.component';
 import { RegisterComponent } from './register/register.component';
 import { GoogleLoginComponent } from './google-login/google-login.component';
 import { LoginGoogleComponent } from './login-google.component/login-google.component'; 
@@ -11,6 +12,7 @@ import { RegistroGoogleComponent } from './registro-google/registro-google.compo
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
 import { DashboardRematadorComponent } from './dashboards/dashboard-rematador/dashboard-rematador.component';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
