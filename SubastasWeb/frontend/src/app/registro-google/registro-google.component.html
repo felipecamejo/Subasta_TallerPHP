@@ -15,7 +15,7 @@
 
     <div class="mb-3">
       <label for="email">Email:</label>
-      <input type="email" id="email" formControlName="email" class="form-control p-2 border rounded w-full" [disabled]="true" />
+      <input type="email" id="email" formControlName="email" class="form-control p-2 border rounded w-full"  />
       <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-red-500 text-sm">
         Ingrese un email válido.
       </div>

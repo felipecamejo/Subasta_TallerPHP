@@ -55,19 +55,15 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
 
     this.form = this.fb.group({
       nombre: [nombre, Validators.required],
-      email: [email, [Validators.required, Validators.email]],
+      email: [{ value: email, disabled: true }, [Validators.required, Validators.email]],
       cedula: ['', Validators.required],
       telefono: ['', Validators.required],
       contrasenia: ['', [Validators.required, Validators.minLength(6)]],
       contrasenia_confirmation: ['', Validators.required],
-      matricula: [this.rol === 'rematador' ? '' : null],
+      matricula: [{ value: '', disabled: this.rol !== 'rematador' }],
       latitud: [null, Validators.required],
       longitud: [null, Validators.required],
     }, { validators: passwordMatchValidator });
-
-    if (this.rol !== 'rematador') {
-      this.form.get('matricula')?.disable();
-    }
   }
 
   async ngAfterViewInit() {
@@ -138,8 +134,8 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
       next: (res: any) => {
         localStorage.setItem('token', res.access_token);
         this.router.navigate([
-        this.rol === 'rematador' ? '/dashboard-rematador' : '/dashboard-cliente'
-      ]);
+          this.rol === 'rematador' ? '/dashboard-rematador' : '/dashboard-cliente'
+        ]);
       },
       error: (err) => {
         console.error('Error al registrar con Google:', err);
