@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Notificacion;
 use App\Models\Cliente;
+use App\Models\Rematador;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Mappers\Mapper;
@@ -39,28 +41,29 @@ class NotificacionController extends Controller
         try {
             $usuario = Auth::user();
             $cliente = Cliente::where('usuario_id', $usuario->id)->first();
+            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
             
-            if (!$cliente) {
-                return response()->json(['error' => 'Cliente no encontrado'], 404);
+            if (!$cliente && !$rematador) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
 
-            $notificaciones = $cliente->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(function ($notificacion) use ($cliente) {
-                    $leido = $notificacion->pivot->leido;                    return [
-                        'id' => $notificacion->id,
-                        'titulo' => $notificacion->titulo,
-                        'mensaje' => $notificacion->mensaje,
-                        'fechaHora' => $notificacion->fecha_hora,
-                        'leido' => $leido,
-                        'esMensajeChat' => $notificacion->es_mensaje_chat,
-                        'usuario' => [
-                            'id' => $cliente->usuario_id,
-                            'nombre' => $cliente->usuario->nombre
-                        ]
-                    ];
-                });
+            $notificaciones = [];
+            
+            if ($cliente) {
+                $notificaciones = $cliente->notificaciones()
+                    ->orderBy('fecha_hora', 'desc')
+                    ->get()
+                    ->map(function ($notificacion) use ($cliente) {
+                        return $this->formatNotification($notificacion, $cliente->usuario);
+                    });
+            } else if ($rematador) {
+                $notificaciones = $rematador->notificaciones()
+                    ->orderBy('fecha_hora', 'desc')
+                    ->get()
+                    ->map(function ($notificacion) use ($rematador) {
+                        return $this->formatNotification($notificacion, $rematador->usuario);
+                    });
+            }
 
             return response()->json($notificaciones);
 
@@ -70,6 +73,25 @@ class NotificacionController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Formatea una notificación para la respuesta de la API
+     */
+    private function formatNotification($notificacion, $usuario) 
+    {
+        return [
+            'id' => $notificacion->id,
+            'titulo' => $notificacion->titulo,
+            'mensaje' => $notificacion->mensaje,
+            'fechaHora' => $notificacion->fecha_hora,
+            'leido' => $notificacion->pivot->leido,
+            'esMensajeChat' => $notificacion->es_mensaje_chat,
+            'usuario' => [
+                'id' => $usuario->id,
+                'nombre' => $usuario->nombre
+            ]
+        ];
     }
 
     /**
@@ -93,18 +115,28 @@ class NotificacionController extends Controller
         try {
             $usuario = Auth::user();
             $cliente = Cliente::where('usuario_id', $usuario->id)->first();
+            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
             
-            if (!$cliente) {
-                return response()->json(['error' => 'Cliente no encontrado'], 404);
+            if (!$cliente && !$rematador) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
 
-            $notificacion = $cliente->notificaciones()->find($id);
+            $notificacion = null;
+            if ($cliente) {
+                $notificacion = $cliente->notificaciones()->find($id);
+                if ($notificacion) {
+                    $cliente->notificaciones()->updateExistingPivot($id, ['leido' => true]);
+                }
+            } else if ($rematador) {
+                $notificacion = $rematador->notificaciones()->find($id);
+                if ($notificacion) {
+                    $rematador->notificaciones()->updateExistingPivot($id, ['leido' => true]);
+                }
+            }
             
             if (!$notificacion) {
                 return response()->json(['error' => 'Notificación no encontrada'], 404);
             }
-
-            $cliente->notificaciones()->updateExistingPivot($id, ['leido' => true]);
 
             return response()->json(['mensaje' => 'Notificación marcada como leída']);
 
@@ -131,15 +163,23 @@ class NotificacionController extends Controller
         try {
             $usuario = Auth::user();
             $cliente = Cliente::where('usuario_id', $usuario->id)->first();
+            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
             
-            if (!$cliente) {
-                return response()->json(['error' => 'Cliente no encontrado'], 404);
+            if (!$cliente && !$rematador) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
 
-            $cliente->notificaciones()->updateExistingPivot(
-                $cliente->notificaciones()->pluck('notificaciones.id'),
-                ['leido' => true]
-            );
+            if ($cliente) {
+                $cliente->notificaciones()->updateExistingPivot(
+                    $cliente->notificaciones()->pluck('notificaciones.id'),
+                    ['leido' => true]
+                );
+            } else if ($rematador) {
+                $rematador->notificaciones()->updateExistingPivot(
+                    $rematador->notificaciones()->pluck('notificaciones.id'),
+                    ['leido' => true]
+                );
+            }
 
             return response()->json(['mensaje' => 'Todas las notificaciones marcadas como leídas']);
 
@@ -152,15 +192,20 @@ class NotificacionController extends Controller
     }
 
     /**
-     * Crea una nueva notificación para uno o varios clientes
+     * Crea una nueva notificación para uno o varios usuarios
      * 
-     * @param array $clienteIds Array de IDs de clientes
+     * @param array $usuarioIds Array de IDs de usuarios que recibirán la notificación
      * @param string $titulo Título de la notificación
      * @param string $mensaje Contenido de la notificación
      * @param bool $esMensajeChat Si la notificación corresponde a un mensaje de chat
      * @return Notificacion
      */
-    public static function createNotificacion(array $clienteIds, string $titulo, string $mensaje, bool $esMensajeChat = false): Notificacion 
+    public static function createNotificacion(
+        array $usuarioIds,
+        string $titulo,
+        string $mensaje,
+        bool $esMensajeChat = false
+    ): Notificacion 
     {
         try {
             $notificacion = Notificacion::create([
@@ -170,9 +215,17 @@ class NotificacionController extends Controller
                 'fecha_hora' => now()
             ]);
 
-            // Asociar la notificación con los clientes especificados
-            foreach ($clienteIds as $clienteId) {
-                $notificacion->clientes()->attach($clienteId, ['leido' => false]);
+            // Clasificar usuarios por tipo y asociar la notificación
+            foreach ($usuarioIds as $usuarioId) {
+                $cliente = Cliente::where('usuario_id', $usuarioId)->first();
+                $rematador = Rematador::where('usuario_id', $usuarioId)->first();
+
+                if ($cliente) {
+                    $notificacion->clientes()->attach($usuarioId, ['leido' => false]);
+                }
+                if ($rematador) {
+                    $notificacion->rematadores()->attach($usuarioId, ['leido' => false]);
+                }
             }
 
             return $notificacion;
@@ -227,7 +280,7 @@ class NotificacionController extends Controller
     public function marcarLeidaSinAutenticacion($id)
     {
         try {
-            // Por ahora solo devolvemos una respuesta exitosa
+            // Por ahora solo devolemos una respuesta exitosa
             return response()->json(['message' => 'Notificación marcada como leída']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al marcar notificación'], 500);
@@ -240,10 +293,68 @@ class NotificacionController extends Controller
     public function marcarTodasLeidasSinAutenticacion()
     {
         try {
-            // Por ahora solo devolvemos una respuesta exitosa
+            // Por ahora solo devolemos una respuesta exitosa
             return response()->json(['message' => 'Todas las notificaciones marcadas como leídas']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al marcar notificaciones'], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/notificaciones",
+     *     summary="Crear una nueva notificación",
+     *     tags={"Notificaciones"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"titulo", "mensaje", "usuarioIds"},
+     *             @OA\Property(property="titulo", type="string", example="Nueva subasta disponible"),
+     *             @OA\Property(property="mensaje", type="string", example="Se ha publicado una nueva subasta que podría interesarte"),
+     *             @OA\Property(property="usuarioIds", type="array", @OA\Items(type="integer"), example={1,2,3}),
+     *             @OA\Property(property="esMensajeChat", type="boolean", example=false)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Notificación creada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="titulo", type="string"),
+     *             @OA\Property(property="mensaje", type="string"),
+     *             @OA\Property(property="fecha_hora", type="string", format="date-time"),
+     *             @OA\Property(property="es_mensaje_chat", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error de validación"),
+     *     @OA\Response(response=500, description="Error del servidor")
+     * )
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'titulo' => 'required|string|max:255',
+                'mensaje' => 'required|string',
+                'usuarioIds' => 'required|array',
+                'usuarioIds.*' => 'integer|exists:usuarios,id',
+                'esMensajeChat' => 'boolean'
+            ]);
+
+            $notificacion = self::createNotificacion(
+                usuarioIds: $validated['usuarioIds'],
+                titulo: $validated['titulo'],
+                mensaje: $validated['mensaje'],
+                esMensajeChat: $validated['esMensajeChat'] ?? false
+            );
+
+            return response()->json($notificacion, 201);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error al crear la notificación',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }
