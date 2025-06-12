@@ -1,0 +1,84 @@
+<div class="notificaciones-container" *ngIf="estaAutenticado">
+  <!-- Botón de notificaciones -->
+  <div class="notification-bell" (click)="toggleDropdown()">
+    <i class="pi pi-bell"></i>
+    <p-badge 
+      *ngIf="contadorNoLeidas > 0" 
+      [value]="contadorNoLeidas.toString()" 
+      severity="danger"
+      class="notification-badge">
+    </p-badge>
+  </div>
+
+  <!-- Dropdown de notificaciones -->
+  <div *ngIf="mostrarDropdown" class="notification-dropdown">
+    <div class="dropdown-header">
+      <h4>Notificaciones</h4>
+      <button 
+        *ngIf="contadorNoLeidas > 0"
+        pButton 
+        type="button" 
+        label="Marcar todas como leídas" 
+        class="p-button-text p-button-sm"
+        (click)="marcarTodasComoLeidas()">
+      </button>
+    </div>
+    
+    <div class="notifications-list">
+      <div 
+        *ngFor="let notificacion of notificaciones" 
+        class="notification-item"
+        [ngClass]="{'unread': !notificacion.leido, 'read': notificacion.leido}"
+        (click)="marcarComoLeida(notificacion)">
+        
+        <div class="notification-content">
+          <div class="notification-title">
+            {{ obtenerTitulo(notificacion) }}
+          </div>
+          <div class="notification-time">
+            {{ formatearFecha(obtenerFecha(notificacion)) }}
+          </div>
+        </div>
+        
+        <div *ngIf="!notificacion.leido" class="unread-indicator"></div>
+      </div>
+      
+      <div *ngIf="notificaciones.length === 0" class="no-notifications">
+        <i class="pi pi-inbox"></i>
+        <p>No hay notificaciones</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar dropdown -->
+  <div 
+    *ngIf="mostrarDropdown" 
+    class="dropdown-overlay"
+    (click)="cerrarDropdown()">
+  </div>
+</div>
+
+<!-- Modal de detalle de notificación -->
+<p-dialog 
+  [header]="'Notificación'"
+  [visible]="mostrarDialog"
+  [modal]="true" 
+  [breakpoints]="{ '1199px': '65vw', '575px': '90vw' }" 
+  [style]="{ width: '50vw' }"
+  [draggable]="false" 
+  [resizable]="false"
+  [closable]="true"
+  (visibleChange)="cerrarDialog()">
+    <div *ngIf="notificacionSeleccionada" class="notification-modal-content">
+    <div class="modal-header-info">
+      <h3 class="modal-title">{{ obtenerTitulo(notificacionSeleccionada) }}</h3>
+      <p class="modal-date">{{ formatearFechaCompleta(obtenerFecha(notificacionSeleccionada)) }}</p>
+    </div>
+    
+    <div class="modal-body">
+      <div class="modal-message">
+        {{ obtenerMensaje(notificacionSeleccionada) }}
+      </div>
+    </div>
+  </div>
+</p-dialog>

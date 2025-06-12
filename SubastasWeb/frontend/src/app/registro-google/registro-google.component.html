@@ -1,0 +1,89 @@
+<div class="p-4 max-w-xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4">Completa tu registro</h2>
+
+  <img *ngIf="imagenUrl" [src]="imagenUrl" alt="avatar" width="100" class="rounded-full mb-4" />
+
+  <form [formGroup]="form" (ngSubmit)="enviar()">
+
+    <div class="mb-3">
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" formControlName="nombre" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-red-500 text-sm">
+        El nombre es requerido.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="email">Email:</label>
+      <input type="email" id="email" formControlName="email" class="form-control p-2 border rounded w-full"  />
+      <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-red-500 text-sm">
+        Ingrese un email válido.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="cedula">Cédula:</label>
+      <input type="text" id="cedula" formControlName="cedula" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('cedula')?.invalid && form.get('cedula')?.touched" class="text-red-500 text-sm">
+        La cédula es requerida.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="telefono">Teléfono:</label>
+      <input type="text" id="telefono" formControlName="telefono" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched" class="text-red-500 text-sm">
+        El teléfono es requerido.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="contrasenia">Contraseña:</label>
+      <input type="password" id="contrasenia" formControlName="contrasenia" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched" class="text-red-500 text-sm">
+        La contraseña es requerida y debe tener al menos 6 caracteres.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="contrasenia_confirmation">Confirmar Contraseña:</label>
+      <input type="password" id="contrasenia_confirmation" formControlName="contrasenia_confirmation" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched" class="text-red-500 text-sm">
+        Las contraseñas no coinciden.
+      </div>
+      <div *ngIf="form.get('contrasenia_confirmation')?.invalid && form.get('contrasenia_confirmation')?.touched && !form.hasError('passwordMismatch')" class="text-red-500 text-sm">
+        Confirmar contraseña es requerido.
+      </div>
+    </div>
+
+    <div *ngIf="rol === 'rematador'" class="mb-3">
+      <label for="matricula">Matrícula:</label>
+      <input type="text" id="matricula" formControlName="matricula" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('matricula')?.invalid && form.get('matricula')?.touched" class="text-red-500 text-sm">
+        La matrícula es requerida para rematadores.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label>Ubicación:</label>
+      <div id="map-registro-google" style="height: 300px;" class="rounded border mb-2"></div>
+      <div class="text-sm text-gray-600">
+        Ubicación seleccionada:
+        {{ form.get('latitud')?.value | number:'1.4-4' }},
+        {{ form.get('longitud')?.value | number:'1.4-4' }}
+      </div>
+      <div *ngIf="(form.get('latitud')?.invalid || form.get('longitud')?.invalid) && (form.get('latitud')?.touched || form.get('longitud')?.touched)" class="text-red-500 text-sm">
+        Selecciona una ubicación en el mapa.
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="form.invalid"
+      class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+    >
+      Finalizar registro
+    </button>
+
+  </form>
+</div>

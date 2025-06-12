@@ -9,10 +9,14 @@ import { clienteDto } from '../../models/clienteDto';
 import { rematadorDto } from '../../models/rematadorDto';
 import { subastaDto } from '../../models/subastaDto';
 
+
+import { PayPalComponent } from '../pay-pal/pay-pal.component';
+
+
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, TableModule, PaginatorModule],
+  imports: [CommonModule, TableModule, PaginatorModule, PayPalComponent],
   providers: [DatePipe],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
@@ -30,27 +34,35 @@ export class PerfilComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe(params => {
       const usuario_id = +params['id'];
-
+      console.log('Usuario ID:', usuario_id);
       this.clienteService.seleccionarCliente(usuario_id).subscribe({
         next: (data) => {
+          console.log('Cliente data:', data);
           if (typeof data === 'string') {
             this.cliente = undefined;
           } else {
             this.cliente = data;
           }
         },
-        error: () => this.cliente = undefined
+        error: (error) => {
+          console.error('Error loading cliente:', error);
+          this.cliente = undefined;
+        }
       });
 
       this.rematadorService.seleccionarRematador(usuario_id).subscribe({
         next: (data) => {
+          console.log('Rematador data:', data);
           if (typeof data === 'string') {
             this.rematador = undefined;
           } else {
             this.rematador = data;
           }
         },
-        error: () => this.rematador = undefined
+        error: (error) => {
+          console.error('Error loading rematador:', error);
+          this.rematador = undefined;
+        }
       });
     });
   }

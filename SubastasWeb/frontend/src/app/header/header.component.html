@@ -1,18 +1,24 @@
-<header class="app-header">
-  <div class="logo">
-    <i class="pi pi-at"></i>
-    <span>Your Company</span>
-  </div>
+<div class="header">
+  <nav>
+    <div class="logo">
+      <i class="pi pi-at"></i>
+      <span>Your Company</span>
+    </div>
 
-  <nav class="nav-links">
-    <a routerLink="/">Home</a>
+    <ul class="menu">
+      <li *ngFor="let item of items">
+        <a [routerLink]="item.routerLink">{{ item.label }}</a>
+      </li>
+    </ul>
+
+    <div class="right-section">
+      <i class="pi pi-user"></i>
+      <app-notificaciones></app-notificaciones>
+      <div class="social-icons">
+        <i class="pi pi-twitter"></i>
+        <i class="pi pi-instagram"></i>
+        <i class="pi pi-facebook"></i>
+      </div>
+    </div>
   </nav>
-
-  <div class="icons">
-    <i class="pi pi-user"></i>
-    <i class="pi pi-bell"></i>
-    <i class="pi pi-twitter"></i>
-    <i class="pi pi-instagram"></i>
-    <i class="pi pi-facebook"></i>
-  </div>
-</header>
+</div>
