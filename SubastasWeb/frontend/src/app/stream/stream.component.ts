@@ -313,9 +313,11 @@ export class StreamComponent implements OnInit, OnDestroy {
           } else {
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
 
-            /*if(this.clienteID ==) {
-              
-            } */
+            if(this.clienteID == localStorage.getItem('usuarioID')) {
+              //paypal
+              //crear sala para chat
+              //notificacion para chatear (usuario, casaRemate)
+            } 
 
             this.detenerTimer();
             
@@ -541,8 +543,8 @@ export class StreamComponent implements OnInit, OnDestroy {
   private limpiarCamposPuja(): void {
     this.pujaComun = null;
   }
-
-  // ==================== WEBSOCKET INTEGRATION ====================
+ 
+  //==================== WEBSOCKET INTEGRATION ====================
 
   private setupWebSocketConnection(): void {
     if (!this.subasta?.id) return;
