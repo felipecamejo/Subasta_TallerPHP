@@ -22,8 +22,10 @@
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
             <p-button label="Iniciar" severity="secondary" (click)="iniciarSubasta()"/>
-            <span class="pi pi-clock"></span>
-            <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
+            <div class="clock-input-group">
+                <span class="pi pi-clock"></span>
+                <input type="text" class="text-input" pInputText [(ngModel)]="timer" />
+            </div>
         </div>
 
         <hr class="w-full" />
@@ -34,20 +36,25 @@
             </div>
             
             <div class="w-full flex padrePujas margin">
-                <span class="subtitulo">Puja Actual:</span>
+                <div class="puja-input-group">
+                     <span class="subtitulo">Puja Actual:</span>
                 <input type="text" class="text-input" [value]="pujaActual" pInputText readonly/>
+                </div>
             </div>
 
             <div class="w-full margin">
                 <div class="w-full flex padrePujas">
-                    <p-button label="Puja Rapida" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaRapida()"/>
-                    <input type="number" class="text-input" [value]="pujaActual+1" pInputText readonly/>
+                    <div class="puja-input-group">
+                        <p-button label="Puja Rapida" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaRapida()"/>
+                        <input type="number" class="text-input" [value]="pujaActual+1" pInputText readonly/>
+                    </div>
                 </div>
 
                 <div class="w-full flex padrePujas margin">
-                    <p-button label="Puja" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaComun()"/>
-                    <input type="number" class="text-input" [(ngModel)]="pujaComun" pInputText  />
-                    
+                    <div class="puja-input-group">
+                        <p-button label="Puja" class="boton" severity="secondary" [disabled]="!this.timerState.timerActivo" (click)="crearPujaComun()"/>
+                        <input type="number" class="text-input" [(ngModel)]="pujaComun" pInputText  />
+                    </div>
                 </div>
             </div>
         </div>

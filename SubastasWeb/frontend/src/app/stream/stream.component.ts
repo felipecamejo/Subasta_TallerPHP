@@ -18,7 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 
 interface PujaRequest {
   fechaHora: string;
-  montoTotal: number;
+  monto: number;
   cliente_id: number | null;
   lote_id: number;
 }
@@ -384,7 +384,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   private crearPujaBase(monto: number): PujaRequest {
     return {
       fechaHora: new Date().toISOString(),
-      montoTotal: monto,
+      monto: monto,
       cliente_id: null,
       lote_id: Number(this.lotes[this.indexLotes].id)
     };

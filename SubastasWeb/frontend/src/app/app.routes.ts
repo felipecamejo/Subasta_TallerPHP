@@ -14,6 +14,11 @@ export const routes: Routes = [
     { path: 'buscadorRemates', component: BuscadorRematesComponent},
     { path: 'perfil/:id', loadComponent: () => PerfilComponent },
     { path: 'stream/:id', loadComponent: () => StreamComponent },
+    { path: 'stream/:id', component: StreamComponent },
+    { path: 'buscadorRemates', component: BuscadorRematesComponent},
+    { path: 'perfil/:id', component: PerfilComponent },
+    { path: 'estadisticas', component: EstadisticasComponent },
+    { path: 'casa-remates', component: CasaRemateComponent },
     { path: 'registro', component: RegisterComponent },
     { path: '', redirectTo: 'registro', pathMatch: 'full' }, 
 ];
