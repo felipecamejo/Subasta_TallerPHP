@@ -16,6 +16,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DialogModule } from 'primeng/dialog';
 import { mailDto } from '../../models/mailDto';
 import { WebsocketService } from '../../services/webSocketService';
+import { PayPalComponent } from '../pay-pal/pay-pal.component';
 
 
 interface PujaRequest {
@@ -42,7 +43,7 @@ const TIMER_CONSTANTS = {
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule],
+  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule, PayPalComponent],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
@@ -266,6 +267,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     });
   }
 
+  pagando: boolean = false;
+  paypalMonto: number = 0;
+
+
   iniciarTimer() {
     if (this.timerState.timerActivo) {
       console.warn('Timer ya está activo, ignorando nueva inicialización');
@@ -313,8 +318,11 @@ export class StreamComponent implements OnInit, OnDestroy {
           } else {
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
 
-            if(this.clienteID == localStorage.getItem('usuarioID')) {
-              //paypal
+            if(this.clienteID == localStorage.getItem('usuario_id')) {
+
+              this.paypalMonto = this.pujaActual;
+              this.pagando = true;
+              
               //crear sala para chat
               //notificacion para chatear (usuario, casaRemate)
             } 
@@ -410,7 +418,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     return {
       fechaHora: new Date().toISOString(),
       monto: monto,
-      cliente_id: 1, // Usar un cliente ID válido temporal en lugar de null
+      cliente_id: localStorage.getItem('usuario_id') !== null ? Number(localStorage.getItem('usuario_id')) : null, 
       lote_id: Number(this.lotes[this.indexLotes].id)
     };
   }

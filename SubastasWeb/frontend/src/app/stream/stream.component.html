@@ -58,6 +58,21 @@
                 </div>
             </div>
         </div>
+
+        <p-dialog 
+            header="Metodo de Pago" 
+            [(visible)]="pagando" 
+            [modal]="true" 
+            [style]="{width: '80vw', height: '80vh'}"
+            [closable]="true">
+
+            <section class="payment-section">
+                <h3>Prueba de Pago PayPal</h3>
+                <div class="payment-container">
+                    <app-paypal [amount]="paypalMonto"></app-paypal> 
+                </div>
+            </section>
+        </p-dialog>
     </article>
 </main>
 

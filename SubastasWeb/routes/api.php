@@ -24,6 +24,8 @@ Route::post('/mensaje', [MensajeController::class, 'enviar']);
 Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
 
+Route::apiResource('subastas', SubastaController::class);
+
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -40,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
     Route::apiResource('vendedores', VendedorController::class);
+    //Route::apiResource('subastas', SubastaController::class);
+    Route::apiResource('casa-remates', CasaRemateController::class);
 
     // Rutas de notificaciones
     Route::get('/notificaciones', [NotificacionController::class, 'index']);
@@ -50,8 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas de casas de remate y subastas
     Route::post('/casa-remates/{id}/calificar', [CasaRemateController::class, 'calificar']);
     Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
-    Route::apiResource('casa-remates', CasaRemateController::class);
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
-    Route::apiResource('subastas', SubastaController::class);
+    
 });
