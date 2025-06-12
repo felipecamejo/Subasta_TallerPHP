@@ -11,6 +11,7 @@ import { LoginGoogleComponent } from './login-google.component/login-google.comp
 import { RegistroGoogleComponent } from './registro-google/registro-google.component';
 import { VerificarEmailComponent } from './verificar-email/verificar-email.component';
 import { EmailVerificadoComponent } from './email-verificado/email-verificado.component';
+import { VerificacionPendienteComponent } from './verificacion-pendiente/verificacion-pendiente.component';
 
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
@@ -32,5 +33,7 @@ export const routes: Routes = [
     { path: 'dashboard-rematador', component: DashboardRematadorComponent },
     { path: 'verificar-email', component: VerificarEmailComponent },
     { path: 'email-verificado', component: EmailVerificadoComponent },
+    { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
+
     { path: '**', redirectTo: 'login' }
 ];

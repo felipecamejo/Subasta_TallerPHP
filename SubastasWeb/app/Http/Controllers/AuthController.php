@@ -50,6 +50,10 @@ class AuthController extends Controller
             return response()->json(['error' => 'Credenciales inválidas'], 401);
         }
 
+        if (!$usuario->hasVerifiedEmail()) {
+            return response()->json(['error' => 'Debés verificar tu correo electrónico antes de iniciar sesión.'], 403);
+        }
+
         $token = $usuario->createToken('token-personal')->plainTextToken;
         $rol = $usuario->cliente ? 'cliente' : ($usuario->rematador ? 'rematador' : null);
 
@@ -191,6 +195,8 @@ public function loginWithGoogle(Request $request)
             'imagen' => $googleUser->getAvatar(),
             'contrasenia' => bcrypt(Str::random(16)),
         ]);
+
+         $usuario->markEmailAsVerified();
 
         if ($request->rol === 'rematador') {
             Rematador::create([

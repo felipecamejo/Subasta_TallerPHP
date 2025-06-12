@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { GoogleLoginComponent } from '../google-login/google-login.component';
 
 @Component({
   standalone: true,
   selector: 'app-login',
   templateUrl: './login.component.html',
-  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent,  RouterModule,],
+  styleUrls: ['./login.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent, RouterModule],
 })
 export class LoginComponent {
   form: FormGroup;
@@ -45,14 +45,19 @@ export class LoginComponent {
           this.router.navigate(['/dashboard-rematador']);
         }
       },
-      error: () => {
-        this.error = 'Email o contraseña incorrectos';
+      error: (err) => {
+        if (err.status === 403) {
+          this.router.navigate(['/verificacion-pendiente'], {
+            queryParams: { email: this.form.get('email')?.value }
+          });
+        } else {
+          this.error = 'Email o contraseña incorrectos';
+        }
       },
     });
   }
 
   mostrarFormularioRegistro(usuarioGoogle: any) {
-    console.log('Usuario nuevo desde Google:', usuarioGoogle);
     this.router.navigate(['/registro'], { state: { usuarioGoogle } });
   }
 }

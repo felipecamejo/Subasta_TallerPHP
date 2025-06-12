@@ -1,30 +1,31 @@
-<h2>Iniciar Sesión</h2>
+<div class="login-container">
+  <h2>Iniciar Sesión</h2>
 
-<form [formGroup]="form" (ngSubmit)="login()">
-  <div>
-    <input formControlName="email" type="email" placeholder="Email" />
-    <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="error">
-      <small *ngIf="form.get('email')?.errors?.['required']">El email es obligatorio.</small>
-      <small *ngIf="form.get('email')?.errors?.['email']">El formato del email no es válido.</small>
+  <form [formGroup]="form" (ngSubmit)="login()">
+    <div class="form-group">
+      <input formControlName="email" type="email" placeholder="Email" />
+      <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="error">
+        <small *ngIf="form.get('email')?.errors?.['required']">El email es obligatorio.</small>
+        <small *ngIf="form.get('email')?.errors?.['email']">Formato inválido.</small>
+      </div>
     </div>
-  </div>
 
-  <div>
-    <input formControlName="password" type="password" placeholder="Contraseña" />
-    <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" class="error">
-      <small>La contraseña es obligatoria.</small>
+    <div class="form-group">
+      <input formControlName="password" type="password" placeholder="Contraseña" />
+      <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" class="error">
+        <small>La contraseña es obligatoria.</small>
+      </div>
     </div>
-  </div>
 
-  <button type="submit" [disabled]="form.invalid">Iniciar Sesión</button>
-</form>
+    <button type="submit" [disabled]="form.invalid">Iniciar Sesión</button>
+  </form>
 
-<div *ngIf="error" class="error-msg">{{ error }}</div>
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
 
-<hr>
-<p>o</p>
+  <hr />
+  <p>o</p>
 
-<!-- Este botón Google va fuera del <form> -->
-<app-google-login (usuarioNuevo)="mostrarFormularioRegistro($event)"></app-google-login>
+  <app-google-login (usuarioNuevo)="mostrarFormularioRegistro($event)"></app-google-login>
 
-<a routerLink="/registro">¿No tenés cuenta? Registrate aquí</a>
+  <a routerLink="/registro">¿No tenés cuenta? Registrate aquí</a>
+</div>
