@@ -405,6 +405,137 @@
                 }
             }
         },
+        "/api/register-google-user": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar usuario con Google",
+                "operationId": "4c5e1711bebfc9f444bc29141c1ed8a3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "telefono",
+                                    "contrasenia",
+                                    "latitud",
+                                    "longitud",
+                                    "rol",
+                                    "google_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Juan Pérez"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@gmail.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "099123456"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secreta123"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.9011
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.1645
+                                    },
+                                    "rol": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "rematador"
+                                        ],
+                                        "example": "cliente"
+                                    },
+                                    "google_id": {
+                                        "type": "string",
+                                        "example": "1234567890abcdef"
+                                    },
+                                    "matricula": {
+                                        "type": "string",
+                                        "example": "MAT-987",
+                                        "nullable": true
+                                    },
+                                    "imagen": {
+                                        "type": "string",
+                                        "example": "https://lh3.googleusercontent.com/a/...",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario registrado exitosamente con Google",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario registrado con Google exitosamente."
+                                        },
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "1|aVeryLongTokenHere"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "rol": {
+                                            "type": "string",
+                                            "example": "cliente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/casa-remates": {
             "get": {
                 "tags": [
@@ -1378,6 +1509,169 @@
                 }
             }
         },
+        "/api/notificaciones": {
+            "get": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Obtener notificaciones del usuario autenticado",
+                "operationId": "ce89d0403b6e877dfb1851723ad6c3d6",
+                "responses": {
+                    "200": {
+                        "description": "Lista de notificaciones",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Crear una nueva notificación",
+                "operationId": "b57d435b97589cfc3c07dc202d16c947",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titulo",
+                                    "mensaje",
+                                    "usuarioIds"
+                                ],
+                                "properties": {
+                                    "titulo": {
+                                        "type": "string",
+                                        "example": "Nueva subasta disponible"
+                                    },
+                                    "mensaje": {
+                                        "type": "string",
+                                        "example": "Se ha publicado una nueva subasta que podría interesarte"
+                                    },
+                                    "usuarioIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    },
+                                    "esMensajeChat": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Notificación creada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "titulo": {
+                                            "type": "string"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "fecha_hora": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "es_mensaje_chat": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
+        "/api/notificaciones/{id}/leer": {
+            "put": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Marcar una notificación como leída",
+                "operationId": "a13df690a1f5e72f7d0cda20cb4d7478",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notificación marcada como leída"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    },
+                    "404": {
+                        "description": "Notificación no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/notificaciones/leer-todas": {
+            "put": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Marcar todas las notificaciones como leídas",
+                "operationId": "9dd29836e8a9365c67c2f13ab7c5b316",
+                "responses": {
+                    "200": {
+                        "description": "Todas las notificaciones marcadas como leídas"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
         "/api/pujas": {
             "get": {
                 "tags": [
@@ -1401,7 +1695,7 @@
                                                 "type": "string",
                                                 "format": "date-time"
                                             },
-                                            "montoTotal": {
+                                            "monto": {
                                                 "type": "number",
                                                 "format": "float"
                                             },
@@ -1492,8 +1786,7 @@
                             "schema": {
                                 "required": [
                                     "fechaHora",
-                                    "montoTotal",
-                                    "cliente_id",
+                                    "monto",
                                     "lote_id"
                                 ],
                                 "properties": {
@@ -1502,14 +1795,15 @@
                                         "format": "date-time",
                                         "example": "2025-05-26T14:00:00Z"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 1500.5
                                     },
                                     "cliente_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "lote_id": {
                                         "type": "integer",
@@ -1659,7 +1953,7 @@
                                         "type": "string",
                                         "format": "date-time"
                                     },
-                                    "montoTotal": {
+                                    "monto": {
                                         "type": "number",
                                         "format": "float"
                                     },
@@ -2091,32 +2385,17 @@
                 }
             }
         },
-        "/api/auth/callback/google": {
+        "/auth/callback/google": {
             "get": {
                 "tags": [
                     "Autenticación Social"
                 ],
                 "summary": "Callback de Google después del login",
-                "description": "Procesa el usuario de Google y lo registra como cliente o rematador",
+                "description": "Procesa el usuario de Google. Si existe, lo autentica. Si no, redirige al frontend con datos para completar el registro.",
                 "operationId": "handleGoogleCallback",
                 "responses": {
-                    "200": {
-                        "description": "Usuario autenticado y rol asignado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "token": {
-                                            "type": "string"
-                                        },
-                                        "rol": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "302": {
+                        "description": "Redirección al frontend con token si el usuario ya existe o con datos de Google para completar registro"
                     }
                 }
             }
@@ -2279,6 +2558,11 @@
                                     "videoId": {
                                         "type": "string",
                                         "nullable": true
+                                    },
+                                    "loteIndex": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2371,6 +2655,57 @@
                     },
                     "422": {
                         "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/subastas/enviaMail": {
+            "post": {
+                "tags": [
+                    "Subastas"
+                ],
+                "summary": "Envía una notificación por email",
+                "description": "Envía un email de notificación con asunto y mensaje personalizados",
+                "operationId": "7d63d54067a5d94e4d07337c9f5d4e7c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "asunto",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "Dirección de email del destinatario",
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "asunto": {
+                                        "description": "Asunto del email",
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "description": "Contenido del mensaje",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email enviado exitosamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
                     }
                 }
             }
@@ -2705,6 +3040,10 @@
         {
             "name": "Lotes",
             "description": "API para gestionar lotes"
+        },
+        {
+            "name": "Notificaciones",
+            "description": "API para gestionar notificaciones"
         },
         {
             "name": "Rematador",

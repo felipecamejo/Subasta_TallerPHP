@@ -1,80 +1,108 @@
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #eaeaea;
-  background-color: white;
+.header {
+  background-color: #ffffff;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
   .logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-
+    
     i {
       font-size: 1.5rem;
+      color: #2196f3;
     }
-
+    
     span {
-      font-weight: bold;
       font-size: 1.2rem;
-      color: #333;
+      font-weight: 500;
+      color: #495057;
     }
   }
 
-  .nav-links {
+  .menu {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
 
-    a {
-      text-decoration: none;
-      color: #333;
-      font-weight: 500;
-      cursor: pointer;
+    li {
+      a {
+        color: #495057;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
 
-      &:hover {
-        color: #007ad9;
+        &:hover {
+          color: #2196f3;
+        }
       }
     }
-
-    .divider {
-      color: #ccc;
-    }
   }
 
-  .icons {
+  .right-section {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
 
     i {
       font-size: 1.2rem;
-      color: #333;
+      color: #495057;
       cursor: pointer;
+      transition: color 0.3s ease;
 
       &:hover {
-        color: #007ad9;
+        color: #2196f3;
       }
     }
 
-    .pi-user {
-      font-size: 1.5rem;
-      color: black;
+    .social-icons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    app-notificaciones {
+      margin: 0;
     }
   }
 }
 
+@media (max-width: 992px) {
+  .header {
+    .social-icons {
+      display: none;
+    }
+  }
+}
 
 @media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .navigation {
-    width: 100%;
-    justify-content: space-around;
-    flex-wrap: wrap;
+  .header {
+    padding: 0.5rem;
+
+    nav {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .menu {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .right-section {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
   }
 }

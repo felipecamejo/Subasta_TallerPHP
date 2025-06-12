@@ -3,9 +3,15 @@
 namespace Database\Seeders;
 
 
+use App\Models\Articulo;
+use App\Models\CasaRemate;
+use App\Models\Categoria;
 use App\Models\Subasta;
 use App\Models\Lote;
 use App\Models\Puja;
+use App\Models\Usuario;
+use App\Models\Cliente;
+use App\Models\Rematador;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +23,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void {
 
+        CasaRemate::create([
+            'id' => 1,
+            'nombre' => 'Casa de Remates Aurora',
+            'idFiscal' => '212345670018',
+            'email' => 'cocoarodri@gmail.com',
+            'telefono' => '099123456',
+            'calificacion' => [4.5, 4.8, 4.2, 5.0, 4.7],
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         Subasta::create([
             'id' => 1,
             'nombre' => 'alexis',
@@ -27,7 +46,7 @@ class DatabaseSeeder extends Seeder
             'longitud' => -50.1645000,
             'videoId' => 'DN8P7kukaGo',
             'rematador_id' => null,
-            'casa_remate_id' => null,
+            'casa_remate_id' => 1,
             'loteIndex' => 0,
             'created_at' => now(),
             'updated_at' => now(),
@@ -51,6 +70,7 @@ class DatabaseSeeder extends Seeder
 
         Lote::create([
             'id' => 1,
+            'umbral' => 200,
             'valorBase' => 200,
             'pujaMinima' => 210,
             'subasta_id' => 1,
@@ -60,6 +80,7 @@ class DatabaseSeeder extends Seeder
 
         Lote::create([
             'id' => 2,
+            'umbral' => 0,
             'valorBase' => 0,
             'pujaMinima' => 10,
             'subasta_id' => 1,
@@ -111,7 +132,46 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        
+        Categoria::create([
+            'id' => 1,
+            'nombre' => 'Electrónica',
+            'categoria_padre_id' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Categoria::create([
+            'id' => 2,
+            'nombre' => 'Telefonos',
+            'categoria_padre_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Categoria::create([
+            'id' => 3,
+            'nombre' => 'Muebles',
+            'categoria_padre_id' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $articulo = Articulo::create([
+            'nombre' => 'iPhone 14 Pro Max',
+            'estado' => 'EXCELENTE',
+            'imagenes' => 'iphone14pro.jpg',
+            'especificacion' => 'iPhone 14 Pro Max 256GB, Color Azul Alpino, Batería al 95%, Incluye cargador original y caja',
+            'disponibilidad' => true,
+            'condicion' => 'Como nuevo, sin rayones ni golpes',
+            'vendedor_id' => null,
+            'lote_id' => 1,
+            'categoria_id' => 2, 
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $articulo->save();
+
         //Pablo
         $clienteUsuario = Usuario::create([
             'nombre' => 'Steven Spielberg',

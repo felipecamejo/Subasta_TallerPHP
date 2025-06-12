@@ -7,6 +7,8 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mappers\Mapper;
+use App\Mail\NotificacionCorreo;
+use Illuminate\Support\Facades\Mail;
 
 
 /**
@@ -32,10 +34,17 @@ class SubastaController extends Controller
      */
     public function index() {
         try {
-            $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->get();
+            $subastas = Subasta::with([
+                'casaRemate', 
+                'rematador', 
+                'lotes.pujas.cliente.usuario', 
+                'lotes.articulos.categoria',
+                'lotes.articulos.vendedor'
+            ])->get();
             
-            $dto = $subasta->map(function ($subasta) {
-                return Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth);
+            $dto = $subastas->map(function ($subasta) {
+                $visited = [];
+                return Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth);
             });
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -122,14 +131,21 @@ class SubastaController extends Controller
      * )
      */
     public function show($id){
-
-        $subasta = Subasta::with(['casaremate', 'rematador', 'lotes.pujas.cliente.usuario'])->find($id);
+        /** @var Subasta|null $subasta */
+        $subasta = Subasta::with([
+            'casaRemate', 
+            'rematador', 
+            'lotes.pujas.cliente.usuario', 
+            'lotes.articulos.categoria',
+            'lotes.articulos.vendedor'
+        ])->find($id);
 
         if (!$subasta) {
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelSubasta($subasta, $this->visited, $this->maxDepth));
+        $visited = [];
+        return response()->json(Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth));
     }
 
     /**
@@ -197,7 +213,7 @@ class SubastaController extends Controller
             'loteIndex'
         ])); 
 
-        return response()->json($subasta->load(['casaremate', 'rematador',]));
+        return response()->json($subasta->load(['casaRemate', 'rematador',]));
     }
 
     /**
@@ -287,4 +303,38 @@ class SubastaController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/subastas/enviaMail",
+     *     summary="Envía una notificación por email",
+     *     description="Envía un email de notificación con asunto y mensaje personalizados",
+     *     tags={"Subastas"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "asunto", "mensaje"},
+     *             @OA\Property(property="email", type="string", format="email", description="Dirección de email del destinatario"),
+     *             @OA\Property(property="asunto", type="string", description="Asunto del email"),
+     *             @OA\Property(property="mensaje", type="string", description="Contenido del mensaje")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Email enviado exitosamente"),
+     *     @OA\Response(response=422, description="Error de validación"),
+     *     @OA\Response(response=500, description="Error interno del servidor")
+     * )
+     */
+    public function enviarEmailNotificacion(Request $request){
+        $request->validate([
+            'email' => 'required|email',
+            'asunto' => 'required|string|max:255',
+            'mensaje' => 'required|string'
+        ]);
+
+        try {
+            Mail::to($request->email)->send(new NotificacionCorreo($request->asunto, $request->mensaje));
+            return response()->json(['message' => 'Email enviado exitosamente']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al enviar el email: ' . $e->getMessage()], 500);
+        }
+    }
 }
