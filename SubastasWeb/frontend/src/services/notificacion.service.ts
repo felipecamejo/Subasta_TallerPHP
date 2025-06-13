@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of, map } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { UrlService } from './url.service';
-import { notificacionUsuarioDto } from '../models/notificacionDto';
+import { notificacionDto, notificacionUsuarioDto } from '../models/notificacionDto';
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +58,35 @@ export class NotificacionService {
     });
   }
 
+  private enviarNotificacion(payload: any): Observable<notificacionDto> {
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+
+    return this.http.post<notificacionDto>(`${this.baseUrl}/notificaciones`, payload, {
+      headers: headers
+    }).pipe(
+      tap(response => {
+        this.actualizarNotificaciones();
+        return response;
+      }),
+      catchError(error => {
+        console.error('Error al crear notificación:', error);
+        throw error;
+      })
+    );
+  }
+
+  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: Number): Observable<notificacionDto> {
+    const notificacion = {
+      titulo: titulo,
+      mensaje: mensaje,
+      usuarioIds: [idUsuarioDestino],
+      esMensajeChat: chat,
+      chatId: chatId
+    };
+
+    return this.enviarNotificacion(notificacion);
+  }
+
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) {
@@ -98,7 +127,8 @@ export class NotificacionService {
 
   /**
    * Marca una notificación como leída y actualiza el estado
-   */  marcarLeidaYActualizar(id: number): void {
+   */  
+  marcarLeidaYActualizar(id: number): void {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) return;
 
@@ -123,7 +153,8 @@ export class NotificacionService {
 
   /**
    * Marca todas como leídas y actualiza el estado
-   */  marcarTodasLeidasYActualizar(): void {
+   */  
+  marcarTodasLeidasYActualizar(): void {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) return;
 

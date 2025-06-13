@@ -73,6 +73,22 @@
                 </div>
             </section>
         </p-dialog>
+        
+        <!-- Botón flotante para abrir el chat -->
+        <div class="chat-button-container" *ngIf="isCurrentUser()">
+            <p-button icon="pi pi-comments" 
+                      severity="secondary" 
+                      (click)="toggleChat()"
+                      styleClass="p-button-rounded p-button-lg"/>
+        </div>
+        
+        <!-- Componente de chat -->
+        <app-chat 
+            *ngIf="chatVisible"
+            [currentChat]="chatCurrentUser"
+            [currentUserId]="clienteID?.toString() || ''"
+            (close)="closeChat()">
+        </app-chat>
     </article>
 </main>
 

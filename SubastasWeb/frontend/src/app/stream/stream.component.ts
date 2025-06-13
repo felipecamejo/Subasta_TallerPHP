@@ -17,6 +17,9 @@ import { DialogModule } from 'primeng/dialog';
 import { mailDto } from '../../models/mailDto';
 import { WebsocketService } from '../../services/webSocketService';
 import { PayPalComponent } from '../pay-pal/pay-pal.component';
+import { NotificacionService } from '../../services/notificacion.service';
+import { ChatComponent } from '../chat/chat.component';
+import { ChatService } from '../../services/chat.service';
 
 
 interface PujaRequest {
@@ -43,7 +46,7 @@ const TIMER_CONSTANTS = {
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule, PayPalComponent],
+  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule, PayPalComponent, ChatComponent],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
@@ -58,7 +61,13 @@ export class StreamComponent implements OnInit, OnDestroy {
   umbralSuperado: boolean = false;
 
   videoUrl: SafeResourceUrl | null = null;
-
+  
+  // Propiedades para el chat
+  chatVisible: boolean = false;
+  chatRoomId: string = '';
+  chatCurrentUser: { id: string, name: string } | null = null;
+  chatMessages: Array<{ fromUserId: number, message: string, timestamp: string }> = [];
+  
   public timerState: TimerState = {
     timer: "00:00:00",
     timerActivo: false
@@ -86,7 +95,9 @@ export class StreamComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private subastaService: SubastaService,
     private pujaService: PujaService,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
+    private notificacionService: NotificacionService,
+    private chatService: ChatService
   ) {
   }
 
@@ -323,8 +334,29 @@ export class StreamComponent implements OnInit, OnDestroy {
               this.paypalMonto = this.pujaActual;
               this.pagando = true;
               
-              //crear sala para chat
-              //notificacion para chatear (usuario, casaRemate)
+              // Inicializar chat entre el cliente ganador y la casa de remate
+              this.initializeChat();
+
+              const chatId = 0; // Usando 0 como valor numérico para el chatId
+
+              this.notificacionService.crearNotificacion("Subasta finalizada", "Usted ha ganado la subasta por el lote " + this.lotes[this.indexLotes].id, this.clienteID || 0, true, chatId).subscribe({
+                next: (notificacion) => {
+                  console.log('Notificación creada:', notificacion);
+                },
+                error: (error) => {
+                  console.error('Error al crear notificación:', error);
+                }
+              });
+
+              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + this.clienteID, this.subasta?.casaremate.id || 0, true, chatId).subscribe({
+                next: (notificacion) => {
+                  console.log('Notificación creada:', notificacion);
+                },
+                error: (error) => {
+                  console.error('Error al crear notificación:', error);
+                }
+              });
+
             } 
 
             this.detenerTimer();
@@ -487,6 +519,15 @@ export class StreamComponent implements OnInit, OnDestroy {
 
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
+
+          this.notificacionService.crearNotificacion("Umbral Superado", "Su lote " + this.lotes[this.indexLotes].id + " ha superado su umbral", this.subasta?.casaremate.id || 0, false, 0).subscribe({
+                next: (notificacion) => {
+                  console.log('Notificación creada:', notificacion);
+                },
+                error: (error) => {
+                  console.error('Error al crear notificación:', error);
+                }
+          });
         }
 
         this.actualizarDatosSinSobrescribir();
@@ -622,13 +663,27 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Escuchar nuevos mensajes de chat
+    const chatMessageSubscription = this.websocketService.onNewMessage().subscribe({
+      next: (messageData) => {
+        console.log('Mensaje de chat recibido:', messageData);
+        this.chatMessages.push({
+          fromUserId: messageData.fromUserId,
+          message: messageData.message,
+          timestamp: messageData.timestamp
+        });
+      },
+      error: (err) => console.error('Error en WebSocket chat:', err)
+    });
+
     this.websocketSubscriptions.push(
       auctionJoinedSubscription,
       bidSubscription,
       userJoinedSubscription,
       loteUpdateSubscription,
       timerSubscription,
-      stateSubscription
+      stateSubscription,
+      chatMessageSubscription
     );
   }
 
@@ -767,6 +822,54 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.indexLotes,
       loteData
     );
+  }
+
+  // Métodos para el chat
+  initializeChat(): void {
+    if (!this.clienteID || !this.subasta?.casaremate.id) {
+      console.error('No se puede inicializar el chat: faltan IDs de usuario o casa de remate');
+      return;
+    }
+    
+    // Crear un ID único para el chat entre el cliente y la casa de remate
+    this.chatRoomId = `chat_${this.clienteID}_${this.subasta.casaremate.id}`;
+    
+    // Configurar el usuario actual
+    this.chatCurrentUser = {
+      id: this.clienteID.toString(),
+      name: 'Usuario ' + this.clienteID
+    };
+    
+    // Inicializar el chat en el servicio
+    this.chatService.initializeChat(
+      this.chatRoomId,
+      Number(this.clienteID),
+      this.chatCurrentUser.name
+    );
+    
+    // Mostrar el chat
+    this.chatVisible = true;
+    
+    console.log('Chat inicializado:', this.chatRoomId);
+  }
+  
+  toggleChat(): void {
+    if (!this.chatVisible && this.isCurrentUser()) {
+      this.initializeChat();
+    } else {
+      this.chatVisible = !this.chatVisible;
+    }
+  }
+  
+  closeChat(): void {
+    this.chatVisible = false;
+    this.chatService.clearChat();
+  }
+  
+  // Método para comprobar si el clienteID coincide con el usuario_id almacenado en localStorage
+  isCurrentUser(): boolean {
+    const storedUserId = localStorage.getItem('usuario_id');
+    return storedUserId !== null && this.clienteID !== null && this.clienteID === Number(storedUserId);
   }
 }
 
