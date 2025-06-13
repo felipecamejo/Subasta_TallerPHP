@@ -15,6 +15,9 @@ use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\PasswordReset;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,6 +25,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
+Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
+Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
+
 
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {

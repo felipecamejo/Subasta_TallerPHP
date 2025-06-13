@@ -10,6 +10,8 @@ use App\Models\Rematador;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
@@ -181,23 +183,24 @@ public function loginWithGoogle(Request $request)
         'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
     ]);
 
+    // Obtener datos del usuario desde Google usando el token
     $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
 
+    // Buscar el usuario por email
     $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
 
     if (!$usuario) {
-        // Usuario nuevo
+        // Si no existe, lo creamos
         $usuario = Usuario::create([
             'nombre' => $googleUser->getName(),
             'email' => $googleUser->getEmail(),
-            'cedula' => '', // Adaptá según tu lógica
+            'cedula' => '', // Definí según tu lógica
             'telefono' => '',
             'imagen' => $googleUser->getAvatar(),
             'contrasenia' => bcrypt(Str::random(16)),
         ]);
 
-         $usuario->markEmailAsVerified();
-
+        // Asociamos el rol correspondiente
         if ($request->rol === 'rematador') {
             Rematador::create([
                 'usuario_id' => $usuario->id,
@@ -210,8 +213,15 @@ public function loginWithGoogle(Request $request)
         }
     }
 
+    // Aseguramos que el correo se marque como verificado, venga de Google o no
+    if (!$usuario->hasVerifiedEmail()) {
+        $usuario->markEmailAsVerified();
+    }
+
+    // Crear token de acceso
     $token = $usuario->createToken('auth_token')->plainTextToken;
 
+    // Cargar relaciones (cliente o rematador)
     $usuario->load(['rematador', 'cliente']);
 
     // Determinar el rol actual
@@ -225,6 +235,7 @@ public function loginWithGoogle(Request $request)
         'usuario' => $usuario,
     ]);
 }
+
 
 /**
  * @OA\Post(
@@ -318,5 +329,47 @@ public function registerGoogleUser(Request $request)
     ]);
 }
 
+public function enviarLinkReset(Request $request)
+{
+    $request->validate(['email' => 'required|email']);
+
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+
+    return $status === Password::RESET_LINK_SENT
+        ? response()->json(['message' => __($status)])
+        : response()->json(['error' => __($status)], 400);
+}
+
+public function resetearContrasena(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|min:8|confirmed',
+    ]);
+
+    try {
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                
+
+                $user->contrasenia = Hash::make($password);
+                $user->save();
+
+                event(new \Illuminate\Auth\Events\PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => __($status)])
+            : response()->json(['error' => __($status)], 400);
+    } catch (\Throwable $e) {
+        \Log::error('Error al resetear contraseña: ' . $e->getMessage());
+        return response()->json(['error' => 'Error interno del servidor'], 500);
+    }
+}
 
 }

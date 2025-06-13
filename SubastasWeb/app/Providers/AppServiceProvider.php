@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,14 +14,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->mapApiRoutes();
-    }
-
-    protected function mapApiRoutes()
-    {
-        Route::prefix('api')
-            ->middleware('api') // solo middleware api
-            ->group(base_path('routes/api.php'));
+        ResetPassword::createUrlUsing(function ($notifiable, string $token) {
+            return "http://localhost:4200/restablecer-contrasena?token=$token&email=" . urlencode($notifiable->email);
+        });
     }
 }
-

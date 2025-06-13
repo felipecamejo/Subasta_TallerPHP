@@ -42,3 +42,18 @@ button:disabled {
   margin-top: 1rem;
   text-align: center;
 }
+
+.forgot-password-link {
+  text-align: right;
+  margin: 0.5rem 0 1rem;
+
+  a {
+    font-size: 0.9rem;
+    color: #007bff;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

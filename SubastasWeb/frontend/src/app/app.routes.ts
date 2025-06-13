@@ -12,6 +12,8 @@ import { RegistroGoogleComponent } from './registro-google/registro-google.compo
 import { VerificarEmailComponent } from './verificar-email/verificar-email.component';
 import { EmailVerificadoComponent } from './email-verificado/email-verificado.component';
 import { VerificacionPendienteComponent } from './verificacion-pendiente/verificacion-pendiente.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
 
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
@@ -34,6 +36,9 @@ export const routes: Routes = [
     { path: 'verificar-email', component: VerificarEmailComponent },
     { path: 'email-verificado', component: EmailVerificadoComponent },
     { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
+    { path: 'forgot-password', component: ForgotPasswordComponent },
+    { path: 'restablecer-contrasena', component: ResetPasswordComponent },
+    
 
     { path: '**', redirectTo: 'login' }
 ];
