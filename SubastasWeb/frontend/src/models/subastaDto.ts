@@ -17,7 +17,7 @@ export interface subastaDto {
 
     lotes: Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos' | 'umbral'>[];
 
-    casaremate: Pick<casaRemateDto, 'id' | 'nombre' | 'email'>;
+    casaremate: Pick<casaRemateDto, 'usuario_id' >;
 
     rematador: Pick<rematadorDto, 'usuario'>;
 }
