@@ -15,6 +15,8 @@ use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
+use App\Http\Controllers\NotificacionController;
+
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\PasswordReset;
@@ -28,6 +30,7 @@ Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser
 Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
 Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
 
+Route::apiResource('subastas', SubastaController::class);
 
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -53,12 +56,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
     Route::apiResource('vendedores', VendedorController::class);
-});
+    Route::apiResource('casa-remates', CasaRemateController::class);
 
-//  Funcionalidades adicionales
-Route::post('/casa-remates/{id}/calificar', [CasaRemateController::class, 'calificar']);
-Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
-Route::apiResource('casa-remates', CasaRemateController::class);
-Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
-Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
-Route::apiResource('subastas', SubastaController::class);
+    // Rutas de notificaciones
+    Route::get('/notificaciones', [NotificacionController::class, 'index']);
+    Route::post('/notificaciones', [NotificacionController::class, 'store']);
+    Route::put('/notificaciones/{id}/leer', [NotificacionController::class, 'marcarLeida']);
+    Route::put('/notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas']);
+
+    // Rutas de casas de remate y subastas
+    Route::post('/casa-remates/{id}/calificar', [CasaRemateController::class, 'calificar']);
+    Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
+    Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
+    Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
+});

@@ -58,6 +58,37 @@
                 </div>
             </div>
         </div>
+
+        <p-dialog 
+            header="Metodo de Pago" 
+            [(visible)]="pagando" 
+            [modal]="true" 
+            [style]="{width: '80vw', height: '80vh'}"
+            [closable]="true">
+
+            <section class="payment-section">
+                <h3>Prueba de Pago PayPal</h3>
+                <div class="payment-container">
+                    <app-paypal [amount]="paypalMonto"></app-paypal> 
+                </div>
+            </section>
+        </p-dialog>
+        
+        <!-- Botón flotante para abrir el chat -->
+        <div class="chat-button-container" *ngIf="isCurrentUser()">
+            <p-button icon="pi pi-comments" 
+                      severity="secondary" 
+                      (click)="toggleChat()"
+                      styleClass="p-button-rounded p-button-lg"/>
+        </div>
+        
+        <!-- Componente de chat -->
+        <app-chat 
+            *ngIf="chatVisible"
+            [currentChat]="chatCurrentUser"
+            [currentUserId]="clienteID?.toString() || ''"
+            (close)="closeChat()">
+        </app-chat>
     </article>
 </main>
 

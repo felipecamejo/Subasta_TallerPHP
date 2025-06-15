@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, OnDestroy, ViewChild, Input, Output, EventEmitter, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../services/chat.service';
+import { ChatService } from '../../services/chat.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 interface ChatUser {
