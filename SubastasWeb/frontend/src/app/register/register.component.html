@@ -94,6 +94,10 @@
         <input class="form-check-input" type="radio" id="tipoRematador" formControlName="tipo" value="rematador">
         <label class="form-check-label" for="tipoRematador">Rematador</label>
       </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="tipoCasa" formControlName="tipo" value="casa_remate">
+        <label class="form-check-label" for="tipoCasa">Casa de Remate</label>
+      </div>
     </div>
 
     <!-- Matrícula -->
@@ -106,6 +110,19 @@
       </div>
       <div *ngIf="fieldErrors['matricula']" class="text-danger">
         <div *ngFor="let error of fieldErrors['matricula']">{{ error }}</div>
+      </div>
+    </div>
+
+    <!-- ID Fiscal -->
+    <div class="form-group" *ngIf="tipo?.value === 'casa_remate'">
+      <label for="idFiscal">ID Fiscal (solo casas de remate):</label>
+      <input type="text" id="idFiscal" formControlName="idFiscal" class="form-control"
+             [class.is-invalid]="idFiscal?.invalid && (idFiscal?.touched || fieldErrors['idFiscal'])">
+      <div *ngIf="idFiscal?.errors?.['required'] && idFiscal?.touched" class="text-danger">
+        El ID Fiscal es requerido.
+      </div>
+      <div *ngIf="fieldErrors['idFiscal']" class="text-danger">
+        <div *ngFor="let error of fieldErrors['idFiscal']">{{ error }}</div>
       </div>
     </div>
 

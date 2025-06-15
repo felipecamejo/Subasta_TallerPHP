@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
+use App\Models\CasaRemate;
+use App\Models\Admin;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
@@ -15,32 +17,35 @@ use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
-    /**
+/**
  * @OA\Post(
  *     path="/api/login",
- *     summary="Iniciar sesión",
+ *     summary="Iniciar sesión con email y contraseña",
  *     tags={"Autenticación"},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"email","password"},
- *             @OA\Property(property="email", type="string", example="test@example.com"),
- *             @OA\Property(property="password", type="string", example="123456")
+ *             required={"email", "password"},
+ *             @OA\Property(property="email", type="string", example="usuario@correo.com"),
+ *             @OA\Property(property="password", type="string", format="password", example="12345678")
  *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Token generado correctamente",
+ *         description="Inicio de sesión exitoso",
  *         @OA\JsonContent(
- *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOi...")
+ *             @OA\Property(property="token", type="string", example="1|abc123"),
+ *             @OA\Property(property="usuario_id", type="integer", example=5),
+ *             @OA\Property(property="rol", type="string", example="cliente")
  *         )
  *     ),
- *     @OA\Response(response=401, description="Credenciales inválidas")
+ *     @OA\Response(response=401, description="Credenciales inválidas"),
+ *     @OA\Response(response=403, description="Email no verificado")
  * )
  */
 
-    public function login(Request $request)
-    {
+
+   public function login(Request $request){
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
@@ -57,13 +62,26 @@ class AuthController extends Controller
         }
 
         $token = $usuario->createToken('token-personal')->plainTextToken;
-        $rol = $usuario->cliente ? 'cliente' : ($usuario->rematador ? 'rematador' : null);
 
-        return response()->json(['token' => $token,  'usuario_id' => $usuario->id,
-    'rol' => $rol    ], 200);
+        $rol = null;
+        if ($usuario->cliente) {
+            $rol = 'cliente';
+        } elseif ($usuario->rematador) {
+            $rol = 'rematador';
+        } elseif ($usuario->casaRemate) {
+            $rol = 'casa_remate';
+        } elseif (Admin::where('usuario_id', $usuario->id)->exists()) {
+            $rol = 'admin';
+        }
+
+        return response()->json([
+            'token' => $token,
+            'usuario_id' => $usuario->id,
+            'rol' => $rol
+        ], 200);
     }
 
-       /**
+    /**
      * @OA\Post(
      *     path="/api/logout",
      *     tags={"Autenticación"},
@@ -86,146 +104,172 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
-/**
+    /**
  * @OA\Post(
- *     path="/api/register",
- *     summary="Registrar un nuevo usuario",
+ *     path="/api/register-casa-remate",
+ *     summary="Registrar una casa de remate",
  *     tags={"Autenticación"},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"nombre", "cedula", "email", "telefono", "contrasenia", "tipo"},
- *             @OA\Property(property="nombre", type="string", example="Juan Pérez"),
- *             @OA\Property(property="cedula", type="string", example="12345678"),
- *             @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
- *             @OA\Property(property="telefono", type="string", example="098765432"),
- *             @OA\Property(property="imagen", type="string", nullable=true, example="foto.png"),
- *             @OA\Property(property="contrasenia", type="string", format="password", example="secret123"),
- *             @OA\Property(property="latitud", type="number", format="float", nullable=true, example=-34.6037),
- *             @OA\Property(property="longitud", type="number", format="float", nullable=true, example=-58.3816),
- *             @OA\Property(property="tipo", type="string", enum={"cliente", "rematador"}, example="rematador"),
- *             @OA\Property(property="matricula", type="string", nullable=true, example="ABC123")
+ *             required={"nombre", "idFiscal", "email", "telefono", "contrasenia", "latitud", "longitud"},
+ *             @OA\Property(property="nombre", type="string", example="Subastas S.A."),
+ *             @OA\Property(property="idFiscal", type="string", example="RUT-789456123"),
+ *             @OA\Property(property="email", type="string", format="email", example="casa@remate.com"),
+ *             @OA\Property(property="telefono", type="string", example="099123456"),
+ *             @OA\Property(property="contrasenia", type="string", format="password", example="claveSegura123"),
+ *             @OA\Property(property="latitud", type="number", example=-34.9011),
+ *             @OA\Property(property="longitud", type="number", example=-56.1645)
  *         )
  *     ),
  *     @OA\Response(
  *         response=201,
- *         description="Usuario registrado exitosamente",
+ *         description="Casa de remate registrada exitosamente",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Usuario registrado exitosamente"),
- *             @OA\Property(property="token", type="string", example="1|abcDEF123...")
+ *             @OA\Property(property="message", type="string", example="Casa de remate registrada exitosamente. Se envió un correo de verificación. Queda pendiente de aprobación del admin."),
+ *             @OA\Property(property="usuario_id", type="integer", example=7)
  *         )
  *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Datos inválidos",
- *         @OA\JsonContent(
- *             @OA\Property(property="errors", type="object")
- *         )
- *     )
+ *     @OA\Response(response=422, description="Error de validación")
  * )
  */
 
-
-public function register(Request $request)
-{
-    $request->validate([
-        'nombre' => 'required|string',
-        'cedula' => 'required|string|unique:usuarios,cedula',
-        'email' => 'required|email|unique:usuarios,email',
-        'telefono' => 'required|string',
-        'imagen' => 'nullable|string',
-        'contrasenia' => 'required|string|min:6',
-        'latitud' => 'nullable|numeric',
-        'longitud' => 'nullable|numeric',
-        'tipo' => 'required|in:cliente,rematador',
-        'matricula' => 'required_if:tipo,rematador|string|nullable',
-    ]);
-    
-    // Crear el usuario
-    $usuario = Usuario::create([
-        'nombre' => $request->nombre,
-        'cedula' => $request->cedula,
-        'email' => $request->email,
-        'telefono' => $request->telefono,
-        'imagen' => $request->imagen,
-        'contrasenia' => Hash::make($request->contrasenia),
-        'latitud' => $request->latitud,
-        'longitud' => $request->longitud,
-    ]);
-
-    if ($request->tipo === 'cliente') {
-        $usuario->cliente()->create(['calificacion' => 0]);
-    } else {
-        $usuario->rematador()->create([
-            'matricula' => $request->matricula
+    public function registerCasaRemate(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'idFiscal' => 'required|string|max:255|unique:casa_remates,idFiscal',
+            'email' => 'required|email|unique:usuarios,email',
+            'telefono' => 'required|string|max:255',
+            'contrasenia' => 'required|string|min:6',
+            'latitud' => 'required|numeric',
+            'longitud' => 'required|numeric',
         ]);
+
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'cedula' => '',
+            'email' => $request->email,
+            'telefono' => $request->telefono,
+            'contrasenia' => Hash::make($request->contrasenia),
+            'latitud' => $request->latitud,
+            'longitud' => $request->longitud,
+        ]);
+
+        $usuario->casaRemate()->create([
+            'idFiscal' => $request->idFiscal,
+            'activo' => false,
+        ]);
+
+        event(new Registered($usuario));
+
+        return response()->json([
+            'message' => 'Casa de remate registrada exitosamente. Se envió un correo de verificación. Queda pendiente de aprobación del admin.',
+            'usuario_id' => $usuario->id,
+        ], 201);
     }
 
-    $token = $usuario->createToken('token-personal')->plainTextToken;
+    /**
+ * @OA\Post(
+ *     path="/api/login-with-google",
+ *     summary="Iniciar sesión con Google",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"token", "rol"},
+ *             @OA\Property(property="token", type="string", example="ya29.a0AfH6SM..."),
+ *             @OA\Property(property="rol", type="string", enum={"cliente", "rematador", "casa_remate"}, example="cliente"),
+ *             @OA\Property(property="matricula", type="string", nullable=true, example="MAT123"),
+ *             @OA\Property(property="idFiscal", type="string", nullable=true, example="RUT12345678")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Inicio de sesión exitoso",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="access_token", type="string", example="1|token..."),
+ *             @OA\Property(property="token_type", type="string", example="Bearer"),
+ *             @OA\Property(property="usuario_id", type="integer", example=12),
+ *             @OA\Property(property="rol", type="string", example="cliente"),
+ *             @OA\Property(property="usuario", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(response=403, description="El usuario es admin o acceso no permitido"),
+ *     @OA\Response(response=422, description="Error de validación")
+ * )
+ */
 
-    event(new Registered($usuario));
+    public function aprobarCasaRemate(Request $request, $id)
+    {
+        $request->validate([
+            'admin_id' => 'required|exists:admins,usuario_id'
+        ]);
 
-    // auth()->login($usuario);
+        $casa = CasaRemate::findOrFail($id);
+        $casa->activo = true;
+        $casa->aprobado_por = Admin::where('usuario_id', $request->admin_id)->first()?->usuario?->email ?? 'admin';
+        $casa->aprobado_en = now();
+        $casa->save();
 
-    return response()->json([
-    'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
-    'token' => $token,
-    'usuario_id' => $usuario->id,
-    'email_verified' => $usuario->hasVerifiedEmail()
-    ], 201);
-}
+        return response()->json(['message' => 'Casa de remate aprobada exitosamente']);
+    }
 
 public function loginWithGoogle(Request $request)
 {
     $request->validate([
         'token' => 'required|string',
-        'rol' => 'required|in:cliente,rematador',
+        'rol' => 'required|in:cliente,rematador,casa_remate',
         'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+        'idFiscal' => 'required_if:rol,casa_remate|nullable|string|unique:casa_remates,idFiscal',
     ]);
 
-    // Obtener datos del usuario desde Google usando el token
     $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
-
-    // Buscar el usuario por email
     $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
 
     if (!$usuario) {
-        // Si no existe, lo creamos
         $usuario = Usuario::create([
             'nombre' => $googleUser->getName(),
             'email' => $googleUser->getEmail(),
-            'cedula' => '', // Definí según tu lógica
+            'cedula' => '',
             'telefono' => '',
             'imagen' => $googleUser->getAvatar(),
             'contrasenia' => bcrypt(Str::random(16)),
         ]);
 
-        // Asociamos el rol correspondiente
         if ($request->rol === 'rematador') {
             Rematador::create([
                 'usuario_id' => $usuario->id,
                 'matricula' => $request->matricula,
             ]);
-        } else if ($request->rol === 'cliente') {
+        } elseif ($request->rol === 'cliente') {
             Cliente::create([
                 'usuario_id' => $usuario->id,
+            ]);
+        } elseif ($request->rol === 'casa_remate') {
+            CasaRemate::create([
+                'usuario_id' => $usuario->id,
+                'idFiscal' => $request->idFiscal,
+                'activo' => false, // Hasta aprobación del admin
             ]);
         }
     }
 
-    // Aseguramos que el correo se marque como verificado, venga de Google o no
     if (!$usuario->hasVerifiedEmail()) {
         $usuario->markEmailAsVerified();
     }
 
-    // Crear token de acceso
     $token = $usuario->createToken('auth_token')->plainTextToken;
 
-    // Cargar relaciones (cliente o rematador)
-    $usuario->load(['rematador', 'cliente']);
-
-    // Determinar el rol actual
-    $rol = $usuario->rematador ? 'rematador' : 'cliente';
+    // Determinar el rol
+    $rol = null;
+    if ($usuario->rematador) {
+        $rol = 'rematador';
+    } elseif ($usuario->cliente) {
+        $rol = 'cliente';
+    } elseif ($usuario->casaRemate) {
+        $rol = 'casa_remate';
+    }
 
     return response()->json([
         'access_token' => $token,
@@ -235,7 +279,6 @@ public function loginWithGoogle(Request $request)
         'usuario' => $usuario,
     ]);
 }
-
 
 /**
  * @OA\Post(

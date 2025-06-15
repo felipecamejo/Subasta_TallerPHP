@@ -40,6 +40,11 @@ class Usuario extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Rematador::class, 'usuario_id');
     }
 
+    public function casaRemate()
+    {
+        return $this->hasOne(CasaRemate::class, 'usuario_id');
+    }
+
     public function getAuthPassword()
     {
         return $this->contrasenia;

@@ -51,18 +51,28 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       confirmarContrasenia: ['', Validators.required],
       tipo: ['cliente', Validators.required],
       matricula: [''],
+      idFiscal: [''],
       latitud: [null, Validators.required],
       longitud: [null, Validators.required],
     }, { validator: passwordsMatchValidator() });
 
     this.form.get('tipo')?.valueChanges.subscribe(tipo => {
       const matriculaControl = this.form.get('matricula');
+      const idFiscalControl = this.form.get('idFiscal');
+
       if (tipo === 'rematador') {
         matriculaControl?.setValidators(Validators.required);
+        idFiscalControl?.clearValidators();
+      } else if (tipo === 'casa_remate') {
+        idFiscalControl?.setValidators(Validators.required);
+        matriculaControl?.clearValidators();
       } else {
         matriculaControl?.clearValidators();
+        idFiscalControl?.clearValidators();
       }
+
       matriculaControl?.updateValueAndValidity();
+      idFiscalControl?.updateValueAndValidity();
       this.form.updateValueAndValidity();
     });
   }
@@ -115,7 +125,11 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       const formData = { ...this.form.value };
       delete formData.confirmarContrasenia;
 
-      this.http.post('http://localhost:8000/api/register', formData).subscribe({
+      const url = formData.tipo === 'casa_remate'
+        ? 'http://localhost:8000/api/register-casa-remate'
+        : 'http://localhost:8000/api/register';
+
+      this.http.post(url, formData).subscribe({
         next: () => {
           alert('Registro exitoso. Verificá tu correo.');
           this.router.navigate(['/verificar-email']);
@@ -154,6 +168,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   get confirmarContrasenia() { return this.form.get('confirmarContrasenia'); }
   get tipo() { return this.form.get('tipo'); }
   get matricula() { return this.form.get('matricula'); }
+  get idFiscal() { return this.form.get('idFiscal'); }
   get latitud() { return this.form.get('latitud'); }
   get longitud() { return this.form.get('longitud'); }
 }

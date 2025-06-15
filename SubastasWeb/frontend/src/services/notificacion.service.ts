@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of, map } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { UrlService } from './url.service';
@@ -13,7 +13,6 @@ export class NotificacionService {
   private notificacionesSubject = new BehaviorSubject<notificacionUsuarioDto[]>([]);
   private contadorSubject = new BehaviorSubject<number>(0);
   private actualizacionAutomaticaInterval: any;
-  private headers: HttpHeaders;
 
   public notificaciones$ = this.notificacionesSubject.asObservable();
   public contador$ = this.contadorSubject.asObservable();
@@ -23,13 +22,6 @@ export class NotificacionService {
     private urlService: UrlService
   ) {
     this.baseUrl = this.urlService.baseUrl;
-    // Add Authorization header if token exists
-    const token = localStorage.getItem('token');
-    let headers = new HttpHeaders().set('Content-Type', 'application/json');
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    this.headers = headers;
     this.iniciarActualizacionAutomatica();
   }
 
@@ -39,9 +31,6 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Inicializa el servicio cargando las notificaciones
-   */
   inicializar(): void {
     this.actualizarNotificaciones();
   }
@@ -59,15 +48,8 @@ export class NotificacionService {
   }
 
   private enviarNotificacion(payload: any): Observable<notificacionDto> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-
-    return this.http.post<notificacionDto>(`${this.baseUrl}/notificaciones`, payload, {
-      headers: headers
-    }).pipe(
-      tap(response => {
-        this.actualizarNotificaciones();
-        return response;
-      }),
+    return this.http.post<notificacionDto>(`${this.baseUrl}/notificaciones`, payload).pipe(
+      tap(() => this.actualizarNotificaciones()),
       catchError(error => {
         console.error('Error al crear notificación:', error);
         throw error;
@@ -77,31 +59,22 @@ export class NotificacionService {
 
   crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: Number): Observable<notificacionDto> {
     const notificacion = {
-      titulo: titulo,
-      mensaje: mensaje,
+      titulo,
+      mensaje,
       usuarioIds: [idUsuarioDestino],
       esMensajeChat: chat,
-      chatId: chatId
+      chatId
     };
-
     return this.enviarNotificacion(notificacion);
   }
 
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) {
-      return of([]); // Si no hay usuario, devolvemos un array vacío
+      return of([]); // Usuario no logueado
     }
 
-    const token = localStorage.getItem('token');
-    let currentHeaders = this.headers;
-    if (token) {
-      currentHeaders = currentHeaders.set('Authorization', `Bearer ${token}`);
-    }
-
-    return this.http.get<any>(`${this.baseUrl}/notificaciones`, {
-      headers: currentHeaders
-    }).pipe(
+    return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
         if (Array.isArray(notificaciones)) {
           return notificaciones.map((notif: any) => ({
@@ -125,18 +98,12 @@ export class NotificacionService {
     );
   }
 
-  /**
-   * Marca una notificación como leída y actualiza el estado
-   */  
   marcarLeidaYActualizar(id: number): void {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) return;
 
-    this.http.put(`${this.baseUrl}/notificaciones/${id}/leer`, {}, {
-      headers: this.headers
-    }).subscribe({
+    this.http.put(`${this.baseUrl}/notificaciones/${id}/leer`, {}).subscribe({
       next: () => {
-        // Actualizar localmente
         const notificaciones = this.notificacionesSubject.value;
         const notificacion = notificaciones.find(n => n.id === id);
         if (notificacion) {
@@ -151,18 +118,12 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Marca todas como leídas y actualiza el estado
-   */  
   marcarTodasLeidasYActualizar(): void {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) return;
 
-    this.http.put(`${this.baseUrl}/notificaciones/leer-todas`, {}, {
-      headers: this.headers
-    }).subscribe({
+    this.http.put(`${this.baseUrl}/notificaciones/leer-todas`, {}).subscribe({
       next: () => {
-        // Actualizar localmente
         const notificaciones = this.notificacionesSubject.value;
         notificaciones.forEach(n => n.leido = true);
         this.notificacionesSubject.next(notificaciones);

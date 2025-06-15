@@ -34,4 +34,10 @@
                 ->withPivot('leido')
                 ->withTimestamps();
         }
+        public function casasDeRemate(){
+            return $this->belongsToMany(CasaRemate::class, 'casa_remate_rematador', 'rematador_id', 'casa_remate_id')
+                ->withPivot('estado')
+                ->withTimestamps();
+        }
+
 }
