@@ -9,7 +9,7 @@
       <button (click)="toggleMinimize()" class="control-btn">
         <i class="fas" [class.fa-window-minimize]="!minimized" [class.fa-window-maximize]="minimized"></i>
       </button>
-      <button (click)="closeChat()" class="control-btn">
+      <button (click)="closeChat($event)" class="control-btn">
         <i class="fas fa-times"></i>
       </button>
     </div>

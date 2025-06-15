@@ -4,6 +4,7 @@
 
     use Illuminate\Database\Eloquent\Model;
     use App\Models\Cliente;
+    use App\Models\Rematador;
 
     class Notificacion extends Model{
 
@@ -24,9 +25,16 @@
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
         public function clientes() {
-            return $this->belongsToMany(Cliente::class, 'notificacion_clientes', 'notificacion_id', 'cliente_id');
+            return $this->belongsToMany(Cliente::class, 'notificacion_clientes', 'notificacion_id', 'cliente_id')
+                ->withPivot('leido')
+                ->withTimestamps();
         }
 
+        public function rematadores() {
+            return $this->belongsToMany(Rematador::class, 'notificacion_rematadores', 'notificacion_id', 'rematador_id')
+                ->withPivot('leido')
+                ->withTimestamps();
+        }
     }
 
 ?>

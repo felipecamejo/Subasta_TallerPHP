@@ -26,29 +26,35 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
   mostrarDialog: boolean = false;
   notificacionSeleccionada: notificacionUsuarioDto | null = null;
   private subscriptions: Subscription = new Subscription();
+
   constructor(
     private notificacionService: NotificacionService
   ) {}
+
   ngOnInit(): void {
-    this.subscriptions.add(
-      this.notificacionService.notificaciones$.subscribe((notificaciones: notificacionUsuarioDto[]) => {
-        this.notificaciones = notificaciones;
-      })
-    );
+    if (this.estaAutenticado) {
+      this.subscriptions.add(
+        this.notificacionService.notificaciones$.subscribe((notificaciones: notificacionUsuarioDto[]) => {
+          this.notificaciones = notificaciones;
+        })
+      );
 
-    this.subscriptions.add(
-      this.notificacionService.contador$.subscribe((contador: number) => {
-        this.contadorNoLeidas = contador;
-      })
-    );
+      this.subscriptions.add(
+        this.notificacionService.contador$.subscribe((contador: number) => {
+          this.contadorNoLeidas = contador;
+        })
+      );
 
-    this.notificacionService.inicializar();
+      this.notificacionService.inicializar();
+    }
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-  }  get estaAutenticado(): boolean {
-    return true; // Siempre mostramos las notificaciones mientras no haya autenticación
+  }
+
+  get estaAutenticado(): boolean {
+    return !!localStorage.getItem('usuario_id');
   }
 
   toggleDropdown(): void {
