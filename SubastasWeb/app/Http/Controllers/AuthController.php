@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
+use App\Models\CasaRemate;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
@@ -131,8 +132,9 @@ public function register(Request $request)
         'contrasenia' => 'required|string|min:6',
         'latitud' => 'nullable|numeric',
         'longitud' => 'nullable|numeric',
-        'tipo' => 'required|in:cliente,rematador',
+        'tipo' => 'required|in:cliente,rematador,casa_remate',
         'matricula' => 'required_if:tipo,rematador|string|nullable',
+        'idFiscal' => 'required_if:tipo,casa_remate|string|nullable',
     ]);
     
     // Crear el usuario
@@ -149,9 +151,14 @@ public function register(Request $request)
 
     if ($request->tipo === 'cliente') {
         $usuario->cliente()->create(['calificacion' => 0]);
-    } else {
+    } else if ($request->tipo === 'rematador') {
         $usuario->rematador()->create([
             'matricula' => $request->matricula
+        ]);
+    } else if ($request->tipo === 'casa_remate') {
+        $usuario->casaRemate()->create([
+            'idFiscal' => $request->idFiscal,
+            'calificacion' => json_encode([])
         ]);
     }
 
@@ -173,8 +180,9 @@ public function loginWithGoogle(Request $request)
 {
     $request->validate([
         'token' => 'required|string',
-        'rol' => 'required|in:cliente,rematador',
+        'rol' => 'required|in:cliente,rematador,casa_remate',
         'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+        'idFiscal' => 'required_if:rol,casa_remate|nullable|string|unique:casa_remates,idFiscal',
     ]);
 
     $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
@@ -206,10 +214,15 @@ public function loginWithGoogle(Request $request)
 
     $token = $usuario->createToken('auth_token')->plainTextToken;
 
-    $usuario->load(['rematador', 'cliente']);
+    $usuario->load(['rematador', 'cliente', 'casaRemate']);
 
     // Determinar el rol actual
-    $rol = $usuario->rematador ? 'rematador' : 'cliente';
+    $rol = 'cliente'; // valor por defecto
+    if ($usuario->rematador) {
+        $rol = 'rematador';
+    } else if ($usuario->casaRemate) {
+        $rol = 'casa_remate';
+    }
 
     return response()->json([
         'access_token' => $token,
