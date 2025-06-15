@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('casa_remate_rematador', function (Blueprint $table) {
             $table->unsignedBigInteger('rematador_id');
-            
-            $table->foreignId('casa_remate_id')->references('id')->on('casa_remates')->onDelete('cascade');
+
+            $table->foreignId('casa_remate_id')->references('usuario_id')->on('casa_remates')->onDelete('cascade');
             $table->foreign('rematador_id')->references('usuario_id')->on('rematadores')->onDelete('cascade');
 
             $table->timestamps();
