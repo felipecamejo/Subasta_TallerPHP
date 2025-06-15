@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+
 import { StreamComponent } from './stream/stream.component';
 import { LoginComponent } from './login/login.component';
 import { EstadisticasComponent } from './estadisticas/estadisticas.component';
@@ -7,7 +8,7 @@ import { BuscadorRematesComponent } from './buscador-remates/buscador-remates.co
 import { PerfilComponent } from './perfil/perfil.component';
 import { RegisterComponent } from './register/register.component';
 import { GoogleLoginComponent } from './google-login/google-login.component';
-import { LoginGoogleComponent } from './login-google.component/login-google.component'; 
+import { LoginGoogleComponent } from './login-google.component/login-google.component';
 import { RegistroGoogleComponent } from './registro-google/registro-google.component';
 import { VerificarEmailComponent } from './verificar-email/verificar-email.component';
 import { EmailVerificadoComponent } from './email-verificado/email-verificado.component';
@@ -20,31 +21,29 @@ import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashbo
 import { DashboardRematadorComponent } from './dashboards/dashboard-rematador/dashboard-rematador.component';
 
 export const routes: Routes = [
-    { path: 'stream/:id', loadComponent: () => StreamComponent },
-    { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
-    { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
-    { path: 'buscadorRemates', component: BuscadorRematesComponent},
-    { path: 'perfil/:id', loadComponent: () => PerfilComponent },
-    { path: 'stream/:id', loadComponent: () => StreamComponent },
-    { path: 'stream/:id', component: StreamComponent },
-    { path: 'buscadorRemates', component: BuscadorRematesComponent },
-    { path: 'perfil/:id', component: PerfilComponent },
-    { path: 'estadisticas', component: EstadisticasComponent },
-    { path: 'casa-remates', component: CasaRemateComponent },
-    { path: 'registro', component: RegisterComponent },
-    { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: 'login', component: LoginComponent },
-    { path: 'google-login', component: GoogleLoginComponent },
-    { path: 'login-google', component: LoginGoogleComponent },
-    { path: 'registro-google', component: RegistroGoogleComponent },
-    { path: 'dashboard-cliente', component: DashboardClienteComponent },
-    { path: 'dashboard-rematador', component: DashboardRematadorComponent },
-    { path: 'verificar-email', component: VerificarEmailComponent },
-    { path: 'email-verificado', component: EmailVerificadoComponent },
-    { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
-    { path: 'forgot-password', component: ForgotPasswordComponent },
-    { path: 'restablecer-contrasena', component: ResetPasswordComponent },
-    
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'registro', component: RegisterComponent },
+  { path: 'google-login', component: GoogleLoginComponent },
+  { path: 'login-google', component: LoginGoogleComponent },
+  { path: 'registro-google', component: RegistroGoogleComponent },
+  { path: 'verificar-email', component: VerificarEmailComponent },
+  { path: 'email-verificado', component: EmailVerificadoComponent },
+  { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'restablecer-contrasena', component: ResetPasswordComponent },
 
-    { path: '**', redirectTo: 'login' }
+  // Componentes funcionales
+  { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
+  { path: 'stream/:id', loadComponent: () => StreamComponent },
+  { path: 'perfil/:id', loadComponent: () => PerfilComponent },
+  { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
+  { path: 'buscadorRemates', loadComponent: () => BuscadorRematesComponent },
+
+  // Dashboards
+  { path: 'dashboard-cliente', component: DashboardClienteComponent },
+  { path: 'dashboard-rematador', component: DashboardRematadorComponent },
+
+  // Ruta por defecto en caso de error
+  { path: '**', redirectTo: 'login' },
 ];
