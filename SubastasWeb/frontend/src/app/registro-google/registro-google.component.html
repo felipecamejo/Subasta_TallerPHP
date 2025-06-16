@@ -5,6 +5,20 @@
 
   <form [formGroup]="form" (ngSubmit)="enviar()">
 
+    <!-- Rol -->
+    <div class="mb-3">
+      <label for="rol">Rol:</label>
+      <select id="rol" formControlName="rol" class="form-control p-2 border rounded w-full" (change)="onRolChange()">
+        <option value="cliente">Cliente</option>
+        <option value="rematador">Rematador</option>
+        <option value="casa_remate">Casa de Remate</option>
+      </select>
+      <div *ngIf="form.get('rol')?.invalid && form.get('rol')?.touched" class="text-red-500 text-sm">
+        Selecciona un rol válido.
+      </div>
+    </div>
+
+    <!-- Nombre -->
     <div class="mb-3">
       <label for="nombre">Nombre:</label>
       <input type="text" id="nombre" formControlName="nombre" class="form-control p-2 border rounded w-full" />
@@ -13,14 +27,13 @@
       </div>
     </div>
 
+    <!-- Email (solo lectura) -->
     <div class="mb-3">
       <label for="email">Email:</label>
-      <input type="email" id="email" formControlName="email" class="form-control p-2 border rounded w-full"  />
-      <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-red-500 text-sm">
-        Ingrese un email válido.
-      </div>
+      <input type="email" id="email" [value]="form.get('email')?.value" readonly class="form-control p-2 border rounded w-full bg-gray-100" />
     </div>
 
+    <!-- Cédula -->
     <div class="mb-3">
       <label for="cedula">Cédula:</label>
       <input type="text" id="cedula" formControlName="cedula" class="form-control p-2 border rounded w-full" />
@@ -29,6 +42,7 @@
       </div>
     </div>
 
+    <!-- Teléfono -->
     <div class="mb-3">
       <label for="telefono">Teléfono:</label>
       <input type="text" id="telefono" formControlName="telefono" class="form-control p-2 border rounded w-full" />
@@ -37,14 +51,16 @@
       </div>
     </div>
 
+    <!-- Contraseña -->
     <div class="mb-3">
       <label for="contrasenia">Contraseña:</label>
       <input type="password" id="contrasenia" formControlName="contrasenia" class="form-control p-2 border rounded w-full" />
       <div *ngIf="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched" class="text-red-500 text-sm">
-        La contraseña es requerida y debe tener al menos 6 caracteres.
+        La contraseña es requerida y debe tener al menos 8 caracteres.
       </div>
     </div>
 
+    <!-- Confirmar contraseña -->
     <div class="mb-3">
       <label for="contrasenia_confirmation">Confirmar Contraseña:</label>
       <input type="password" id="contrasenia_confirmation" formControlName="contrasenia_confirmation" class="form-control p-2 border rounded w-full" />
@@ -56,7 +72,8 @@
       </div>
     </div>
 
-    <div *ngIf="rol === 'rematador'" class="mb-3">
+    <!-- Matrícula (solo rematador) -->
+    <div *ngIf="form.get('rol')?.value === 'rematador'" class="mb-3">
       <label for="matricula">Matrícula:</label>
       <input type="text" id="matricula" formControlName="matricula" class="form-control p-2 border rounded w-full" />
       <div *ngIf="form.get('matricula')?.invalid && form.get('matricula')?.touched" class="text-red-500 text-sm">
@@ -64,6 +81,16 @@
       </div>
     </div>
 
+    <!-- ID Fiscal (solo casa_remate) -->
+    <div *ngIf="form.get('rol')?.value === 'casa_remate'" class="mb-3">
+      <label for="idFiscal">ID Fiscal:</label>
+      <input type="text" id="idFiscal" formControlName="idFiscal" class="form-control p-2 border rounded w-full" />
+      <div *ngIf="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched" class="text-red-500 text-sm">
+        El ID Fiscal es requerido para casas de remate.
+      </div>
+    </div>
+
+    <!-- Mapa -->
     <div class="mb-4">
       <label>Ubicación:</label>
       <div id="map-registro-google" style="height: 300px;" class="rounded border mb-2"></div>
@@ -77,6 +104,7 @@
       </div>
     </div>
 
+    <!-- Botón -->
     <button
       type="submit"
       [disabled]="form.invalid"

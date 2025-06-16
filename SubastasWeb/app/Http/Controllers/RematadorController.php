@@ -17,7 +17,6 @@ use OpenApi\Annotations as OA;
 */
 class RematadorController extends Controller
 {
-
     public $maxDepth = 1;
     public $visited = [];
 
@@ -32,31 +31,20 @@ class RematadorController extends Controller
     public function index()
     {
         try {
-
             $rematadores = Rematador::with('usuario')->get() ?? collect();
             $dtos = $rematadores->map(function ($rematador) {
                 return Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth);
             });
-
             return response()->json($dtos, 200);
-
         } catch (\Throwable $e) {
-
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ], 500);
-
         }
     }
 
-    /**
-     * Mostrar formulario para crear (sin implementación).
-     */
-    public function create()
-    {
-        //
-    }
+    public function create() {}
 
     /**
      * @OA\Post(
@@ -78,33 +66,7 @@ class RematadorController extends Controller
      *             @OA\Property(property="longitud", type="number"),
      *         )
      *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Rematador creado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="usuario_id", type="integer"),
-     *             @OA\Property(property="matricula", type="string"),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time"),
-     *             @OA\Property(
-     *                 property="usuario",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="nombre", type="string"),
-     *                 @OA\Property(property="cedula", type="string"),
-     *                 @OA\Property(property="email", type="string"),
-     *                 @OA\Property(property="telefono", type="string"),
-     *                 @OA\Property(property="imagen", type="string"),
-     *                 @OA\Property(property="latitud", type="number"),
-     *                 @OA\Property(property="longitud", type="number"),
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación"
-     *     )
+     *     @OA\Response(response=201, description="Rematador creado exitosamente")
      * )
     */
     public function store(Request $request)
@@ -121,7 +83,6 @@ class RematadorController extends Controller
             'longitud' => 'nullable|numeric',
         ]);
 
-        // 1. Crear el usuario
         $usuario = Usuario::create([
             'nombre' => $validated['nombre'],
             'cedula' => $validated['cedula'],
@@ -133,7 +94,6 @@ class RematadorController extends Controller
             'longitud' => $validated['longitud'] ?? null,
         ]);
 
-        // 2. Crear el rematador asociado
         $rematador = Rematador::create([
             'usuario_id' => $usuario->id,
             'matricula' => $validated['matricula'],
@@ -143,78 +103,24 @@ class RematadorController extends Controller
         return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth), 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/rematadores/{id}",
-     *     summary="Obtener un rematador por ID",
-     *     tags={"Rematador"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del rematador",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Rematador encontrado"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Rematador no encontrado"
-     *     )
-     * )
-    */
     public function show($usuario_id)
     {
-        $rematador = Rematador::with(['usuario', 'subastas', 'casasRemate'])->find($usuario_id);
+        $rematador = Rematador::with(['usuario', 'subastas', 'casasRemate'])
+            ->where('usuario_id', $usuario_id)
+            ->first();
+
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
+
         return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
     }
 
-    /**
-     * Mostrar formulario para editar (sin implementación).
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+    public function edit(string $id) {}
 
-    /**
-     * @OA\Put(
-     *     path="/api/rematadores/{rematador}",
-     *     summary="Actualizar un rematador",
-     *     tags={"Rematador"},
-     *     @OA\Parameter(
-     *         name="rematador",
-     *         in="path",
-     *         description="ID del rematador a actualizar",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *              required={"nombre", "cedula", "email", "matricula"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="cedula", type="string"),
-     *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="imagen", type="string"),
-     *             @OA\Property(property="matricula", type="string"),
-     *             @OA\Property(property="latitud", type="number"),
-     *             @OA\Property(property="longitud", type="number"),
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Rematador actualizado correctamente"),
-     *     @OA\Response(response=404, description="Rematador no encontrado")
-     * )
-    */
     public function update(Request $request, string $usuario_id)
     {
-        $rematador = Rematador::find($usuario_id);
+        $rematador = Rematador::where('usuario_id', $usuario_id)->first();
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
@@ -228,12 +134,11 @@ class RematadorController extends Controller
             'email' => 'sometimes|email|unique:usuarios,email,' . $usuario->id,
             'telefono' => 'nullable|string',
             'imagen' => 'nullable|string',
-            'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $usuario_id,
+            'matricula' => 'sometimes|string|unique:rematadores,matricula,' . $rematador->id,
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
         ]);
 
-        // Actualizar usuario
         $usuario->update([
             'nombre' => $validated['nombre'] ?? $usuario->nombre,
             'cedula' => $validated['cedula'] ?? $usuario->cedula,
@@ -244,44 +149,22 @@ class RematadorController extends Controller
             'longitud' => $validated['longitud'] ?? $usuario->longitud,
         ]);
 
-        // Actualizar rematador
         $rematador->update([
             'matricula' => $validated['matricula'] ?? $rematador->matricula,
         ]);
 
         $rematador->load('usuario');
-         return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
+        return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/api/rematadores/{id}",
-     *     summary="Eliminar un rematador por ID",
-     *     tags={"Rematador"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del rematador a eliminar",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Rematador eliminado correctamente"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Rematador no encontrado"
-     *     )
-     * )
-     */
     public function destroy(string $usuario_id)
     {
-          $rematador = Rematador::find($usuario_id);
+        $rematador = Rematador::where('usuario_id', $usuario_id)->first();
 
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
+
         $usuario = $rematador->usuario;
 
         $rematador->delete();

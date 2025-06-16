@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('casa_remates', function (Blueprint $table) {
-            $table->unsignedBigInteger('usuario_id')->primary(); // ← clave primaria
+            $table->id(); // Clave primaria estándar (id)
+            $table->unsignedBigInteger('usuario_id')->unique(); // 👈 Relación única con usuarios
+
             $table->string('idFiscal');
             $table->json('calificacion')->default(json_encode([]))->nullable();
             $table->boolean('activo')->default(false);

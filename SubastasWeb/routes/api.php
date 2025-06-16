@@ -41,6 +41,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::get('/check-auth', function () {
+        return response()->json(['authenticated' => true]);
+    });
+
     Route::post('/email/resend', function (Request $request) {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json(['message' => 'El correo ya está verificado.'], 400);

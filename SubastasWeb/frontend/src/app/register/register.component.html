@@ -66,7 +66,7 @@
         La contraseña es requerida.
       </div>
       <div *ngIf="contrasenia?.errors?.['minlength'] && contrasenia?.touched" class="text-danger">
-        Mínimo 6 caracteres.
+        Mínimo 8 caracteres.
       </div>
     </div>
 
@@ -101,7 +101,7 @@
     </div>
 
     <!-- Matrícula -->
-    <div class="form-group" *ngIf="tipo?.value === 'rematador'">
+    <div class="form-group" *ngIf="esRematador">
       <label for="matricula">Matrícula (solo rematadores):</label>
       <input type="text" id="matricula" formControlName="matricula" class="form-control"
              [class.is-invalid]="matricula?.invalid && (matricula?.touched || fieldErrors['matricula'])">
@@ -114,7 +114,7 @@
     </div>
 
     <!-- ID Fiscal -->
-    <div class="form-group" *ngIf="tipo?.value === 'casa_remate'">
+    <div class="form-group" *ngIf="esCasaRemate">
       <label for="idFiscal">ID Fiscal (solo casas de remate):</label>
       <input type="text" id="idFiscal" formControlName="idFiscal" class="form-control"
              [class.is-invalid]="idFiscal?.invalid && (idFiscal?.touched || fieldErrors['idFiscal'])">

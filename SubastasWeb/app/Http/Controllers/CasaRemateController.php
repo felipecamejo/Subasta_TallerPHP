@@ -15,9 +15,9 @@ use App\Mappers\Mapper;
  */
 class CasaRemateController extends Controller
 {
-
     public $maxDepth = 2;
     public $visited = [];
+
     /**
      * @OA\Get(
      *     path="/api/casa-remates",
@@ -59,12 +59,12 @@ class CasaRemateController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nombre'        => 'required|string|max:255',
-            'idFiscal'      => 'required|string|max:20',
-            'email'         => 'required|email|max:255',
-            'telefono'      => 'nullable|string|max:20',
-            'latitud'       => 'nullable|numeric',
-            'longitud'      => 'nullable|numeric',
+            'nombre'   => 'required|string|max:255',
+            'idFiscal' => 'required|string|max:20',
+            'email'    => 'required|email|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'latitud'  => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -144,12 +144,12 @@ class CasaRemateController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre'        => 'sometimes|string|max:255',
-            'idFiscal'      => 'sometimes|string|max:20',
-            'email'         => 'sometimes|email|max:255',
-            'telefono'      => 'nullable|string|max:20',
-            'latitud'       => 'nullable|numeric',
-            'longitud'      => 'nullable|numeric',
+            'nombre'   => 'sometimes|string|max:255',
+            'idFiscal' => 'sometimes|string|max:20',
+            'email'    => 'sometimes|email|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'latitud'  => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -170,7 +170,6 @@ class CasaRemateController extends Controller
             'casaRemate' => $casaRemate
         ]);
     }
-
 
     /**
      * @OA\Delete(
@@ -199,6 +198,7 @@ class CasaRemateController extends Controller
 
         return response()->json(['message' => 'Casa de remate eliminada']);
     }
+
     /**
      * @OA\Post(
      *     path="/api/casa-remates/{id}/asociar-rematadores",
@@ -247,7 +247,6 @@ class CasaRemateController extends Controller
         ]);
     }
 
-
     /**
      * @OA\Post(
      *     path="/api/casa-remates/{id}/calificar",
@@ -287,18 +286,12 @@ class CasaRemateController extends Controller
         ]);
 
         $casa = CasaRemate::findOrFail($id);
-
-        // Asegura que calificacion es un array
         $calificaciones = $casa->calificacion ?? [];
-        
-        // Agrega el nuevo valor
         $calificaciones[] = $request->valor;
 
-        // Guarda nuevamente
         $casa->calificacion = $calificaciones;
         $casa->save();
 
-        // Calcula el nuevo promedio
         $promedio = round(array_sum($calificaciones) / count($calificaciones), 2);
 
         return response()->json([
@@ -307,6 +300,4 @@ class CasaRemateController extends Controller
             'total' => count($calificaciones),
         ]);
     }
-
-
 }

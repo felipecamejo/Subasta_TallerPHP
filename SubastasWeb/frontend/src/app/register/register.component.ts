@@ -1,3 +1,4 @@
+// register.component.ts
 import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit } from '@angular/core';
 import {
   ReactiveFormsModule,
@@ -47,7 +48,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       cedula: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       telefono: ['', Validators.required],
-      contrasenia: ['', [Validators.required, Validators.minLength(6)]],
+      contrasenia: ['', [Validators.required, Validators.minLength(8)]],
       confirmarContrasenia: ['', Validators.required],
       tipo: ['cliente', Validators.required],
       matricula: [''],
@@ -56,25 +57,31 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       longitud: [null, Validators.required],
     }, { validator: passwordsMatchValidator() });
 
-    this.form.get('tipo')?.valueChanges.subscribe(tipo => {
-      const matriculaControl = this.form.get('matricula');
-      const idFiscalControl = this.form.get('idFiscal');
+    this.form.get('tipo')?.valueChanges.subscribe(() => this.onRolChange());
+  }
 
-      if (tipo === 'rematador') {
-        matriculaControl?.setValidators(Validators.required);
-        idFiscalControl?.clearValidators();
-      } else if (tipo === 'casa_remate') {
-        idFiscalControl?.setValidators(Validators.required);
-        matriculaControl?.clearValidators();
-      } else {
-        matriculaControl?.clearValidators();
-        idFiscalControl?.clearValidators();
-      }
+  onRolChange() {
+    const tipo = this.form.get('tipo')?.value;
+    const matriculaControl = this.form.get('matricula');
+    const idFiscalControl = this.form.get('idFiscal');
 
-      matriculaControl?.updateValueAndValidity();
-      idFiscalControl?.updateValueAndValidity();
-      this.form.updateValueAndValidity();
-    });
+    if (tipo === 'rematador') {
+      matriculaControl?.setValidators(Validators.required);
+      idFiscalControl?.clearValidators();
+      idFiscalControl?.setValue('');
+    } else if (tipo === 'casa_remate') {
+      idFiscalControl?.setValidators(Validators.required);
+      matriculaControl?.clearValidators();
+      matriculaControl?.setValue('');
+    } else {
+      matriculaControl?.clearValidators();
+      idFiscalControl?.clearValidators();
+      matriculaControl?.setValue('');
+      idFiscalControl?.setValue('');
+    }
+
+    matriculaControl?.updateValueAndValidity();
+    idFiscalControl?.updateValueAndValidity();
   }
 
   async ngAfterViewInit() {
@@ -171,4 +178,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   get idFiscal() { return this.form.get('idFiscal'); }
   get latitud() { return this.form.get('latitud'); }
   get longitud() { return this.form.get('longitud'); }
+  get esRematador() { return this.tipo?.value === 'rematador'; }
+  get esCasaRemate() { return this.tipo?.value === 'casa_remate'; }
 }
+

@@ -3,9 +3,10 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app/app.routes';
-import { AppComponent } from './app/app.component';
-import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
+import { authInterceptor } from './app/interceptors/auth.interceptor';
+import { AppComponent } from './app/app.component'; 
 import {
   SocialAuthServiceConfig,
   GoogleLoginProvider,
@@ -17,7 +18,7 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptorsFromDi() // 👉 para usar interceptores registrados con `@Injectable`
+      withInterceptors([authInterceptor])
     ),
     provideAnimationsAsync(),
     {

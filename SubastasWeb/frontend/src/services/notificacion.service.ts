@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, of, map } from 'rxjs';
+import { Observable, BehaviorSubject, interval, of, map, Subscription } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { UrlService } from './url.service';
 import { notificacionDto, notificacionUsuarioDto } from '../models/notificacionDto';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,30 +13,42 @@ export class NotificacionService {
   private baseUrl: string;
   private notificacionesSubject = new BehaviorSubject<notificacionUsuarioDto[]>([]);
   private contadorSubject = new BehaviorSubject<number>(0);
-  private actualizacionAutomaticaInterval: any;
+  private actualizacionAutomaticaInterval?: Subscription;
 
   public notificaciones$ = this.notificacionesSubject.asObservable();
   public contador$ = this.contadorSubject.asObservable();
 
   constructor(
     private http: HttpClient,
-    private urlService: UrlService
+    private urlService: UrlService,
+    private authService: AuthService
   ) {
     this.baseUrl = this.urlService.baseUrl;
-    this.iniciarActualizacionAutomatica();
+
+    this.authService.isAuthenticated$.subscribe((isAuth) => {
+      if (isAuth) {
+        this.iniciarActualizacionAutomatica();
+        this.actualizarNotificaciones();
+      } else {
+        this.destruir();
+      }
+    });
   }
 
   private iniciarActualizacionAutomatica(): void {
+    if (this.actualizacionAutomaticaInterval) {
+      this.actualizacionAutomaticaInterval.unsubscribe();
+    }
+
     this.actualizacionAutomaticaInterval = interval(30000).subscribe(() => {
       this.actualizarNotificaciones();
     });
   }
 
-  inicializar(): void {
-    this.actualizarNotificaciones();
-  }
+  actualizarNotificaciones(): void {
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!usuarioId) return;
 
-  private actualizarNotificaciones(): void {
     this.obtenerNotificaciones().subscribe({
       next: (notificaciones) => {
         this.notificacionesSubject.next(notificaciones);
@@ -47,32 +60,9 @@ export class NotificacionService {
     });
   }
 
-  private enviarNotificacion(payload: any): Observable<notificacionDto> {
-    return this.http.post<notificacionDto>(`${this.baseUrl}/notificaciones`, payload).pipe(
-      tap(() => this.actualizarNotificaciones()),
-      catchError(error => {
-        console.error('Error al crear notificación:', error);
-        throw error;
-      })
-    );
-  }
-
-  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: Number): Observable<notificacionDto> {
-    const notificacion = {
-      titulo,
-      mensaje,
-      usuarioIds: [idUsuarioDestino],
-      esMensajeChat: chat,
-      chatId
-    };
-    return this.enviarNotificacion(notificacion);
-  }
-
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) {
-      return of([]); // Usuario no logueado
-    }
+    if (!usuarioId) return of([]);
 
     return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
@@ -99,9 +89,6 @@ export class NotificacionService {
   }
 
   marcarLeidaYActualizar(id: number): void {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) return;
-
     this.http.put(`${this.baseUrl}/notificaciones/${id}/leer`, {}).subscribe({
       next: () => {
         const notificaciones = this.notificacionesSubject.value;
@@ -119,9 +106,6 @@ export class NotificacionService {
   }
 
   marcarTodasLeidasYActualizar(): void {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) return;
-
     this.http.put(`${this.baseUrl}/notificaciones/leer-todas`, {}).subscribe({
       next: () => {
         const notificaciones = this.notificacionesSubject.value;
@@ -142,6 +126,33 @@ export class NotificacionService {
   destruir(): void {
     if (this.actualizacionAutomaticaInterval) {
       this.actualizacionAutomaticaInterval.unsubscribe();
+      this.actualizacionAutomaticaInterval = undefined;
     }
+    this.notificacionesSubject.next([]);
+    this.contadorSubject.next(0);
+  }
+
+  crearNotificacion(
+    titulo: string,
+    mensaje: string,
+    idUsuarioDestino: number,
+    chat: boolean,
+    chatId: number | null
+  ): Observable<notificacionDto> {
+    const notificacion = {
+      titulo,
+      mensaje,
+      usuarioIds: [idUsuarioDestino],
+      esMensajeChat: chat,
+      chatId
+    };
+
+    return this.http.post<notificacionDto>(`${this.baseUrl}/notificaciones`, notificacion).pipe(
+      tap(() => this.actualizarNotificaciones()),
+      catchError(error => {
+        console.error('Error al crear notificación:', error);
+        throw error;
+      })
+    );
   }
 }

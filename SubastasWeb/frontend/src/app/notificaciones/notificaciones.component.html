@@ -1,4 +1,4 @@
-<div class="notificaciones-container" *ngIf="estaAutenticado">
+<div class="notificaciones-container" *ngIf="authService.isAuthenticated$ | async">
   <!-- Botón de notificaciones -->
   <div class="notification-bell" (click)="toggleDropdown()">
     <i class="pi pi-bell"></i>
