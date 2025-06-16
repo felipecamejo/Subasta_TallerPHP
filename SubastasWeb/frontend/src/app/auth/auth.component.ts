@@ -11,6 +11,7 @@ export class AuthComponent {
   isLoginMode = true;
 
   loginData = { email: '', password: '' };
+
   registerData: any = {
     nombre: '',
     email: '',
@@ -33,11 +34,10 @@ export class AuthComponent {
     private authService: AuthService,
     private notificacionService: NotificacionService
   ) {
-    const token = localStorage.getItem('token');
-    const email = localStorage.getItem('email');
-    if (token && email) {
+    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+    if (auth?.token && auth?.usuario?.email) {
       this.isLoggedIn = true;
-      this.userEmail = email;
+      this.userEmail = auth.usuario.email;
     }
 
     this.authService.isAuthenticated$.subscribe(isAuth => {
@@ -52,19 +52,22 @@ export class AuthComponent {
   onLogin(): void {
     this.http.post<any>('http://localhost:8000/api/login', this.loginData).subscribe({
       next: (res) => {
-        const token = res.token;
-        const usuarioId = res.usuario_id;
-        const rol = res.rol || 'cliente'; // por si no viene, asumimos cliente
+        this.authService.login({
+          token: res.token,
+          usuario_id: res.usuario_id,
+          rol: res.rol || 'cliente',
+          usuario: res.usuario
+        });
 
-        this.authService.login(token, this.loginData.email, usuarioId, rol);
-        this.userEmail = this.loginData.email;
+        // ✅ Corrección del error con "??"
+        this.userEmail = res.usuario?.email || this.loginData.email;
 
-        // Enviar notificación de bienvenida solo si no es admin
-        if (rol !== 'admin') {
+        // Enviar notificación de bienvenida si no es admin
+        if (res.rol !== 'admin') {
           this.notificacionService.crearNotificacion(
             'Bienvenido',
             'Te damos la bienvenida al sistema',
-            usuarioId,
+            res.usuario_id,
             false,
             null
           ).subscribe({
@@ -73,7 +76,7 @@ export class AuthComponent {
           });
         }
       },
-      error: (err) => alert('Login fallido: ' + err.error.error),
+      error: (err) => alert('Login fallido: ' + (err.error?.error || 'Error desconocido')),
     });
   }
 
@@ -88,7 +91,7 @@ export class AuthComponent {
   }
 
   logout(): void {
-    const token = localStorage.getItem('token');
+    const token = this.authService.getToken();
     if (!token) return;
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);

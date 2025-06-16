@@ -19,6 +19,8 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
 import { DashboardRematadorComponent } from './dashboards/dashboard-rematador/dashboard-rematador.component';
+import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
+import { CasaRemateDashboardComponent } from './casa-remate-dashboard/casa-remate-dashboard.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -43,6 +45,8 @@ export const routes: Routes = [
   // Dashboards
   { path: 'dashboard-cliente', component: DashboardClienteComponent },
   { path: 'dashboard-rematador', component: DashboardRematadorComponent },
+  { path: 'admin', component: AdminDashboardComponent },
+  { path: 'casa-remate', component: CasaRemateDashboardComponent },
 
   // Ruta por defecto en caso de error
   { path: '**', redirectTo: 'login' },

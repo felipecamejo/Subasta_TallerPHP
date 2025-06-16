@@ -10,15 +10,21 @@ export class AuthService {
   public isAuthenticated$ = this.authSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.verificarAutenticacion(); // Al iniciar, valida si hay token
+    this.verificarAutenticacion(); // Verifica el token al iniciar
   }
 
-  login(token: string, email: string, usuario_id: string, rol: string): void {
-    localStorage.setItem('token', token);
-    localStorage.setItem('email', email);
-    localStorage.setItem('usuario_id', usuario_id);
-    localStorage.setItem('rol', rol); // ✅ Guardar el rol, sea cliente, rematador, casa_remate o admin
-    this.verificarAutenticacion();
+  /**
+   * Guarda los datos completos del usuario en localStorage.
+   * Se espera un objeto con: token, usuario_id, rol y usuario.
+   */
+  login(data: {
+    token: string;
+    usuario_id: number;
+    rol: string;
+    usuario: any;
+  }): void {
+    localStorage.setItem('auth', JSON.stringify(data));
+    this.authSubject.next(true);
   }
 
   logout(): void {
@@ -26,16 +32,36 @@ export class AuthService {
     this.authSubject.next(false);
   }
 
+  /** Devuelve todo el objeto auth del localStorage */
+  getAuthData(): any {
+    const raw = localStorage.getItem('auth');
+    if (!raw) return null;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.token && parsed?.usuario_id && parsed?.rol) {
+        return parsed;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return this.getAuthData()?.token ?? null;
   }
 
   getUsuarioId(): string | null {
-    return localStorage.getItem('usuario_id');
+    return this.getAuthData()?.usuario_id ?? null;
   }
 
   getRol(): string | null {
-    return localStorage.getItem('rol');
+    return this.getAuthData()?.rol ?? null;
+  }
+
+  getUsuario(): any {
+    return this.getAuthData()?.usuario ?? null;
   }
 
   isAuthenticated(): boolean {
@@ -44,6 +70,7 @@ export class AuthService {
 
   verificarAutenticacion(): void {
     const token = this.getToken();
+
     if (!token) {
       this.authSubject.next(false);
       return;

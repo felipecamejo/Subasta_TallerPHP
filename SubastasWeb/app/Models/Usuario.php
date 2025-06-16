@@ -24,6 +24,7 @@ class Usuario extends Authenticatable implements MustVerifyEmail
         'latitud',
         'longitud',
         'google_id',
+        'email_verified_at'
     ]; 
 
     protected $hidden = [
@@ -40,13 +41,15 @@ class Usuario extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Rematador::class, 'usuario_id');
     }
 
-    public function casaRemate()
-    {
+    public function casaRemate(){
         return $this->hasOne(CasaRemate::class, 'usuario_id');
     }
 
-    public function getAuthPassword()
-    {
+    public function getAuthPassword(){
         return $this->contrasenia;
+    }
+
+    public function admin(){
+    return $this->hasOne(Admin::class, 'usuario_id');
     }
 }

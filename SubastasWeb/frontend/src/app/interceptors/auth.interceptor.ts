@@ -1,10 +1,15 @@
-// src/app/interceptors/auth.interceptor.ts
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('token');
+  const raw = localStorage.getItem('auth');
+  let token = null;
 
-  // Evitar agregar el token a URLs externas
+  try {
+    token = raw ? JSON.parse(raw).token : null;
+  } catch (e) {
+    token = null;
+  }
+
   const isApiUrl = req.url.startsWith('http://localhost:8000');
 
   if (token && isApiUrl) {

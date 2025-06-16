@@ -36,7 +36,8 @@ class AuthController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="usuario_id", type="integer"),
-     *             @OA\Property(property="rol", type="string")
+     *             @OA\Property(property="rol", type="string"),
+     *             @OA\Property(property="usuario", type="object")
      *         )
      *     ),
      *     @OA\Response(response=401, description="Credenciales inválidas")
@@ -68,38 +69,23 @@ class AuthController extends Controller
             $rol = 'rematador';
         } elseif ($usuario->casaRemate) {
             $rol = 'casa_remate';
-        } elseif (Admin::where('usuario_id', $usuario->id)->exists()) {
+        } elseif ($usuario->admin) {
             $rol = 'admin';
         }
 
         return response()->json([
             'token' => $token,
             'usuario_id' => $usuario->id,
-            'rol' => $rol
+            'rol' => $rol,
+            'usuario' => $usuario
         ], 200);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/logout",
-     *     summary="Cerrar sesión",
-     *     tags={"Autenticación"},
-     *     security={{"sanctum": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Sesión cerrada correctamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string")
-     *         )
-     *     )
-     * )
-     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
-
 
     public function registerCasaRemate(Request $request)
     {
@@ -151,77 +137,75 @@ class AuthController extends Controller
         return response()->json(['message' => 'Casa de remate aprobada exitosamente']);
     }
 
-   public function loginWithGoogle(Request $request)
-{
-    $request->validate([
-        'token' => 'required|string',
-        'rol' => 'required|in:cliente,rematador,casa_remate',
-        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
-        'idFiscal' => 'required_if:rol,casa_remate|nullable|string|unique:casa_remates,idFiscal',
-    ]);
-
-    $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
-    $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
-
-    if (!$usuario) {
-        $usuario = Usuario::create([
-            'nombre' => $googleUser->getName(),
-            'email' => $googleUser->getEmail(),
-            'cedula' => '',
-            'telefono' => '',
-            'imagen' => $googleUser->getAvatar(),
-            'contrasenia' => bcrypt(Str::random(16)),
-            'email_verified_at' => now(),
+    public function loginWithGoogle(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'rol' => 'required|in:cliente,rematador,casa_remate',
+            'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+            'idFiscal' => 'required_if:rol,casa_remate|nullable|string|unique:casa_remates,idFiscal',
         ]);
 
-        if ($request->rol === 'rematador') {
-            Rematador::create([
-                'usuario_id' => $usuario->id,
-                'matricula' => $request->matricula,
+        $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+        $usuario = Usuario::firstWhere('email', $googleUser->getEmail());
+
+        if (!$usuario) {
+            $usuario = Usuario::create([
+                'nombre' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'cedula' => '',
+                'telefono' => '',
+                'imagen' => $googleUser->getAvatar(),
+                'contrasenia' => bcrypt(Str::random(16)),
+                'email_verified_at' => now(),
             ]);
-        } elseif ($request->rol === 'cliente') {
-            Cliente::create([
-                'usuario_id' => $usuario->id,
-            ]);
-        } elseif ($request->rol === 'casa_remate') {
-            CasaRemate::create([
-                'usuario_id' => $usuario->id,
-                'idFiscal' => $request->idFiscal,
-                'activo' => false, // Requiere aprobación manual
-            ]);
+
+            if ($request->rol === 'rematador') {
+                Rematador::create([
+                    'usuario_id' => $usuario->id,
+                    'matricula' => $request->matricula,
+                ]);
+            } elseif ($request->rol === 'cliente') {
+                Cliente::create(['usuario_id' => $usuario->id]);
+            } elseif ($request->rol === 'casa_remate') {
+                CasaRemate::create([
+                    'usuario_id' => $usuario->id,
+                    'idFiscal' => $request->idFiscal,
+                    'activo' => false,
+                ]);
+            }
         }
-    }
 
-    if (!$usuario->hasVerifiedEmail()) {
-        $usuario->markEmailAsVerified();
-    }
+        if (!$usuario->hasVerifiedEmail()) {
+            $usuario->markEmailAsVerified();
+        }
 
-    // 🚫 Verificar si es casa_remate y aún no está activa
-    if ($usuario->casaRemate && !$usuario->casaRemate->activo) {
+        if ($usuario->casaRemate && !$usuario->casaRemate->activo) {
+            return response()->json([
+                'error' => 'La casa de remate aún no fue aprobada por un administrador.'
+            ], 403);
+        }
+
+        $token = $usuario->createToken('auth_token')->plainTextToken;
+
+        $rol = null;
+        if ($usuario->rematador) {
+            $rol = 'rematador';
+        } elseif ($usuario->cliente) {
+            $rol = 'cliente';
+        } elseif ($usuario->casaRemate) {
+            $rol = 'casa_remate';
+        }
+
         return response()->json([
-            'error' => 'La casa de remate aún no fue aprobada por un administrador.'
-        ], 403);
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'usuario_id' => $usuario->id,
+            'rol' => $rol,
+            'usuario' => $usuario,
+        ]);
     }
 
-    $token = $usuario->createToken('auth_token')->plainTextToken;
-
-    $rol = null;
-    if ($usuario->rematador) {
-        $rol = 'rematador';
-    } elseif ($usuario->cliente) {
-        $rol = 'cliente';
-    } elseif ($usuario->casaRemate) {
-        $rol = 'casa_remate';
-    }
-
-    return response()->json([
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-        'usuario_id' => $usuario->id,
-        'rol' => $rol,
-        'usuario' => $usuario,
-    ]);
-}
     public function registerGoogleUser(Request $request)
     {
         $data = $request->validate([

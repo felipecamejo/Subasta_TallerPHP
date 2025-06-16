@@ -1,3 +1,4 @@
+// src/app/services/notificacion.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of, map, Subscription } from 'rxjs';
@@ -46,6 +47,12 @@ export class NotificacionService {
   }
 
   actualizarNotificaciones(): void {
+    const rol = this.authService.getRol();
+    if (rol === 'admin' || rol === 'casa_remate') {
+      this.destruir();
+      return;
+    }
+
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) return;
 
@@ -61,9 +68,6 @@ export class NotificacionService {
   }
 
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) return of([]);
-
     return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
         if (Array.isArray(notificaciones)) {
