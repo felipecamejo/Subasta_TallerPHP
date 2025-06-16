@@ -87,6 +87,47 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
+    public function register(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'cedula' => 'required|string|max:255|unique:usuarios',
+        'email' => 'required|email|unique:usuarios,email',
+        'telefono' => 'required|string|max:255',
+        'contrasenia' => 'required|string|min:8|confirmed',
+        'latitud' => 'required|numeric',
+        'longitud' => 'required|numeric',
+        'rol' => 'required|in:cliente,rematador',
+        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
+    ]);
+
+    $usuario = Usuario::create([
+        'nombre' => $request->nombre,
+        'cedula' => $request->cedula,
+        'email' => $request->email,
+        'telefono' => $request->telefono,
+        'contrasenia' => Hash::make($request->contrasenia),
+        'latitud' => $request->latitud,
+        'longitud' => $request->longitud,
+    ]);
+
+    if ($request->rol === 'cliente') {
+        Cliente::create(['usuario_id' => $usuario->id]);
+    } elseif ($request->rol === 'rematador') {
+        Rematador::create([
+            'usuario_id' => $usuario->id,
+            'matricula' => $request->matricula,
+        ]);
+    }
+
+    event(new Registered($usuario));
+
+    return response()->json([
+        'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
+        'usuario_id' => $usuario->id,
+    ], 201);
+}
+
     public function registerCasaRemate(Request $request)
     {
         $request->validate([

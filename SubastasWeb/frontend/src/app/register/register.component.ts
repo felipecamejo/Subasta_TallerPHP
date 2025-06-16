@@ -1,4 +1,3 @@
-// register.component.ts
 import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit } from '@angular/core';
 import {
   ReactiveFormsModule,
@@ -129,10 +128,20 @@ export class RegisterComponent implements OnInit, AfterViewInit {
     if (this.form.valid) {
       this.loading = true;
 
-      const formData = { ...this.form.value };
-      delete formData.confirmarContrasenia;
+      const formData = {
+        ...this.form.value,
+        contrasenia_confirmation: this.form.value.confirmarContrasenia,
+        rol: this.form.value.tipo
+      };
 
-      const url = formData.tipo === 'casa_remate'
+      // Limpieza
+      delete formData.confirmarContrasenia;
+      delete formData.tipo;
+
+      if (formData.rol !== 'rematador') delete formData.matricula;
+      if (formData.rol !== 'casa_remate') delete formData.idFiscal;
+
+      const url = formData.rol === 'casa_remate'
         ? 'http://localhost:8000/api/register-casa-remate'
         : 'http://localhost:8000/api/register';
 
@@ -167,6 +176,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Getters para acceder desde el HTML
   get nombre() { return this.form.get('nombre'); }
   get cedula() { return this.form.get('cedula'); }
   get email() { return this.form.get('email'); }
@@ -181,4 +191,3 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   get esRematador() { return this.tipo?.value === 'rematador'; }
   get esCasaRemate() { return this.tipo?.value === 'casa_remate'; }
 }
-
