@@ -1,84 +1,70 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private authSubject = new BehaviorSubject<boolean>(false);
-  public isAuthenticated$ = this.authSubject.asObservable();
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
+  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.verificarAutenticacion(); // Verifica el token al iniciar
-  }
-
-  /**
-   * Guarda los datos completos del usuario en localStorage.
-   * Se espera un objeto con: token, usuario_id, rol y usuario.
-   */
-  login(data: {
-    token: string;
-    usuario_id: number;
-    rol: string;
-    usuario: any;
+  login(authData: {
+    token: string,
+    rol: string,
+    usuario_id: number,
+    usuario: any
   }): void {
-    localStorage.setItem('auth', JSON.stringify(data));
-    this.authSubject.next(true);
+    // Nuevo formato unificado
+    localStorage.setItem('auth', JSON.stringify(authData));
+
+    // Compatibilidad con código viejo
+    localStorage.setItem('token', authData.token);
+    localStorage.setItem('rol', authData.rol);
+    localStorage.setItem('usuario_id', authData.usuario_id.toString());
+
+    this.isAuthenticatedSubject.next(true);
   }
 
   logout(): void {
-    localStorage.clear();
-    this.authSubject.next(false);
-  }
+    localStorage.removeItem('auth');
 
-  /** Devuelve todo el objeto auth del localStorage */
-  getAuthData(): any {
-    const raw = localStorage.getItem('auth');
-    if (!raw) return null;
+    // Limpieza de claves separadas (opcional, podés dejarlo si querés 100% compatibilidad)
+    localStorage.removeItem('token');
+    localStorage.removeItem('rol');
+    localStorage.removeItem('usuario_id');
 
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.token && parsed?.usuario_id && parsed?.rol) {
-        return parsed;
-      }
-      return null;
-    } catch {
-      return null;
-    }
+    this.isAuthenticatedSubject.next(false);
   }
 
   getToken(): string | null {
-    return this.getAuthData()?.token ?? null;
-  }
-
-  getUsuarioId(): string | null {
-    return this.getAuthData()?.usuario_id ?? null;
+    const auth = this.getAuthObject();
+    return auth?.token || localStorage.getItem('token');
   }
 
   getRol(): string | null {
-    return this.getAuthData()?.rol ?? null;
+    const auth = this.getAuthObject();
+    return auth?.rol || localStorage.getItem('rol');
   }
 
-  getUsuario(): any {
-    return this.getAuthData()?.usuario ?? null;
+  getUsuarioId(): number | null {
+    const auth = this.getAuthObject();
+    return auth?.usuario_id || Number(localStorage.getItem('usuario_id'));
   }
 
-  isAuthenticated(): boolean {
-    return this.authSubject.value;
+  getUsuario(): any | null {
+    return this.getAuthObject()?.usuario || null;
   }
 
-  verificarAutenticacion(): void {
-    const token = this.getToken();
+  isLoggedIn(): boolean {
+    return this.hasToken();
+  }
 
-    if (!token) {
-      this.authSubject.next(false);
-      return;
-    }
+  private getAuthObject(): any {
+    return JSON.parse(localStorage.getItem('auth') || '{}');
+  }
 
-    this.http.get('http://localhost:8000/api/check-auth').subscribe({
-      next: () => this.authSubject.next(true),
-      error: () => this.logout()
-    });
+  private hasToken(): boolean {
+    const auth = this.getAuthObject();
+    return !!auth.token || !!localStorage.getItem('token');
   }
 }

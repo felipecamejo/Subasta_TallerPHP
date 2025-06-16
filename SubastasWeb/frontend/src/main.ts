@@ -3,10 +3,16 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app/app.routes';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptorsFromDi
+} from '@angular/common/http';
 
-import { authInterceptor } from './app/interceptors/auth.interceptor';
-import { AppComponent } from './app/app.component'; 
+import { AppComponent } from './app/app.component';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './app/interceptors/auth.interceptor';
+
 import {
   SocialAuthServiceConfig,
   GoogleLoginProvider,
@@ -18,8 +24,13 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor])
+      withInterceptorsFromDi() // ✅ ahora inyecta desde los providers
     ),
+    {
+      provide: HTTP_INTERCEPTORS, // ✅ Registro del interceptor como clase
+      useClass: AuthInterceptor,
+      multi: true
+    },
     provideAnimationsAsync(),
     {
       provide: 'SocialAuthServiceConfig',

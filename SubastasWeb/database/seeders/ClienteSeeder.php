@@ -17,7 +17,7 @@ class ClienteSeeder extends Seeder
             'email' => 'spielberg@example.com',
             'telefono' => '099111111',
             'imagen' => null,
-            'contrasenia' => Hash::make('123456'),
+            'contrasenia' => Hash::make('123456789'),
             'latitud' => -34.9011,
             'longitud' => -56.1645,
             'email_verified_at' => now(),

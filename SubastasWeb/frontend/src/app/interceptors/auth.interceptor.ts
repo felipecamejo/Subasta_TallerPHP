@@ -1,25 +1,30 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent
+} from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AuthService } from '../../services/auth.service'; // Asegurate que la ruta esté bien
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const raw = localStorage.getItem('auth');
-  let token = null;
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) {}
 
-  try {
-    token = raw ? JSON.parse(raw).token : null;
-  } catch (e) {
-    token = null;
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    const token = this.authService.getToken();
+    const isApiUrl = req.url.startsWith('http://localhost:8000');
+
+    if (token && isApiUrl) {
+      const authReq = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return next.handle(authReq);
+    }
+
+    return next.handle(req);
   }
-
-  const isApiUrl = req.url.startsWith('http://localhost:8000');
-
-  if (token && isApiUrl) {
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(authReq);
-  }
-
-  return next(req);
-};
+}
