@@ -15,7 +15,7 @@ import {
 } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 
 export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): { [key: string]: boolean } | null => {
   const password = control.get('contrasenia');
@@ -146,7 +146,11 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
     if (payload.rol !== 'rematador') delete payload.matricula;
     if (payload.rol !== 'casa_remate') delete payload.idFiscal;
 
-    this.http.post('http://localhost:8000/api/register-google-user', payload).subscribe({
+    const url = payload.rol === 'casa_remate'
+      ? 'http://localhost:8000/api/register-casa-remate'
+      : 'http://localhost:8000/api/register-google-user';
+
+    this.http.post(url, payload).subscribe({
       next: (res: any) => {
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('usuario_id', res.usuario_id);
@@ -161,7 +165,7 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
           this.router.navigate(['/dashboard-cliente']);
         }
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         if (err.status === 403 && err.error?.error?.includes('no fue aprobada')) {
           alert('Tu casa de remate aún no fue aprobada por el administrador.');
         } else {
