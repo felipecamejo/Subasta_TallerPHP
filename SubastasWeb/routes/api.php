@@ -16,6 +16,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\AdminController;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -74,4 +75,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
+
+    // Rutas de administración
+    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
+    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
+    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
 });

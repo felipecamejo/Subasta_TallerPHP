@@ -34,5 +34,9 @@
             return $this->hasMany(Subasta::class);
         }
 
+        public function usuario(){
+            return $this->belongsTo(Usuario::class);
+        }
+
     }
 ?>
