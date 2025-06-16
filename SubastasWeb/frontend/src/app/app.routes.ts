@@ -46,7 +46,7 @@ export const routes: Routes = [
   { path: 'dashboard-cliente', component: DashboardClienteComponent },
   { path: 'dashboard-rematador', component: DashboardRematadorComponent },
   { path: 'admin', component: AdminDashboardComponent },
-  { path: 'casa-remate', component: CasaRemateDashboardComponent },
+  { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent },
 
   // Ruta por defecto en caso de error
   { path: '**', redirectTo: 'login' },
