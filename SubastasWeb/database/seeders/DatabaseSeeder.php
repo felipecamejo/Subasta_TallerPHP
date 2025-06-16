@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-
 use App\Models\Articulo;
 use App\Models\CasaRemate;
 use App\Models\Categoria;
@@ -21,8 +20,18 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-    public function run(): void {
-        $this->call(AdminSeeder::class);
+    public function run(): void
+    {
+        $this->call([
+            AdminSeeder::class,
+            CasaRemateSeeder::class,
+            SubastaSeeder::class,
+            LoteSeeder::class,
+            PujaSeeder::class,
+            CategoriaSeeder::class,
+            ArticuloSeeder::class,
+            ClienteSeeder::class,
+            RematadorSeeder::class,
+        ]);
     }
-    
 }
