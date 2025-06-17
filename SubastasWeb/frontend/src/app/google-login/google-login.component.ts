@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class GoogleLoginComponent {
   loginConGoogle() {
-    const url = `http://localhost:8000/auth/redirect/google?rol=cliente`; // por defecto cliente
+    const url = `${environment.apiUrl}/auth/redirect/google?rol=cliente`; // por defecto cliente
     window.location.href = url;
   }
 }

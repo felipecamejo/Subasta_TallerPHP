@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -20,7 +21,7 @@ export class LogoutButtonComponent {
       Authorization: `Bearer ${token}`,
     });
 
-    this.http.post('http://localhost:8000/api/logout', {}, { headers }).subscribe({
+    this.http.post(`${environment.apiUrl}/api/logout`, {}, { headers }).subscribe({
       next: () => this.limpiarSesion(),
       error: () => this.limpiarSesion(), // en caso de error igual limpiamos
     });

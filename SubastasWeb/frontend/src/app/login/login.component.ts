@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -35,7 +36,7 @@ export class LoginComponent {
 
     const datos = this.form.value;
 
-    this.http.post('http://localhost:8000/api/login', datos).subscribe({
+    this.http.post(`${environment.apiUrl}/api/login`, datos).subscribe({
       next: (res: any) => {
         // Usamos el AuthService para guardar todo
         this.authService.login({

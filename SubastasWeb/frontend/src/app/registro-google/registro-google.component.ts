@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import {
   Component,
   OnInit,
@@ -147,8 +148,8 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
     if (payload.rol !== 'casa_remate') delete payload.idFiscal;
 
     const url = payload.rol === 'casa_remate'
-      ? 'http://localhost:8000/api/register-casa-remate'
-      : 'http://localhost:8000/api/register-google-user';
+      ? `${environment.apiUrl}/api/register-casa-remate`
+      : `${environment.apiUrl}/api/register-google-user`;
 
     this.http.post(url, payload).subscribe({
       next: (res: any) => {

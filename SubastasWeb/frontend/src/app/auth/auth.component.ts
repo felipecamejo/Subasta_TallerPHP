@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
@@ -50,7 +51,7 @@ export class AuthComponent {
   }
 
   onLogin(): void {
-    this.http.post<any>('http://localhost:8000/api/login', this.loginData).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/api/login`, this.loginData).subscribe({
       next: (res) => {
         this.authService.login({
           token: res.token,
@@ -81,7 +82,7 @@ export class AuthComponent {
   }
 
   onRegister(): void {
-    this.http.post<any>('http://localhost:8000/api/register', this.registerData).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/api/register`, this.registerData).subscribe({
       next: () => {
         alert('Registrado con éxito, ahora inicia sesión');
         this.toggleMode();
@@ -96,7 +97,7 @@ export class AuthComponent {
 
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.post<any>('http://localhost:8000/api/logout', {}, { headers }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/api/logout`, {}, { headers }).subscribe({
       next: () => {
         this.authService.logout();
         this.userEmail = '';

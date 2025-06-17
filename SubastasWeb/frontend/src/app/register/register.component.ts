@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit } from '@angular/core';
 import {
   ReactiveFormsModule,
@@ -142,8 +143,8 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       if (formData.rol !== 'casa_remate') delete formData.idFiscal;
 
       const url = formData.rol === 'casa_remate'
-        ? 'http://localhost:8000/api/register-casa-remate'
-        : 'http://localhost:8000/api/register';
+        ? `${environment.apiUrl}/api/register-casa-remate`
+        : `${environment.apiUrl}/api/register`;
 
       this.http.post(url, formData).subscribe({
         next: () => {

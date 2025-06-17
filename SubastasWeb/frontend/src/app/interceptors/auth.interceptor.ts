@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import {
   HttpInterceptor,
@@ -14,7 +15,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
-    const isApiUrl = req.url.startsWith('http://localhost:8000');
+    const isApiUrl = req.url.startsWith(environment.apiUrl);
 
     if (token && isApiUrl) {
       const authReq = req.clone({

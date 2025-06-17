@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common'; 
@@ -21,7 +22,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
   cargarPendientes() {
-    this.http.get<any[]>('http://localhost:8000/api/admin/usuarios-pendientes').subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/api/admin/usuarios-pendientes`).subscribe({
       next: data => {
         this.pendientes = data;
       },
@@ -33,7 +34,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
   cargarActivas() {
-    this.http.get<any[]>('http://localhost:8000/api/admin/casas-activas').subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/api/admin/casas-activas`).subscribe({
       next: data => {
         this.activas = data;
       },
@@ -45,7 +46,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
   aprobarCasa(id: number) {
-    this.http.post(`http://localhost:8000/api/admin/aprobar-casa/${id}`, {}).subscribe({
+    this.http.post(`${environment.apiUrl}/api/admin/aprobar-casa/${id}`, {}).subscribe({
       next: () => {
         this.cargarPendientes();
         this.cargarActivas();
@@ -58,7 +59,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
  desactivarCasa(id: number) {
-  this.http.post(`http://localhost:8000/api/admin/desaprobar-casa/${id}`, {}).subscribe({
+  this.http.post(`${environment.apiUrl}/api/admin/desaprobar-casa/${id}`, {}).subscribe({
     next: () => {
       this.cargarPendientes();
       this.cargarActivas();

@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -38,7 +39,7 @@ enviar() {
   // Mostrá lo que se está enviando
   console.log('Datos enviados al backend:', this.form.value);
 
-  this.http.post('http://localhost:8000/api/reset-password', this.form.value).subscribe({
+  this.http.post(`${environment.apiUrl}/api/reset-password`, this.form.value).subscribe({
     next: () => {
       this.mensaje = 'Contraseña actualizada correctamente.';
       this.router.navigate(['/login']);

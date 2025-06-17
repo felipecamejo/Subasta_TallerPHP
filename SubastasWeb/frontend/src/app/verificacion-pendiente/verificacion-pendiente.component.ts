@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -22,7 +23,7 @@ export class VerificacionPendienteComponent {
     this.mensaje = '';
     this.error = '';
 
-    this.http.post('http://localhost:8000/api/email/resend', {}).subscribe({
+    this.http.post(`${environment.apiUrl}/api/email/resend`, {}).subscribe({
       next: (res: any) => {
         this.mensaje = 'Correo de verificación reenviado correctamente.';
         this.loading = false;

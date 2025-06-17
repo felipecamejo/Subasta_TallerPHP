@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -23,7 +24,7 @@ export class ForgotPasswordComponent {
   enviar() {
     if (this.form.invalid) return;
 
-    this.http.post('http://localhost:8000/api/forgot-password', this.form.value).subscribe({
+    this.http.post(`${environment.apiUrl}/api/forgot-password`, this.form.value).subscribe({
       next: (res: any) => {
         this.mensaje = res.message;
       },
