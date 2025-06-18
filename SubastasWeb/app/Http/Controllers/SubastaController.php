@@ -6,7 +6,6 @@ use App\Models\Subasta;
 use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Mappers\Mapper;
 use App\Mail\NotificacionCorreo;
 use Illuminate\Support\Facades\Mail;
 
@@ -19,8 +18,6 @@ use Illuminate\Support\Facades\Mail;
  */
 class SubastaController extends Controller
 {
-    public $maxDepth = 3;
-    public $visited = [];
     /**
      * @OA\Get(
      *     path="/api/subastas",
@@ -35,18 +32,14 @@ class SubastaController extends Controller
     public function index() {
         try {
             $subastas = Subasta::with([
-                'casaRemate', 
+                'casaRemate.valoracion', 
                 'rematador', 
                 'lotes.pujas.cliente.usuario', 
                 'lotes.articulos.categoria',
                 'lotes.articulos.vendedor'
             ])->get();
             
-            $dto = $subastas->map(function ($subasta) {
-                $visited = [];
-                return Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth);
-            });
-            return response()->json($dto);
+            return response()->json($subastas);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => $e->getMessage(),
@@ -144,8 +137,7 @@ class SubastaController extends Controller
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
-        $visited = [];
-        return response()->json(Mapper::fromModelSubasta($subasta, $visited, $this->maxDepth));
+        return response()->json($subasta);
     }
 
     /**

@@ -87,6 +87,21 @@ export class NotificacionService {
     return this.enviarNotificacion(notificacion);
   }
 
+  /**
+   * Crea una notificación específica para invitaciones de chat
+   */
+  crearNotificacionChat(titulo: string, mensaje: string, idUsuarioDestino: number, chatId: string): Observable<notificacionDto> {
+    const notificacion = {
+      titulo: titulo,
+      mensaje: mensaje,
+      usuarioIds: [idUsuarioDestino],
+      esMensajeChat: true,
+      chatId: chatId
+    };
+
+    return this.enviarNotificacion(notificacion);
+  }
+
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) {
@@ -110,6 +125,8 @@ export class NotificacionService {
             mensaje: notif.mensaje,
             fechaHora: notif.fechaHora,
             leido: notif.leido,
+            esMensajeChat: notif.esMensajeChat,
+            chatId: notif.chatId,
             usuario: {
               id: notif.usuario?.id || null,
               nombre: notif.usuario?.nombre || null
@@ -174,8 +191,44 @@ export class NotificacionService {
     });
   }
 
+  /**
+   * Obtiene notificaciones para un usuario específico (endpoint público para pruebas)
+   * @param usuarioId ID del usuario
+   */
+  obtenerNotificacionesPublico(usuarioId: number): Observable<notificacionUsuarioDto[]> {
+    return this.http.get<notificacionUsuarioDto[]>(`${this.baseUrl}/test-notificaciones/${usuarioId}`, {
+      headers: new HttpHeaders().set('Content-Type', 'application/json')
+    }).pipe(
+      catchError(error => {
+        console.error('Error al obtener notificaciones públicas:', error);
+        return of([]);
+      })
+    );
+  }
+
   private contarNoLeidas(notificaciones: notificacionUsuarioDto[]): number {
     return notificaciones.filter(n => !n.leido).length;
+  }
+
+  /**
+   * Manejar click en una notificación de chat
+   */
+  manejarClickNotificacionChat(notificacion: notificacionUsuarioDto): void {
+    if (notificacion.esMensajeChat && notificacion.chatId) {
+      // Marcar como leída primero
+      this.marcarLeidaYActualizar(notificacion.id!);
+      console.log('Notificación de chat marcada como leída');
+
+      // Abrir el chat - esto debe ser manejado por el componente que usa el servicio
+      console.log('Abrir chat:', notificacion.chatId);
+    }
+  }
+
+  /**
+   * Verificar si una notificación es de chat
+   */
+  esNotificacionDeChat(notificacion: notificacionUsuarioDto): boolean {
+    return Boolean(notificacion.esMensajeChat && notificacion.chatId);
   }
 
   destruir(): void {

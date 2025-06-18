@@ -1,10 +1,12 @@
 <?php
     namespace App\Models;
     use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\MorphOne;
     use App\Models\DtoDireccion;
     use App\Models\Usuario;
     use App\Models\Puja;
     use App\Models\Notificacion;
+    use App\Models\Valoracion;
 
     class Cliente extends Model {
         protected $table = 'clientes';
@@ -12,7 +14,6 @@
 
         protected $fillable = [ 
             'usuario_id',
-            'calificacion',
         ];  
 
         protected $casts = [
@@ -31,6 +32,12 @@
 
         public function notificaciones() {
             return $this->belongsToMany(Notificacion::class, 'notificacion_clientes', 'cliente_id', 'notificacion_id');
+        }
+
+    
+        public function valoracion(): MorphOne
+        {
+            return $this->morphOne(Valoracion::class, 'valorable');
         }
 
 }

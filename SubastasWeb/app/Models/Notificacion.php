@@ -14,7 +14,8 @@
             'titulo',
             'mensaje',
             'fecha_hora',
-            'es_mensaje_chat'
+            'es_mensaje_chat',
+            'chat_id'
         ]; 
 
         protected $casts = [

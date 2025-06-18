@@ -9,7 +9,9 @@
       
       <!-- Información específica de cliente -->
       <div *ngIf="cliente">
-        <p>Calificación: {{ cliente.calificacion }}</p>
+        <p>Calificación: {{ obtenerPromedioValoracionCliente() }} estrellas 
+           <span *ngIf="cliente.valoracion">({{ cliente.valoracion.cantidad_opiniones }} opiniones)</span>
+        </p>
       </div>
       
       <!-- Información específica de rematador -->

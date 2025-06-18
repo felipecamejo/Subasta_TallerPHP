@@ -21,7 +21,6 @@ import { NotificacionService } from '../../services/notificacion.service';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatService } from '../../services/chat.service';
 
-
 interface PujaRequest {
   fechaHora: string;
   monto: number;
@@ -329,7 +328,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           } else {
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
 
-            if(this.clienteID == localStorage.getItem('usuario_id')) {
+            if(this.isCurrentUser()) {
 
               this.paypalMonto = this.pujaActual;
               this.pagando = true;
@@ -866,10 +865,80 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.chatService.clearChat();
   }
   
-  // Método para comprobar si el clienteID coincide con el usuario_id almacenado en localStorage
   isCurrentUser(): boolean {
     const storedUserId = localStorage.getItem('usuario_id');
     return storedUserId !== null && this.clienteID !== null && this.clienteID === Number(storedUserId);
+  }
+
+  /**
+   * Invita a otro usuario a un chat privado
+   */
+  invitarAChat(usuarioId: number, usuarioNombre: string): void {
+    const miId = parseInt(localStorage.getItem('usuario_id') || '0');
+    const miNombre = localStorage.getItem('usuario_nombre') || 'Usuario';
+    
+    if (!miId) {
+      console.error('Usuario no autenticado');
+      return;
+    }
+
+    this.chatService.crearInvitacionChat(
+      miId,
+      miNombre,
+      usuarioId,
+      usuarioNombre
+    ).then((resultado: any) => {
+      console.log('Invitación de chat creada:', resultado);
+      // Mostrar mensaje de confirmación
+      alert(`Invitación de chat enviada a ${usuarioNombre}`);
+    }).catch((error: any) => {
+      console.error('Error al crear invitación de chat:', error);
+      alert('Error al enviar la invitación de chat');
+    });
+  }
+
+  /**
+   * Maneja el pago exitoso de PayPal
+   */
+  async onPaymentSuccess(paymentData: any): Promise<void> {
+    console.log('💰 Pago exitoso:', paymentData);
+    
+    try {
+      // Cerrar modal de pago
+      this.pagando = false;
+      
+      // Crear chat post-pago si no existe
+      if (this.clienteID && this.subasta?.casaremate && this.subasta.id) {
+        const chatResult = await this.chatService.crearInvitacionChat(
+          this.clienteID,
+          `Usuario ${this.clienteID}`,
+          this.subasta.casaremate.id || 0, // Usar el ID de la casa de remate
+          this.subasta.casaremate.nombre || 'Casa de Remate'
+        );
+
+
+        
+        console.log('✅ Chat creado post-pago:', chatResult);
+        
+        // Inicializar el chat creado
+        this.initializeChat();
+        
+        // Mostrar mensaje de éxito
+        alert('¡Pago exitoso! Se ha creado un chat con la casa de remate para coordinar la entrega.');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error post-pago:', error);
+      alert('Pago exitoso, pero hubo un error al crear el chat. Contacte al soporte.');
+    }
+  }
+
+  /**
+   * Maneja errores en el pago de PayPal
+   */
+  onPaymentError(error: any): void {
+    console.error('❌ Error en el pago:', error);
+    alert('Error en el pago. Por favor, intente nuevamente.');
   }
 }
 

@@ -72,5 +72,13 @@ export class PerfilComponent implements OnInit {
     { id: 2, titulo: 'Artículo 2', descripcion: 'Descripción 2', imagen: 'https://via.placeholder.com/100' },
     { id: 3, titulo: 'Artículo 3', descripcion: 'Descripción 3', imagen: 'https://via.placeholder.com/100' }
   ];
+
+  obtenerPromedioValoracionCliente(): number {
+    if (!this.cliente?.valoracion || this.cliente.valoracion.cantidad_opiniones === 0) {
+      return 0;
+    }
+    const promedio = this.cliente.valoracion.valoracion_total / this.cliente.valoracion.cantidad_opiniones;
+    return Math.round(promedio);
+  }
 }
 

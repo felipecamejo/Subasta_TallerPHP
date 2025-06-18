@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Lote;
 use App\Models\Subasta;
 use Illuminate\Http\Request;
-use App\Mappers\Mapper;
 
 
 /**
@@ -17,8 +16,6 @@ use App\Mappers\Mapper;
 
 class LoteController extends Controller{
     
-    public $maxDepth = 1;
-    public $visited = [];
 
     /**
      * @OA\Get(
@@ -33,7 +30,7 @@ class LoteController extends Controller{
             $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->get();
 
             $dtos = $lote->map(function ($lote) {
-                return Mapper::fromModelLote($lote, $this->visited, $this->maxDepth);
+                return $lote;
             });
 
             return response()->json($dtos);
@@ -86,7 +83,7 @@ class LoteController extends Controller{
         
         $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->find($lote->id);
         
-        return response()->json(Mapper::fromModelLote($lote, $this->visited, $this->maxDepth), 201);
+        return response()->json($lote, 201);
     }
 
     /**

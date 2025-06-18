@@ -16,6 +16,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\ChatController;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,27 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
+
+// Rutas públicas para pruebas de chat
+Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
+Route::get('/test-notificaciones/{usuarioId}', [NotificacionController::class, 'obtenerNotificacionesPublico']);
+
+// Rutas públicas para chat
+Route::post('/chat/invitacion', [ChatController::class, 'crearInvitacion']);
+Route::get('/chat/{chatId}/validar', [ChatController::class, 'validarAccesoChat']);
+Route::get('/chat/{usuarioId}/activos', [ChatController::class, 'obtenerChatsActivos']);
+
+// Rutas para mensajes de chat (públicas por ahora para pruebas)
+Route::post('/chat/{chatId}/mensaje', [ChatController::class, 'enviarMensaje']);
+Route::get('/chat/{chatId}/mensajes', [ChatController::class, 'obtenerMensajes']);
+Route::get('/chat/{chatId}/info', [ChatController::class, 'obtenerInfoChat']);
+
+// Rutas para valoraciones y finalización de chat
+Route::post('/chat/{chatId}/valorar-usuario', [ChatController::class, 'valorarUsuario']);
+Route::post('/chat/{chatId}/valorar-cliente', [ChatController::class, 'valorarUsuario']); // Compatibilidad
+Route::post('/chat/{chatId}/valorar-casa', [ChatController::class, 'valorarUsuario']); // Compatibilidad
+Route::post('/chat/{chatId}/finalizar-chat', [ChatController::class, 'finalizarChat']);
+Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat']);
 
 Route::apiResource('subastas', SubastaController::class);
 

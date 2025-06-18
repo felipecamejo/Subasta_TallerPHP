@@ -1,5 +1,6 @@
 import { rematadorDto } from './rematadorDto';
 import { subastaDto } from './subastaDto';
+import { valoracionDto } from './valoracionDto';
 
 export interface casaRemateDto {
     id : number | null;
@@ -7,10 +8,10 @@ export interface casaRemateDto {
     idFiscal: string;
     email: string;
     telefono: string;
-    calificacion: Array<number>;
     latitud: number;
     longitud: number;
 
-    rematador: Pick<rematadorDto, 'usuario' | 'matricula'>;
+    rematadores: Pick<rematadorDto, 'usuario' | 'matricula'>[];
     subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre'>[];
+    valoracion: Pick<valoracionDto, 'id' | 'valoracion_total' | 'cantidad_opiniones' | 'valorable_type' | 'valorable_id'> | null;
 }
