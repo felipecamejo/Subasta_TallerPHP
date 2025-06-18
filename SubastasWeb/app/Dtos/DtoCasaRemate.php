@@ -4,14 +4,12 @@ namespace App\DTOs;
 
 use App\Dtos\DtoRematador;
 use App\Dtos\DtoSubasta;
+use App\Dtos\DtoUsuario;
+use App\Dtos\DtoVendedor;
 
 class DtoCasaRemate {
-
-    public $id;
-    public $nombre;
+    public $usuario_id;
     public $idFiscal;
-    public $email;  
-    public $telefono;
     
     /** @var int[] */
     public array $calificacion;
@@ -22,16 +20,29 @@ class DtoCasaRemate {
     /** @var DtoSubasta[] */
     public array $subastas;
 
+    /** @var DtoUsuario */
+    public DtoUsuario $usuario;
 
-    public function __construct($id, $nombre, $idFiscal, $email, $telefono, $calificacion, $rematadores, $subastas) {
-        $this->id = $id;
-        $this->nombre = $nombre;
+    /** @var DtoVendedor|null */
+    public ?DtoVendedor $vendedor;
+
+
+    public function __construct(
+        $usuario_id,
+        $idFiscal,
+        $calificacion,
+        DtoUsuario $usuario,
+        array $rematadores = [],
+        array $subastas = [],
+        ?DtoVendedor $vendedor = null
+    ) {
+        $this->usuario_id = $usuario_id;
         $this->idFiscal = $idFiscal;
-        $this->email = $email;
-        $this->telefono = $telefono;
         $this->calificacion = $calificacion;
+        $this->usuario = $usuario;
         $this->rematadores = $rematadores;
         $this->subastas = $subastas;
+        $this->vendedor = $vendedor;
     }
 
     public function getPromedioCalificacion(): ?float
@@ -46,12 +57,14 @@ class DtoCasaRemate {
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
-            'nombre' => $this->nombre,
+            'usuario_id' => $this->usuario_id,
             'idFiscal' => $this->idFiscal,
-            'email' => $this->email,
-            'telefono' => $this->telefono,
             'calificacion' => $this->getPromedioCalificacion() ?? 0,
+            'calificaciones' => $this->calificacion,
+            'usuario' => $this->usuario->toArray(),
+            'rematadores' => array_map(fn($r) => $r->toArray(), $this->rematadores),
+            'subastas' => array_map(fn($s) => $s->toArray(), $this->subastas),
+            'vendedor' => $this->vendedor?->toArray(),
         ];
     }
 }

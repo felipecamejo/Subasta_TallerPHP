@@ -11,14 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('casa_remate_rematador', function (Blueprint $table) {
-            $table->id();
+            // Claves foráneas compuestas
+            $table->unsignedBigInteger('casa_remate_id');
+            $table->unsignedBigInteger('rematador_id');
 
-            // Foreign keys
-            $table->foreignId('casa_remate_id')
-                  ->constrained('casa_remates')
+            $table->foreign('casa_remate_id')
+                  ->references('usuario_id')
+                  ->on('casa_remates')
                   ->onDelete('cascade');
 
-            $table->unsignedBigInteger('rematador_id');
             $table->foreign('rematador_id')
                   ->references('usuario_id')
                   ->on('rematadores')
@@ -27,10 +28,10 @@ return new class extends Migration {
             // Estado de la solicitud
             $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente');
 
-            // Fechas
+            // Timestamps
             $table->timestamps();
 
-            // Restricción única para evitar duplicados
+            // Restricción única
             $table->unique(['casa_remate_id', 'rematador_id']);
         });
     }

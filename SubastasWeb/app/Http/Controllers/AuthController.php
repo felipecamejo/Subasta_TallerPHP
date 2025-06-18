@@ -17,32 +17,6 @@ use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
-    /**
-     * @OA\Post(
-     *     path="/api/login",
-     *     summary="Iniciar sesión",
-     *     tags={"Autenticación"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", example="test@example.com"),
-     *             @OA\Property(property="password", type="string", example="123456")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Token generado correctamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="token", type="string"),
-     *             @OA\Property(property="usuario_id", type="integer"),
-     *             @OA\Property(property="rol", type="string"),
-     *             @OA\Property(property="usuario", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Credenciales inválidas")
-     * )
-     */
     public function login(Request $request)
     {
         $request->validate([
@@ -88,45 +62,45 @@ class AuthController extends Controller
     }
 
     public function register(Request $request)
-{
-    $request->validate([
-        'nombre' => 'required|string|max:255',
-        'cedula' => 'required|string|max:255|unique:usuarios',
-        'email' => 'required|email|unique:usuarios,email',
-        'telefono' => 'required|string|max:255',
-        'contrasenia' => 'required|string|min:8|confirmed',
-        'latitud' => 'required|numeric',
-        'longitud' => 'required|numeric',
-        'rol' => 'required|in:cliente,rematador',
-        'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
-    ]);
-
-    $usuario = Usuario::create([
-        'nombre' => $request->nombre,
-        'cedula' => $request->cedula,
-        'email' => $request->email,
-        'telefono' => $request->telefono,
-        'contrasenia' => Hash::make($request->contrasenia),
-        'latitud' => $request->latitud,
-        'longitud' => $request->longitud,
-    ]);
-
-    if ($request->rol === 'cliente') {
-        Cliente::create(['usuario_id' => $usuario->id]);
-    } elseif ($request->rol === 'rematador') {
-        Rematador::create([
-            'usuario_id' => $usuario->id,
-            'matricula' => $request->matricula,
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'cedula' => 'required|string|max:255|unique:usuarios',
+            'email' => 'required|email|unique:usuarios,email',
+            'telefono' => 'required|string|max:255',
+            'contrasenia' => 'required|string|min:8|confirmed',
+            'latitud' => 'required|numeric',
+            'longitud' => 'required|numeric',
+            'rol' => 'required|in:cliente,rematador',
+            'matricula' => 'required_if:rol,rematador|nullable|string|unique:rematadores,matricula',
         ]);
+
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'cedula' => $request->cedula,
+            'email' => $request->email,
+            'telefono' => $request->telefono,
+            'contrasenia' => Hash::make($request->contrasenia),
+            'latitud' => $request->latitud,
+            'longitud' => $request->longitud,
+        ]);
+
+        if ($request->rol === 'cliente') {
+            Cliente::create(['usuario_id' => $usuario->id]);
+        } elseif ($request->rol === 'rematador') {
+            Rematador::create([
+                'usuario_id' => $usuario->id,
+                'matricula' => $request->matricula,
+            ]);
+        }
+
+        event(new Registered($usuario));
+
+        return response()->json([
+            'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
+            'usuario_id' => $usuario->id,
+        ], 201);
     }
-
-    event(new Registered($usuario));
-
-    return response()->json([
-        'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
-        'usuario_id' => $usuario->id,
-    ], 201);
-}
 
     public function registerCasaRemate(Request $request)
     {
