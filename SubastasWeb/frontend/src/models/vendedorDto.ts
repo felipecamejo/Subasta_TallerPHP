@@ -9,7 +9,7 @@ export interface vendedorDto {
 
     factura: Pick<facturaDto, 'id' | 'montoTotal' | 'condicionesDePago' | 'entrega'>[];
 
-    casaremate: Pick<casaRemateDto, 'id' | 'nombre' | 'idFiscal' | 'email' | 'telefono'>[];
+    casaremate: Pick<casaRemateDto, 'usuario_id' | 'usuario' | 'idFiscal' >[];
 
     articulo: Pick<articuloDto, 'id' | 'nombre'>[];
 

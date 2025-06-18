@@ -12,18 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('casa_remates', function (Blueprint $table) {
-            $table->id();
-            
-            $table->string('nombre');
+            $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
             $table->string('idFiscal');
-            $table->string('email');
-            $table->string('telefono');
-            $table->string('latitud');
-            $table->string('longitud');
             $table->json('calificacion')->default(json_encode([]));
-
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade'); // FOREIGN KEY
             $table->timestamps();
-            
         });
     }
 

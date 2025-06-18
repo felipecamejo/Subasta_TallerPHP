@@ -1,13 +1,13 @@
 <main class="w-full">
     <article class="w-full">
         <div class="w-full flex flex-wrap gap">
-            <p class="titulo ">CasaRemate {{model.nombre}}</p>
+            <p class="titulo ">CasaRemate {{model.usuario?.nombre}}</p>
             <p-button label="Editar CasaRemate" class="boton" severity="secondary"/>
         </div>
         <div class="w-full">
             <p>Rut: {{model.idFiscal}}</p>
-            <p>Email: {{model.email}}</p>
-            <p>Telefono: {{model.telefono}}</p>
+            <p>Email: {{model.usuario?.email}}</p>
+            <p>Telefono: {{model.usuario?.telefono}}</p>
             <form [formGroup]="estrellas">
               <p-rating formControlName="value" [readonly]="true"></p-rating>
             </form>
