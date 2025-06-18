@@ -8,7 +8,6 @@ use App\Models\Rematador;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 /**
@@ -19,9 +18,6 @@ use OpenApi\Annotations as OA;
  */
 class NotificacionController extends Controller
 {
-    protected array $visited = [];
-    protected int $maxDepth = 3;
-
     /**
      * @OA\Get(
      *     path="/api/notificaciones",
@@ -87,6 +83,7 @@ class NotificacionController extends Controller
             'fechaHora' => $notificacion->fecha_hora,
             'leido' => $notificacion->pivot->leido,
             'esMensajeChat' => $notificacion->es_mensaje_chat,
+            'chatId' => $notificacion->chat_id,
             'usuario' => [
                 'id' => $usuario->id,
                 'nombre' => $usuario->nombre
@@ -204,7 +201,8 @@ class NotificacionController extends Controller
         array $usuarioIds,
         string $titulo,
         string $mensaje,
-        bool $esMensajeChat = false
+        bool $esMensajeChat = false,
+        string $chatId = null
     ): Notificacion 
     {
         try {
@@ -212,6 +210,7 @@ class NotificacionController extends Controller
                 'titulo' => $titulo,
                 'mensaje' => $mensaje,
                 'es_mensaje_chat' => $esMensajeChat,
+                'chat_id' => $chatId,
                 'fecha_hora' => now()
             ]);
 
@@ -338,14 +337,16 @@ class NotificacionController extends Controller
                 'mensaje' => 'required|string',
                 'usuarioIds' => 'required|array',
                 'usuarioIds.*' => 'integer|exists:usuarios,id',
-                'esMensajeChat' => 'boolean'
+                'esMensajeChat' => 'boolean',
+                'chatId' => 'nullable|string'
             ]);
 
             $notificacion = self::createNotificacion(
                 usuarioIds: $validated['usuarioIds'],
                 titulo: $validated['titulo'],
                 mensaje: $validated['mensaje'],
-                esMensajeChat: $validated['esMensajeChat'] ?? false
+                esMensajeChat: $validated['esMensajeChat'] ?? false,
+                chatId: $validated['chatId'] ?? null
             );
 
             return response()->json($notificacion, 201);
@@ -353,6 +354,157 @@ class NotificacionController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al crear la notificación',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Endpoint público para crear notificaciones de chat (solo para pruebas)
+     */
+    public function crearNotificacionChatPublico(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'usuario1Id' => 'required|integer',
+                'usuario1Nombre' => 'required|string',
+                'usuario2Id' => 'required|integer',
+                'usuario2Nombre' => 'required|string'
+            ]);
+
+            // Generar chatId
+            $menorId = min($validated['usuario1Id'], $validated['usuario2Id']);
+            $mayorId = max($validated['usuario1Id'], $validated['usuario2Id']);
+            $chatId = "private_{$menorId}_{$mayorId}";
+
+            // Crear notificación para usuario 1
+            $titulo1 = "Chat privado con {$validated['usuario2Nombre']}";
+            $mensaje1 = "Tienes una nueva conversación privada con {$validated['usuario2Nombre']}. Haz clic para abrir el chat.";
+            
+            $notificacion1 = Notificacion::create([
+                'titulo' => $titulo1,
+                'mensaje' => $mensaje1,
+                'es_mensaje_chat' => true,
+                'chat_id' => $chatId,
+                'fecha_hora' => now()
+            ]);
+
+            // Crear notificación para usuario 2
+            $titulo2 = "Chat privado con {$validated['usuario1Nombre']}";
+            $mensaje2 = "Tienes una nueva conversación privada con {$validated['usuario1Nombre']}. Haz clic para abrir el chat.";
+            
+            $notificacion2 = Notificacion::create([
+                'titulo' => $titulo2,
+                'mensaje' => $mensaje2,
+                'es_mensaje_chat' => true,
+                'chat_id' => $chatId,
+                'fecha_hora' => now()
+            ]);
+
+            // Asociar notificaciones a usuarios (buscar si son clientes o rematadores)
+            // Usuario 1 recibe notificacion1
+            $cliente1 = Cliente::where('usuario_id', $validated['usuario1Id'])->first();
+            $rematador1 = Rematador::where('usuario_id', $validated['usuario1Id'])->first();
+
+            if ($cliente1) {
+                $notificacion1->clientes()->attach($cliente1->id, ['leido' => false]);
+            }
+            if ($rematador1) {
+                $notificacion1->rematadores()->attach($rematador1->id, ['leido' => false]);
+            }
+
+            // Usuario 2 recibe notificacion2
+            $cliente2 = Cliente::where('usuario_id', $validated['usuario2Id'])->first();
+            $rematador2 = Rematador::where('usuario_id', $validated['usuario2Id'])->first();
+
+            if ($cliente2) {
+                $notificacion2->clientes()->attach($cliente2->id, ['leido' => false]);
+            }
+            if ($rematador2) {
+                $notificacion2->rematadores()->attach($rematador2->id, ['leido' => false]);
+            }
+
+            return response()->json([
+                'chatId' => $chatId,
+                'mensaje' => 'Invitaciones de chat creadas correctamente',
+                'notificaciones' => [
+                    [
+                        'id' => $notificacion1->id,
+                        'usuario_id' => $validated['usuario1Id'],
+                        'titulo' => $titulo1
+                    ],
+                    [
+                        'id' => $notificacion2->id,
+                        'usuario_id' => $validated['usuario2Id'],
+                        'titulo' => $titulo2
+                    ]
+                ]
+            ], 201);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error al crear las notificaciones de chat',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener notificaciones por usuario ID (endpoint público para pruebas)
+     */
+    public function obtenerNotificacionesPublico($usuarioId)
+    {
+        try {
+            $cliente = Cliente::where('usuario_id', $usuarioId)->first();
+            $rematador = Rematador::where('usuario_id', $usuarioId)->first();
+            
+            $notificaciones = [];
+            
+            if ($cliente) {
+                $notificaciones = $cliente->notificaciones()
+                    ->orderBy('fecha_hora', 'desc')
+                    ->get()
+                    ->map(function ($notificacion) use ($cliente) {
+                        return [
+                            'id' => $notificacion->id,
+                            'titulo' => $notificacion->titulo,
+                            'mensaje' => $notificacion->mensaje,
+                            'fechaHora' => $notificacion->fecha_hora,
+                            'leido' => $notificacion->pivot->leido,
+                            'esMensajeChat' => $notificacion->es_mensaje_chat,
+                            'chatId' => $notificacion->chat_id,
+                            'usuario' => [
+                                'id' => $cliente->usuario->id,
+                                'nombre' => $cliente->usuario->nombre
+                            ]
+                        ];
+                    });
+            } else if ($rematador) {
+                $notificaciones = $rematador->notificaciones()
+                    ->orderBy('fecha_hora', 'desc')
+                    ->get()
+                    ->map(function ($notificacion) use ($rematador) {
+                        return [
+                            'id' => $notificacion->id,
+                            'titulo' => $notificacion->titulo,
+                            'mensaje' => $notificacion->mensaje,
+                            'fechaHora' => $notificacion->fecha_hora,
+                            'leido' => $notificacion->pivot->leido,
+                            'esMensajeChat' => $notificacion->es_mensaje_chat,
+                            'chatId' => $notificacion->chat_id,
+                            'usuario' => [
+                                'id' => $rematador->usuario->id,
+                                'nombre' => $rematador->usuario->nombre
+                            ]
+                        ];
+                    });
+            }
+
+            return response()->json($notificaciones);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error al obtener notificaciones',
                 'message' => $e->getMessage()
             ], 500);
         }

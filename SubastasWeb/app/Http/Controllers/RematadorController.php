@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rematador;
 use App\Models\Usuario;
-use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 /**
@@ -17,9 +15,6 @@ use OpenApi\Annotations as OA;
 */
 class RematadorController extends Controller
 {
-
-    public $maxDepth = 1;
-    public $visited = [];
 
     /**
      * @OA\Get(
@@ -35,7 +30,7 @@ class RematadorController extends Controller
 
             $rematadores = Rematador::with('usuario')->get() ?? collect();
             $dtos = $rematadores->map(function ($rematador) {
-                return Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth);
+                return $rematador;
             });
 
             return response()->json($dtos, 200);
@@ -140,7 +135,7 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-        return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth), 201);
+        return response()->json($rematador, 201);
     }
 
     /**
@@ -171,7 +166,7 @@ class RematadorController extends Controller
         if (!$rematador) {
             return response()->json(['error' => 'Rematador no encontrado'], 404);
         }
-        return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
+        return response()->json($rematador);
     }
 
     /**
@@ -250,7 +245,7 @@ class RematadorController extends Controller
         ]);
 
         $rematador->load('usuario');
-         return response()->json(Mapper::fromModelRematador($rematador, $this->visited, $this->maxDepth));
+         return response()->json($rematador);
     }
 
     /**

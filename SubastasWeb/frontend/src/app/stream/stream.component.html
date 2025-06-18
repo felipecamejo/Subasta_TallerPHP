@@ -67,12 +67,18 @@
             [closable]="true">
 
             <section class="payment-section">
-                <h3>Prueba de Pago PayPal</h3>
+                <h3>Pago Requerido - Subasta Ganada</h3>
+                <p>Felicidades! Has ganado la subasta por <strong>${{paypalMonto}}</strong></p>
                 <div class="payment-container">
-                    <app-paypal [amount]="paypalMonto"></app-paypal> 
+                    <app-paypal 
+                        [amount]="paypalMonto"
+                        (paymentSuccess)="onPaymentSuccess($event)"
+                        (paymentError)="onPaymentError($event)">
+                    </app-paypal> 
                 </div>
             </section>
         </p-dialog>
+        
     </article>
 </main>
 

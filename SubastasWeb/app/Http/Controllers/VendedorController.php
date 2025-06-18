@@ -5,7 +5,6 @@ use App\Models\Vendedor;
 use Illuminate\Http\Request;
 use OpenApi\Annotations as OA;
 use Illuminate\Support\Facades\Validator;
-use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -15,8 +14,7 @@ use App\Mappers\Mapper;
  */
 class VendedorController extends Controller
 {
-    protected array $visited = [];
-    protected int $maxDepth = 3;
+
 
     /**
      * @OA\Get(
@@ -53,7 +51,7 @@ class VendedorController extends Controller
     {
         try {
             $vendedores = Vendedor::with(['facturas', 'articulos', 'casaRemate'])->get();
-            $dtoVendedores = $vendedores->map(fn($vendedor) => Mapper::fromModelVendedor($vendedor));
+            $dtoVendedores = $vendedores->map(fn($vendedor) => $vendedor);
             return response()->json($dtoVendedores, 200);
         } catch (\Throwable $e) {
             return response()->json([
@@ -138,7 +136,7 @@ class VendedorController extends Controller
             if (!$vendedor) {
                 return response()->json(['error' => 'Vendedor no encontrado'], 404);
             }
-            $dtoVendedor = Mapper::fromModelVendedor($vendedor);
+            $dtoVendedor = $vendedor;
             return response()->json($dtoVendedor, 200);
         } catch (\Throwable $e) {
             return response()->json([

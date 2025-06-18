@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Factura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -16,8 +15,7 @@ use App\Mappers\Mapper;
 
 class FacturaController extends Controller
 {
-    protected array $visited = [];
-    protected int $maxDepth = 3;
+    
 
     /**
  * @OA\Get(
@@ -48,7 +46,7 @@ class FacturaController extends Controller
 
             
             $dtos = $facturas->map(function ($factura) {
-                return Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+                return $factura;
             });
 
             return response()->json($dtos);
@@ -110,7 +108,7 @@ class FacturaController extends Controller
 
         $factura->load(['puja', 'vendedor']);
 
-        $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+        $dto = $factura;
 
         return response()->json($dto, 201);
     } catch (\Throwable $e) {
@@ -165,7 +163,7 @@ public function show($id)
             return response()->json(['error' => 'Factura no encontrada'], 404);
         }
 
-        $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+        $dto = $factura;
 
         return response()->json($dto);
     } catch (\Throwable $e) {
@@ -254,7 +252,7 @@ public function show($id)
         }
 
         // Mapea el modelo a DTO
-        $dto = Mapper::fromModelFactura($factura, $this->visited, $this->maxDepth);
+        $dto = $factura;
 
         return response()->json($dto);
     } catch (\Throwable $e) {

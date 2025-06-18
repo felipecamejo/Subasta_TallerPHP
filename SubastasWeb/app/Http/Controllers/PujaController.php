@@ -6,7 +6,6 @@ use App\Models\Puja;
 use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Mappers\Mapper;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -18,9 +17,6 @@ use Illuminate\Support\Facades\Http;
 
 class PujaController extends Controller
 {
-    protected array $visited = [];
-    protected int $maxDepth = 3;
-
         /**
      * @OA\Get(
      *     path="/api/pujas",
@@ -40,7 +36,6 @@ class PujaController extends Controller
      *                     property="cliente",
      *                     type="object",
      *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="calificacion", type="number"),
      *                     @OA\Property(property="usuario", type="object",
      *                         @OA\Property(property="id", type="integer"),
      *                         @OA\Property(property="nombre", type="string")
@@ -76,14 +71,8 @@ class PujaController extends Controller
     public function index()
     {
         try {
-            $pujas = Puja::with(['cliente', 'lote', 'factura'])->get();
-
-            $dtos = $pujas->map(function ($puja) {
-                $visited = []; 
-                return Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
-            });
-
-            return response()->json($dtos);
+            $pujas = Puja::with(['cliente.valoracion', 'cliente.usuario', 'lote', 'factura'])->get();
+            return response()->json($pujas);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => $e->getMessage(),
@@ -149,15 +138,12 @@ class PujaController extends Controller
                 'lote_id' => $request->lote_id,
             ]);
 
-            $puja->load(['cliente.usuario', 'lote', 'factura']);
-
-            $visited = [];
-            $dto = Mapper::fromModelPuja($puja, $visited, 1); // Limit depth to 1
+            $puja->load(['cliente.usuario', 'cliente.valoracion', 'lote', 'factura']);
 
             // Notificar al WebSocket sobre la nueva puja
             $this->notifyWebSocket($puja);
 
-            return response()->json($dto, 201);
+            return response()->json($puja, 201);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al crear la puja',
@@ -210,7 +196,7 @@ class PujaController extends Controller
             }
 
             $visited = []; 
-            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth); 
+            $dto = $puja; 
 
             return response()->json($dto);
         } catch (\Throwable $e) {
@@ -307,7 +293,7 @@ class PujaController extends Controller
             $puja->load(['cliente', 'lote', 'factura']);
 
             $visited = []; 
-            $dto = Mapper::fromModelPuja($puja, $visited, $this->maxDepth);
+            $dto = $puja;
 
             return response()->json($dto);
         } catch (\Throwable $e) {

@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Usuario;
-use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -18,10 +16,6 @@ use OpenApi\Annotations as OA;
 */
 class ClienteController extends Controller
 {
-
-    public $maxDepth = 1;
-    public $visited = [];
-
      /**
      * @OA\Get(
      *     path="/api/clientes",
@@ -33,16 +27,9 @@ class ClienteController extends Controller
     public function index()
     {
         try {
-
-            $clientes = Cliente::with('usuario')->get() ?? collect();
-            $dtos = $clientes->map(function ($cliente) {
-                return Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth);
-            });
-
-            return response()->json($dtos, 200);
-
+            $clientes = Cliente::with(['usuario', 'valoracion'])->get();
+            return response()->json($clientes, 200);
         } catch (\Throwable $e) {
-
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -138,11 +125,10 @@ class ClienteController extends Controller
         // 2. Crear el cliente asociado
         $cliente = Cliente::create([
             'usuario_id' => $usuario->id,
-            'calificacion' => $validated['calificacion'] ?? null,
         ]);
 
-        $cliente->load('usuario');
-        return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth), 201);
+        $cliente->load(['usuario', 'valoracion']);
+        return response()->json($cliente, 201);
     }
 
      /**
@@ -169,7 +155,7 @@ class ClienteController extends Controller
     */
     public function show($usuario_id)
     {
-        $cliente = Cliente::with(['usuario', 'pujas' => function($query) {
+        $cliente = Cliente::with(['usuario', 'valoracion', 'pujas' => function($query) {
             $query->with(['lote', 'factura']);
         }, 'notificaciones'])->find($usuario_id);
         
@@ -177,8 +163,7 @@ class ClienteController extends Controller
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
 
-        $visited = [];
-        return response()->json(Mapper::fromModelCliente($cliente, $visited, 1));
+        return response()->json($cliente);
     }
 
     /**
@@ -251,13 +236,9 @@ class ClienteController extends Controller
             'longitud' => $validated['longitud'] ?? $usuario->longitud,
         ]);
 
-        // Actualizar cliente
-        $cliente->update([
-            'calificacion' => $validated['calificacion'] ?? $cliente->calificacion,
-        ]);
-
-        $cliente->load('usuario');
-         return response()->json(Mapper::fromModelCliente($cliente, $this->visited, $this->maxDepth));
+        // Actualizar cliente (ya no hay campo calificacion)
+        $cliente->load(['usuario', 'valoracion']);
+        return response()->json($cliente);
     }
 
 

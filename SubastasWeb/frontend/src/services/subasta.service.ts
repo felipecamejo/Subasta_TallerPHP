@@ -1,8 +1,10 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { UrlService } from './url.service';
 import { subastaDto } from '../models/subastaDto';
+import { clienteDto } from '../models/clienteDto';
 import { mailDto } from '../models/mailDto';
 
 @Injectable({
@@ -35,4 +37,18 @@ export class SubastaService {
   enviarMail(mail : mailDto): Observable<any> {
     return this.http.post<any>(`${this.urlService.baseUrl}/subastas/enviarMail`, mail);
   }
+  
+  getClienteMail(clienteId: number | null): Observable<string | null> {
+    if (!clienteId) {
+      return of(null);
+    }
+    return this.http.get<clienteDto>(`${this.urlService.baseUrl}/clientes/${clienteId}`).pipe(
+      map(cliente => cliente.usuario?.email || null),
+      catchError(error => {
+        console.error('Error al obtener cliente:', error);
+        return of(null);
+      })
+    );
+  }
 }
+

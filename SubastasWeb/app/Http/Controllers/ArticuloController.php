@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Articulo;
-use App\Mappers\Mapper;
 use OpenApi\Annotations as OA;
 
 
@@ -16,9 +15,6 @@ use OpenApi\Annotations as OA;
 */
 class ArticuloController extends Controller{
 
-    public $maxDepth = 1;
-    public $visited = [];
-
     /**
      * @OA\Get(
      *     path="/api/articulos",
@@ -29,12 +25,8 @@ class ArticuloController extends Controller{
     */
     public function index(){
         try {
-            $articulo = Articulo::with(['categoria', 'vendedor', 'lote'])->get();
-
-            $dtos = $articulo->map(function ($articulo) {
-                return Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth);
-            });
-            return response()->json($dtos);
+            $articulos = Articulo::with(['categoria', 'vendedor', 'lote'])->get();
+            return response()->json($articulos);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => $e->getMessage(),
@@ -91,7 +83,7 @@ class ArticuloController extends Controller{
 
         $articulo = Articulo::with(['categoria', 'vendedor', 'lote'])->find($articulo->id);
 
-        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth), 201);
+        return response()->json($articulo, 201);
     }
 
     /**
@@ -123,7 +115,7 @@ class ArticuloController extends Controller{
             return response()->json(['Error' => "Articulo no encontrado. id: $id"], 404);
         }
 
-        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth));
+        return response()->json($articulo);
     }
 
     /**
@@ -173,7 +165,8 @@ class ArticuloController extends Controller{
         $articulo->lote_id = $request->lote_id;
         $articulo->save();
 
-        return response()->json(Mapper::fromModelArticulo($articulo, $this->visited, $this->maxDepth), 200);
+        $articulo->load(['categoria', 'vendedor', 'lote']);
+        return response()->json($articulo, 200);
     }
 
     /**

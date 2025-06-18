@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { PaypalService } from '../../services/Paypal.service';
 
 @Component({
@@ -8,6 +8,8 @@ import { PaypalService } from '../../services/Paypal.service';
 })
 export class PayPalComponent implements OnInit {
   @Input() amount!: number;
+  @Output() paymentSuccess = new EventEmitter<any>();
+  @Output() paymentError = new EventEmitter<any>();
   @ViewChild('paypalButton') paypalButton!: ElementRef;
 
   constructor(private paypalService: PaypalService) {}
@@ -30,10 +32,15 @@ export class PayPalComponent implements OnInit {
         onApprove: async (data: any, actions: any) => {
           const order = await actions.order.capture();
           console.log('Payment completed', order);
-          // TODO: Implementar lógica post-pago
+          this.paymentSuccess.emit({
+            orderId: order.id,
+            amount: this.amount,
+            details: order
+          });
         },
         onError: (err: any) => {
           console.error('PayPal Error:', err);
+          this.paymentError.emit(err);
         }
       }).render(this.paypalButton.nativeElement);
     } catch (error) {

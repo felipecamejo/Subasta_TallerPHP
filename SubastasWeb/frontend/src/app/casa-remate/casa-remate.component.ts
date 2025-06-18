@@ -32,24 +32,16 @@ export class CasaRemateComponent {
   promedioCalificacion: number = 0;
   estrellas: FormGroup;
   model: casaRemateDto = {
-    id: 0,
+    id: null,
     nombre: '',
     idFiscal: '',
     email: '',
     telefono: '',
-    calificacion: [],
     latitud: 0,
     longitud: 0,
-    rematador: {
-      usuario: {
-        id: 0,
-        nombre: '',
-        imagen: '',
-        email: ''
-      },
-      matricula: ''
-    },
-    subastas: []
+    rematadores: [],
+    subastas: [],
+    valoracion: null
   };
   title: string = 'Casa de Remates';
 
@@ -75,7 +67,7 @@ export class CasaRemateComponent {
       next: (data: any) => {
         this.model = data;
         // calculá el promedio luego de asignar los datos
-        this.promedioCalificacion = this.obtenerPromedio(this.model.calificacion);
+        this.promedioCalificacion = this.obtenerPromedioValoracion();
 
         // actualizá el form control
         this.estrellas.patchValue({ value: this.promedioCalificacion });
@@ -98,6 +90,15 @@ export class CasaRemateComponent {
     }
   }
 
+  obtenerPromedioValoracion(): number {
+    if (!this.model.valoracion || this.model.valoracion.cantidad_opiniones === 0) {
+      return 0;
+    }
+    const promedio = this.model.valoracion.valoracion_total / this.model.valoracion.cantidad_opiniones;
+    return Math.round(promedio);
+  }
+
+  // Método auxiliar para calcular promedio de un array de números (por si se necesita en el futuro)
   obtenerPromedio(calificaciones: number[]): number {
     if (calificaciones.length === 0) {
       return 0; 

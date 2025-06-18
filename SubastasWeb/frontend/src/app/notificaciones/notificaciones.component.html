@@ -28,15 +28,23 @@
       <div 
         *ngFor="let notificacion of notificaciones" 
         class="notification-item"
-        [ngClass]="{'unread': !notificacion.leido, 'read': notificacion.leido}"
+        [ngClass]="{
+          'unread': !notificacion.leido, 
+          'read': notificacion.leido,
+          'chat-notification': esInvitacionChat(notificacion)
+        }"
         (click)="marcarComoLeida(notificacion)">
         
         <div class="notification-content">
           <div class="notification-title">
+            <i *ngIf="esInvitacionChat(notificacion)" class="pi pi-comments chat-icon"></i>
             {{ obtenerTitulo(notificacion) }}
           </div>
           <div class="notification-time">
             {{ formatearFecha(obtenerFecha(notificacion)) }}
+          </div>
+          <div *ngIf="esInvitacionChat(notificacion)" class="chat-indicator">
+            Chat privado - Haz clic para abrir
           </div>
         </div>
         
