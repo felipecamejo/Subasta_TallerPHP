@@ -233,3 +233,25 @@
     background-color: #ffffff;
   }
 }
+
+/* Estilos para notificaciones de chat */
+.chat-icon {
+  color: #007bff;
+  margin-right: 8px;
+}
+
+.chat-indicator {
+  font-size: 0.8rem;
+  color: #007bff;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.notification-item.chat-notification {
+  border-left: 3px solid #007bff;
+  background-color: #f8f9ff;
+}
+
+.notification-item.chat-notification:hover {
+  background-color: #e8f0ff;
+}

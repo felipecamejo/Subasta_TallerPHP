@@ -13,6 +13,8 @@ export interface notificacionUsuarioDto {
   titulo: string;
   mensaje: string;
   fechaHora: Date;
+  esMensajeChat?: boolean;
+  chatId?: string;
   usuario: {
     id: number | null;
     nombre: string | null;

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
 import { DialogModule } from 'primeng/dialog';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NotificacionService } from '../../services/notificacion.service';
 import { notificacionUsuarioDto } from '../../models/notificacionDto';
@@ -28,7 +29,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
 
   constructor(
-    private notificacionService: NotificacionService
+    private notificacionService: NotificacionService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -67,12 +69,60 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
   marcarComoLeida(notificacion: notificacionUsuarioDto): void {
     this.notificacionSeleccionada = notificacion;
+    
+    // Verificar si es una invitación de chat
+    if (this.esInvitacionChat(notificacion)) {
+      this.abrirChat(notificacion);
+      return;
+    }
+    
     this.mostrarDialog = true;
     this.cerrarDropdown();
     
     if (!notificacion.leido && notificacion.id) {
       this.notificacionService.marcarLeidaYActualizar(notificacion.id);
     }
+  }
+
+  /**
+   * Verifica si una notificación es una invitación de chat
+   */
+  esInvitacionChat(notificacion: notificacionUsuarioDto): boolean {
+    return notificacion.esMensajeChat === true && !!notificacion.chatId;
+  }
+
+  /**
+   * Abre el chat cuando se hace clic en una invitación de chat
+   */
+  abrirChat(notificacion: notificacionUsuarioDto): void {
+    if (!notificacion.chatId) {
+      console.error('No se encontró el ID del chat en la notificación');
+      return;
+    }
+
+    // Marcar la notificación como leída
+    if (!notificacion.leido && notificacion.id) {
+      this.notificacionService.marcarLeidaYActualizar(notificacion.id);
+    }
+
+    // Cerrar el dropdown
+    this.cerrarDropdown();
+
+    // Navegar al componente de chat con el chatId como parámetro
+    this.router.navigate(['/chat', notificacion.chatId], {
+      queryParams: {
+        nombreOtroUsuario: this.extraerNombreOtroUsuario(notificacion)
+      }
+    });
+  }
+
+  /**
+   * Extrae el nombre del otro usuario del título de la notificación
+   */
+  private extraerNombreOtroUsuario(notificacion: notificacionUsuarioDto): string {
+    // El título tiene formato "Chat privado con [Nombre]"
+    const match = notificacion.titulo.match(/Chat privado con (.+)/);
+    return match ? match[1] : 'Usuario';
   }
 
   marcarTodasComoLeidas(): void {

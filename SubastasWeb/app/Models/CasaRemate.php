@@ -2,7 +2,9 @@
     namespace App\Models;
     use App\Models\Rematador;
     use App\Models\Subasta;
+    use App\Models\Valoracion;
     use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\MorphOne;
 
     class CasaRemate extends Model{
 
@@ -11,16 +13,18 @@
         protected $primaryKey = 'usuario_id';
         protected $fillable = [ 
             'usuario_id',
-            'idFiscal', 
-            'calificacion'
+            'idFiscal'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-        // tiene un arreglo de calificaciones porque van a ser varias y se debe sacar un promedio a la hora de mostrar la calificación final.
-        protected $casts = [
-            'calificacion' => 'array',
-        ];
+        /**
+         * Relación polimórfica con valoraciones
+         */
+        public function valoracion(): MorphOne
+        {
+            return $this->morphOne(Valoracion::class, 'valorable');
+        }
 
         public function rematadores() {
             return $this->belongsToMany(Rematador::class, 'casa_remate_rematador', 'casa_remate_id', 'rematador_id');

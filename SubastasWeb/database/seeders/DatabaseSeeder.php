@@ -12,6 +12,7 @@ use App\Models\Puja;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
+use App\Models\Valoracion;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -23,17 +24,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void {
 
-        CasaRemate::create([
+        $casaRemate = CasaRemate::create([
             'id' => 1,
             'nombre' => 'Casa de Remates Aurora',
             'idFiscal' => '212345670018',
             'email' => 'cocoarodri@gmail.com',
             'telefono' => '099123456',
-            'calificacion' => [4.5, 4.8, 4.2, 5.0, 4.7],
             'latitud' => -34.9011,
             'longitud' => -56.1645,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        // Crear valoración para la casa de remate
+        Valoracion::create([
+            'valoracion_total' => 23, // 4.6 promedio con 5 valoraciones (4+5+4+5+5 = 23)
+            'cantidad_opiniones' => 5,
+            'valorable_type' => 'App\\Models\\CasaRemate',
+            'valorable_id' => $casaRemate->id,
         ]);
 
         Subasta::create([
@@ -184,9 +192,16 @@ class DatabaseSeeder extends Seeder
             'longitud' => -56.1645,
         ]);
 
-        Cliente::create([
+        $cliente1 = Cliente::create([
             'usuario_id' => $clienteUsuario->id,
-            'calificacion' => 5,
+        ]);
+
+        // Crear valoración para el cliente
+        Valoracion::create([
+            'valoracion_total' => 15, // 5.0 promedio con 3 valoraciones (5+5+5 = 15)
+            'cantidad_opiniones' => 3,
+            'valorable_type' => 'App\\Models\\Cliente',
+            'valorable_id' => $cliente1->usuario_id,
         ]);
 
         $rematadorUsuario = Usuario::create([
@@ -203,6 +218,52 @@ class DatabaseSeeder extends Seeder
         Rematador::create([
             'usuario_id' => $rematadorUsuario->id,
             'matricula' => 'MAT1234',
+        ]);
+
+        $usuario1 = Usuario::create([
+            'nombre' => 'Juan Pérez',
+            'cedula' => '33333333',
+            'email' => 'juan@example.com',
+            'telefono' => '099333333',
+            'imagen' => null,
+            'contrasenia' => Hash::make('123456'),
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+        ]);
+
+        $cliente2 = Cliente::create([
+            'usuario_id' => $usuario1->id,
+        ]);
+
+        // Crear valoración para el cliente Juan Pérez
+        Valoracion::create([
+            'valoracion_total' => 12, // 4.0 promedio con 3 valoraciones (4+4+4 = 12)
+            'cantidad_opiniones' => 3,
+            'valorable_type' => 'App\\Models\\Cliente',
+            'valorable_id' => $cliente2->usuario_id,
+        ]);
+
+        $usuario2 = Usuario::create([
+            'nombre' => 'María González',
+            'cedula' => '44444444',
+            'email' => 'maria@example.com',
+            'telefono' => '099444444',
+            'imagen' => null,
+            'contrasenia' => Hash::make('123456'),
+            'latitud' => -34.9011,
+            'longitud' => -56.1645,
+        ]);
+
+        $cliente3 = Cliente::create([
+            'usuario_id' => $usuario2->id,
+        ]);
+
+        // Crear valoración para el cliente María González
+        Valoracion::create([
+            'valoracion_total' => 20, // 5.0 promedio con 4 valoraciones (5+5+5+5 = 20)
+            'cantidad_opiniones' => 4,
+            'valorable_type' => 'App\\Models\\Cliente',
+            'valorable_id' => $cliente3->usuario_id,
         ]);
 
     }

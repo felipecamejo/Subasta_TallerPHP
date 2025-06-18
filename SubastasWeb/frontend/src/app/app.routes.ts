@@ -9,6 +9,8 @@ import { RegisterComponent } from './register/register.component';
 import { GoogleLoginComponent } from './google-login/google-login.component';
 import { LoginGoogleComponent } from './login-google.component/login-google.component'; 
 import { RegistroGoogleComponent } from './registro-google/registro-google.component';
+import { ChatComponent } from './chat/chat.component';
+import { TestChatComponent } from './test-chat/test-chat.component';
 
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
@@ -27,6 +29,8 @@ export const routes: Routes = [
     { path: 'estadisticas', component: EstadisticasComponent },
     { path: 'casa-remates', component: CasaRemateComponent },
     { path: 'registro', component: RegisterComponent },
+    { path: 'chat/:chatId', component: ChatComponent }, // Nueva ruta para chat
+    { path: 'test-chat', component: TestChatComponent }, // Ruta para pruebas
     { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     // Botón de login con Google (flujo de inicio)

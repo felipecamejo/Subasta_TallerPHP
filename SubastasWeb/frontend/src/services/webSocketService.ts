@@ -47,7 +47,6 @@ export class WebsocketService {
   private setupConnectionEvents() {
     this.socket.on('connect', () => {
       console.log('✅ Conectado al servidor WebSocket');
-      console.log('🔗 Socket ID:', this.socket.id);
       this.connectionStatus.next(true);
     });
 
@@ -136,10 +135,19 @@ export class WebsocketService {
   }
 
   joinChat(chatId: string, userId: number, userName: string) {
+    console.log('WebSocket: Enviando join_chat:', { chatId, userId, userName });
     this.socket.emit('join_chat', { chatId, userId, userName });
   }
 
   sendMessage(chatId: string, fromUserId: number, toUserId: number, message: string, fromUserName: string) {
+    console.log('WebSocket: Enviando send_message:', {
+      chatId,
+      fromUserId,
+      toUserId,
+      message,
+      fromUserName,
+      timestamp: new Date().toISOString()
+    });
     this.socket.emit('send_message', {
       chatId,
       fromUserId,
@@ -151,7 +159,11 @@ export class WebsocketService {
   }
   onNewMessage(): Observable<MessageData> {
     return new Observable(observer => {
-      this.socket.on('new_message', (data: MessageData) => observer.next(data));
+      console.log('WebSocket: Configurando listener para new_message');
+      this.socket.on('new_message', (data: MessageData) => {
+        console.log('WebSocket: Mensaje recibido:', data);
+        observer.next(data);
+      });
     });
   }
 

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('titulo');
             $table->string('mensaje');
             $table->boolean('es_mensaje_chat')->default(false);
+            $table->string('chat_id')->nullable()->after('es_mensaje_chat');
             $table->timestamp('fecha_hora')->useCurrent();
             $table->timestamps();
         });

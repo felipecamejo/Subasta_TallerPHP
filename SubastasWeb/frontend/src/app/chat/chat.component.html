@@ -1,46 +1,216 @@
-<div class="chat-container" [class.minimized]="minimized">
+<div class="chat-container">
   <!-- Chat header -->
   <div class="chat-header">
-    <div class="user-info" (click)="toggleMinimize()">
-      <img src="assets/avatars/user1.png" alt="User avatar" class="avatar">
-      <span class="username">Juan Pérez</span>
-    </div>
-    <div class="header-controls">
-      <button (click)="toggleMinimize()" class="control-btn">
-        <i class="fas" [class.fa-window-minimize]="!minimized" [class.fa-window-maximize]="minimized"></i>
-      </button>
-      <button (click)="closeChat($event)" class="control-btn">
-        <i class="fas fa-times"></i>
-      </button>
+    <button (click)="closeChat()" class="back-btn">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    <div class="user-info">
+      <span class="username">Chat Test</span>
     </div>
   </div>
 
-  <!-- Messages container -->
-  <div class="messages-container" #scrollContainer>
-    <div class="message-list">
-      <div *ngFor="let message of messages" 
+  <!-- Chat content - Siempre visible para debug -->
+  <div class="chat-content">
+    <!-- Messages area -->
+    <div class="messages-area" #messagesContainer (scroll)="onMessagesScroll()">
+      <!-- Mensaje cuando no hay mensajes -->
+      <div *ngIf="messages.length === 0 && chatValido && !cargandoValidacion" 
+           style="text-align: center; padding: 20px; color: #666;">
+        No hay mensajes en este chat
+      </div>
+      
+      <!-- Mensajes dinámicos -->
+      <div *ngFor="let message of messages; trackBy: trackByMessageId; let i = index" 
            class="message" 
-           [class.own-message]="message.isOwn">
-        <img [src]="message.senderAvatar" alt="Avatar" class="message-avatar">
-        <div class="message-content">
-          <div class="message-header">
-            <span class="message-username">{{message.senderName}}</span>
-            <span class="message-time">{{message.timestamp | date:'shortTime'}}</span>
-          </div>
+           [class.message-own]="message.isOwn"
+           [class.message-other]="!message.isOwn">
+        <div class="message-bubble">
           <div class="message-text">{{message.text}}</div>
+          <div class="message-time">{{formatMessageTime(message.timestamp)}}</div>
         </div>
+      </div>
+      
+      <!-- Botón para ir al final del chat -->
+      <button *ngIf="!autoScrollEnabled && messages.length > 0" 
+              class="scroll-to-bottom-btn"
+              (click)="scrollToBottomManual()"
+              title="Ir al final del chat">
+        <i class="bi bi-chevron-down"></i>
+      </button>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area" *ngIf="!chatFinalizado">
+      <div class="input-container">
+        <input type="text" 
+               placeholder="Escribe un mensaje..." 
+               [(ngModel)]="newMessage"
+               (input)="onMessageInput()"
+               (keyup.enter)="sendMessage()"
+               class="message-input"
+               [disabled]="!chatValido || cargandoValidacion || chatFinalizado"
+               #messageInput>
+        <button (click)="sendMessage()" 
+                [disabled]="!newMessage.trim() || !chatValido || cargandoValidacion || chatFinalizado" 
+                class="send-btn">
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando el chat está finalizado -->
+    <div class="chat-finalizado" *ngIf="chatFinalizado">
+      <p>Este chat ha sido finalizado. Ya no se pueden enviar mensajes.</p>
+      <button *ngIf="necesitaValorarChatFinalizado" 
+              (click)="abrirModalValoracionPendiente()"
+              class="btn-valorar-pendiente">
+        Valorar mi experiencia
+      </button>
+    </div>
+
+    <!-- Mensaje cuando el chat no está válido o se está cargando -->
+    <div class="chat-no-activo" *ngIf="!chatValido || cargandoValidacion">
+      <p *ngIf="cargandoValidacion">Validando acceso al chat...</p>
+      <p *ngIf="!chatValido && !cargandoValidacion">{{errorValidacion || 'Chat no disponible'}}</p>
+    </div>
+
+    <!-- Botón para finalizar chat -->
+    <div class="finalizar-section" *ngIf="!chatFinalizado">
+      <button (click)="abrirModalFinalizarChat()" 
+              class="btn-finalizar"
+              [disabled]="!chatValido || cargandoValidacion || chatFinalizado">
+        Finalizar Chat
+      </button>
+    </div>
+
+    <!-- Área de valoración (aparece después de finalizar el chat) -->
+    <div *ngIf="mostrarValoracion" class="valoracion-section">
+      <div class="valoracion-header">
+        <h3>¡Transacción completada!</h3>
+        <p>Por favor, valora tu experiencia:</p>
+      </div>
+
+      <!-- Valoración del cliente a la casa de remate -->
+      <div class="valoracion-item" *ngIf="puntuacionCliente >= 0">
+        <h4>Valorar Casa de Remate</h4>
+        <div class="estrellas">
+          <span *ngFor="let i of [1,2,3,4,5]" 
+                class="estrella"
+                [class.active]="i <= puntuacionCliente"
+                (click)="setPuntuacion('cliente', i)">
+            ⭐
+          </span>
+        </div>
+        <textarea 
+          [(ngModel)]="comentarioCliente" 
+          placeholder="Comentario opcional..."
+          class="comentario-input">
+        </textarea>
+        <button (click)="enviarValoracionCliente()" 
+                class="btn-valorar"
+                [disabled]="puntuacionCliente === 0">
+          Enviar Valoración
+        </button>
+      </div>
+
+      <!-- Valoración de la casa de remate al cliente -->
+      <div class="valoracion-item" *ngIf="puntuacionCasa >= 0">
+        <h4>Valorar Cliente</h4>
+        <div class="estrellas">
+          <span *ngFor="let i of [1,2,3,4,5]" 
+                class="estrella"
+                [class.active]="i <= puntuacionCasa"
+                (click)="setPuntuacion('casa', i)">
+            ⭐
+          </span>
+        </div>
+        <textarea 
+          [(ngModel)]="comentarioCasa" 
+          placeholder="Comentario opcional..."
+          class="comentario-input">
+        </textarea>
+        <button (click)="enviarValoracionCasa()" 
+                class="btn-valorar"
+                [disabled]="puntuacionCasa === 0">
+          Enviar Valoración
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Chat input -->
-  <div class="chat-input">
-    <input type="text" 
-           placeholder="Escribe un mensaje..." 
-           [(ngModel)]="newMessage"
-           (keyup.enter)="sendMessage()">
-    <button (click)="sendMessage()" [disabled]="!newMessage.trim()">
-      <i class="fas fa-paper-plane"></i>
-    </button>
+  <!-- Modal de valoración -->
+  <div class="modal-overlay" *ngIf="mostrarModalValoracion" (click)="cerrarModalValoracion()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{necesitaValorarChatFinalizado ? 'Valorar Chat Finalizado' : 'Finalizar Chat'}}</h3>
+        <button class="modal-close" (click)="cerrarModalValoracion()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p *ngIf="!necesitaValorarChatFinalizado">¿Deseas finalizar el chat y valorar al otro usuario?</p>
+        <p *ngIf="necesitaValorarChatFinalizado" class="chat-finalizado-mensaje">
+          <strong>Este chat fue finalizado por el otro usuario.</strong><br>
+          Te invitamos a valorar tu experiencia para ayudar a otros usuarios.
+        </p>
+        
+        <!-- Selector de tipo de usuario -->
+        <div class="tipo-usuario-selector">
+          <label>Estás valorando a:</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" 
+                     [value]="'cliente'" 
+                     [(ngModel)]="otroUsuarioTipo" 
+                     name="tipoUsuario">
+              Cliente
+            </label>
+            <label>
+              <input type="radio" 
+                     [value]="'casa_remate'" 
+                     [(ngModel)]="otroUsuarioTipo" 
+                     name="tipoUsuario">
+              Casa de Remate
+            </label>
+          </div>
+        </div>
+
+        <!-- Valoración con estrellas -->
+        <div class="valoracion-estrellas">
+          <label>Calificación:</label>
+          <div class="estrellas">
+            <span *ngFor="let i of [1,2,3,4,5]" 
+                  class="estrella"
+                  [class.active]="i <= valoracionSeleccionada"
+                  [class.hover]="i <= valoracionSeleccionada"
+                  (click)="seleccionarValoracion(i)">
+              ⭐
+            </span>
+          </div>
+          <small *ngIf="valoracionSeleccionada > 0">
+            {{valoracionSeleccionada}} de 5 estrellas
+          </small>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-secondary" 
+                *ngIf="!necesitaValorarChatFinalizado"
+                (click)="finalizarChatSinValoracion()"
+                [disabled]="enviandoValoracion">
+          Solo Finalizar
+        </button>
+        <button class="btn-secondary" 
+                *ngIf="necesitaValorarChatFinalizado"
+                (click)="cerrarModalValoracion()"
+                [disabled]="enviandoValoracion">
+          Valorar Más Tarde
+        </button>
+        <button class="btn-primary" 
+                (click)="finalizarChatConValoracion()"
+                [disabled]="valoracionSeleccionada === 0 || enviandoValoracion">
+          {{enviandoValoracion ? 'Enviando...' : (necesitaValorarChatFinalizado ? 'Enviar Valoración' : 'Finalizar y Valorar')}}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

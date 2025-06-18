@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\CasaRemate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Mappers\Mapper;
 
 /**
  * @OA\Tag(
@@ -15,9 +14,6 @@ use App\Mappers\Mapper;
  */
 class CasaRemateController extends Controller
 {
-
-    public $maxDepth = 2;
-    public $visited = [];
     /**
      * @OA\Get(
      *     path="/api/casa-remates",
@@ -28,11 +24,8 @@ class CasaRemateController extends Controller
      */
     public function index()
     {
-        $casaRemate = CasaRemate::with(['rematadores', 'subastas'])->get();
-        $dto = $casaRemate->map(function ($casa) {
-            return Mapper::fromModelCasaRemate($casa, $this->visited, $this->maxDepth);
-        });
-        return response()->json($dto);
+        $casaRemate = CasaRemate::with(['rematadores', 'subastas', 'valoracion'])->get();
+        return response()->json($casaRemate);
     }
 
     /**
@@ -100,13 +93,13 @@ class CasaRemateController extends Controller
      */
     public function show(string $id)
     {
-        $casaRemate = CasaRemate::with(['rematadores', 'subastas'])->find($id);
+        $casaRemate = CasaRemate::with(['rematadores', 'subastas', 'valoracion'])->find($id);
 
         if (!$casaRemate) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
-        return response()->json(Mapper::fromModelCasaRemate($casaRemate, $this->visited, $this->maxDepth));
+        return response()->json($casaRemate);
     }
 
     /**

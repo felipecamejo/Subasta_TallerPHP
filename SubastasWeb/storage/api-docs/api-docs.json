@@ -911,6 +911,449 @@
                 }
             }
         },
+        "/api/chat/invitacion": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Crear invitación de chat entre dos usuarios",
+                "operationId": "fc7a777c07a4d4af4f711851b66537b2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "invitanteId",
+                                    "invitanteNombre",
+                                    "invitadoId",
+                                    "invitadoNombre"
+                                ],
+                                "properties": {
+                                    "invitanteId": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "invitanteNombre": {
+                                        "type": "string",
+                                        "example": "Juan Pérez"
+                                    },
+                                    "invitadoId": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "invitadoNombre": {
+                                        "type": "string",
+                                        "example": "María García"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitación de chat creada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitaciones de chat creadas correctamente"
+                                        },
+                                        "chatId": {
+                                            "type": "string",
+                                            "example": "private_1_2"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error del servidor"
+                    }
+                }
+            }
+        },
+        "/api/chat/{chatId}/validar": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Validar acceso a un chat",
+                "operationId": "c3d01064ae67d3aa6f7bde727e71c87c",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "private_1_2"
+                    },
+                    {
+                        "name": "usuario_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resultado de la validación de acceso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "valid": {
+                                            "description": "true si tiene acceso, false si no",
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/{chatId}/mensaje": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Enviar un mensaje en un chat",
+                "operationId": "240a80cd9ec497a01838c80c799c9c48",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "private_1_2"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "usuario_id",
+                                    "contenido"
+                                ],
+                                "properties": {
+                                    "usuario_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "contenido": {
+                                        "type": "string",
+                                        "example": "Hola, ¿cómo estás?"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Mensaje enviado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "mensaje": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes acceso a este chat"
+                    },
+                    "404": {
+                        "description": "Chat no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/chat/{chatId}/mensajes": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtener mensajes de un chat",
+                "operationId": "fba6594ca5a7862e2b5658b2533cdd2b",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "private_1_2"
+                    },
+                    {
+                        "name": "usuario_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1
+                        },
+                        "example": 50
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de mensajes del chat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "mensajes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "chat": {
+                                            "type": "object"
+                                        },
+                                        "pagination": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes acceso a este chat"
+                    },
+                    "404": {
+                        "description": "Chat no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/chat/{chatId}/info": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtener información del chat",
+                "operationId": "0b7b5f3cf8ca930266f390f27aafdf6f",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "private_1_2"
+                    },
+                    {
+                        "name": "usuario_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Información del chat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "chat": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes acceso a este chat"
+                    },
+                    "404": {
+                        "description": "Chat no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/chat/{chatId}/finalizar-chat": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Finalizar chat para habilitar valoraciones",
+                "operationId": "4022baf14a5392c756c4b5dc66c2c6b5",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "description": "ID del chat a finalizar",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "private_1_2"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "usuario_id"
+                                ],
+                                "properties": {
+                                    "usuario_id": {
+                                        "description": "ID del usuario que finaliza el chat",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Chat finalizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chat finalizado. Ahora pueden valorar."
+                                        },
+                                        "puede_valorar": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No tienes acceso a este chat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No tienes acceso a este chat"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chat no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chat no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/clientes": {
             "get": {
                 "tags": [
@@ -1703,9 +2146,6 @@
                                                 "properties": {
                                                     "id": {
                                                         "type": "integer"
-                                                    },
-                                                    "calificacion": {
-                                                        "type": "number"
                                                     },
                                                     "usuario": {
                                                         "properties": {
@@ -3032,6 +3472,10 @@
         {
             "name": "Categorias",
             "description": "API para gestionar categoria"
+        },
+        {
+            "name": "Chat",
+            "description": "API para gestionar chats privados"
         },
         {
             "name": "Cliente",

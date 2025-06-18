@@ -2,16 +2,16 @@ import { rematadorDto } from './rematadorDto';
 import { subastaDto } from './subastaDto';
 import { usuarioDto } from './usuarioDto';
 import { vendedorDto } from './vendedorDto';
+import { valoracionDto } from './valoracionDto';
 
 export interface casaRemateDto {
     usuario_id: number;
     idFiscal: string;
-    calificacion: number;          // Promedio de calificaciones
-    calificaciones: number[];      // Array de calificaciones individuales
     usuario: usuarioDto;           // Datos personales del usuario
     vendedor?: vendedorDto;        // Vendedor asociado (opcional)
     rematadores: rematadorDto[];   // Lista de rematadores
     subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre' | 'activa'>[]; // Subastas resumidas
+    valoracion: Pick<valoracionDto, 'id' | 'valoracion_total' | 'cantidad_opiniones' | 'valorable_type' | 'valorable_id'> | null;
 }
 
 // Para crear/actualizar una casa de remate
