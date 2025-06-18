@@ -1,5 +1,6 @@
 import { rematadorDto } from './rematadorDto';
 import { clienteDto } from './clienteDto';
+import { casaRemateDto } from './casaRemateDto';
 
 export interface usuarioDto {
     id: number | null;
@@ -11,8 +12,8 @@ export interface usuarioDto {
     contrasenia: string;
     latitud: number;
     longitud: number;
-    
-    rematador: Pick<rematadorDto, 'usuario'>;
-    cliente: Pick<clienteDto, 'usuario'>;
 
+    rematador?: Pick<rematadorDto, 'usuario'>;
+    cliente?: Pick<clienteDto, 'usuario'>;
+    casaremate?: Pick<casaRemateDto, 'usuario'>;
 }

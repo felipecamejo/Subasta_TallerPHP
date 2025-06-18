@@ -11,14 +11,20 @@ export interface casaRemateDto {
     usuario: usuarioDto;           // Datos personales del usuario
     vendedor?: vendedorDto;        // Vendedor asociado (opcional)
     rematadores: rematadorDto[];   // Lista de rematadores
-    subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre' | 'activa'>[]; // Subastas resumidas
+    subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre' | 'activa'>[];
+
+    // Campos opcionales para que funcionen los componentes sin romper la estructura original
+    id?: number;
+    nombre?: string;
+    email?: string;
+    telefono?: string;
 }
 
 // Para crear/actualizar una casa de remate
 export interface CreateCasaRemateDto {
     idFiscal: string;
-    usuario_id: number;     // ID del usuario ya creado
-    vendedor_id?: number;   // ID del vendedor (opcional)
+    usuario_id: number;
+    vendedor_id?: number;
 }
 
 // Para listar casas de remate (vista resumida)

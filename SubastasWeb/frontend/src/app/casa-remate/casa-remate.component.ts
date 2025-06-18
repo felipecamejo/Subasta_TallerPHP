@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { RatingModule } from 'primeng/rating';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { FormGroup, FormControl } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,43 +14,54 @@ import { CasaRematesService } from '../../services/casa-remates.service';
 import { casaRemateDto } from '../../models/casaRemateDto';
 import { MessageService } from 'primeng/api';
 
-
-
 @Component({
   selector: 'app-casa-remate',
   standalone: true,
-  imports: [DialogModule, InputGroupModule, InputGroupAddonModule, FormsModule, CommonModule, ButtonModule, RatingModule, ReactiveFormsModule, TableModule],
+  imports: [
+    DialogModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    FormsModule,
+    CommonModule,
+    ButtonModule,
+    RatingModule,
+    ReactiveFormsModule,
+    TableModule
+  ],
   templateUrl: './casa-remate.component.html',
   styleUrl: './casa-remate.component.scss',
   providers: [MessageService]
 })
 export class CasaRemateComponent {
-
-  // ACA PUEDO DECLARAR LAS VARIABLES QUE NECESITO PARA EL COMPONENTE
-  modoEdicion: boolean = false; // bandera para saber si estoy editando
+  modoEdicion: boolean = false;
   listaCasaRemates: casaRemateDto[] = [];
   promedioCalificacion: number = 0;
   estrellas: FormGroup;
+
   model: casaRemateDto = {
-    id: 0,
-    nombre: '',
+    usuario_id: 0,
     idFiscal: '',
-    email: '',
-    telefono: '',
-    calificacion: [],
-    latitud: 0,
-    longitud: 0,
-    rematador: {
-      usuario: {
-        id: 0,
-        nombre: '',
-        imagen: '',
-        email: ''
-      },
-      matricula: ''
+    calificacion: 0,
+    calificaciones: [],
+    usuario: {
+      id: 0,
+      nombre: '',
+      email: '',
+      imagen: '',
+      telefono: '',
+      cedula: '',
+      contrasenia: '',
+      latitud: 0,
+      longitud: 0,
+      rematador: { usuario: {} as any },
+      cliente: { usuario: {} as any },
+      casaremate: { usuario: {} as any }
     },
+    vendedor: undefined,
+    rematadores: [],
     subastas: []
   };
+
   title: string = 'Casa de Remates';
 
   constructor(
@@ -58,30 +69,25 @@ export class CasaRemateComponent {
     private messageService: MessageService,
     private fb: FormBuilder
   ) {
-    // Creá el form aquí, con value 0 inicialmente
     this.estrellas = this.fb.group({
       value: [0]
     });
   }
 
   ngOnInit(): void {
-    // Si estás editando, por ejemplo desde un route con ID:
     this.getCasaRemate();
-    console.log("Casa de remate cargada:", this.model);
+    console.log('Casa de remate cargada:', this.model);
   }
-  
+
   getCasaRemate() {
     this._service.getCasaRematesPorId(1).subscribe({
-      next: (data: any) => {
+      next: (data: casaRemateDto) => {
         this.model = data;
-        // calculá el promedio luego de asignar los datos
-        this.promedioCalificacion = this.obtenerPromedio(this.model.calificacion);
-
-        // actualizá el form control
+        this.promedioCalificacion = this.model.calificacion;
         this.estrellas.patchValue({ value: this.promedioCalificacion });
       },
       error: (response: any) => {
-        //this._alertService.showError(`Error al obtener ${this.title}, ${response.message}`);
+        // error opcional
       }
     });
   }
@@ -89,44 +95,33 @@ export class CasaRemateComponent {
   guardar(): void {
     if (this.modoEdicion) {
       this._service.putActualizarCasaRemates(this.model).subscribe(() => {
-        this.messageService.add({severity:'success', summary:'Éxito', detail:'Casa de remate actualizada'});
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Casa de remate actualizada' });
       });
     } else {
       this._service.postCrearCasaRemates(this.model).subscribe(() => {
-        this.messageService.add({severity:'success', summary:'Éxito', detail:'Casa de remate creada'});
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Casa de remate creada' });
       });
     }
   }
 
-  obtenerPromedio(calificaciones: number[]): number {
-    if (calificaciones.length === 0) {
-      return 0; 
-    }
-    const suma = calificaciones.reduce((a, b) => a + b, 0);
-    return suma / calificaciones.length;
-  }
-
-  
-
   totalRecords: number = 0;
-
-  modalSubasta : boolean = false;
+  modalSubasta: boolean = false;
   modalArticulo: boolean = false;
 
-  lalala : any = [
+  lalala: any = [
     {
-      nombre: "holi",
-      especificacion: "laburante",
+      nombre: 'holi',
+      especificacion: 'laburante',
       disponibilidad: true,
-      condicion: "Impeclable",
-      nombreVendedor: "Roberto"
+      condicion: 'Impeclable',
+      nombreVendedor: 'Roberto'
     },
     {
-      nombre: "chau",
-      especificacion: "vago",
+      nombre: 'chau',
+      especificacion: 'vago',
       disponibilidad: false,
-      condicion: "Roto",
-      nombreVendedor: "Salvador"
+      condicion: 'Roto',
+      nombreVendedor: 'Salvador'
     }
   ];
 
@@ -138,12 +133,7 @@ export class CasaRemateComponent {
     this.modalSubasta = true;
   }
 
-  saveSubasta() {
+  saveSubasta() {}
 
-  }
-
-  saveArticulo(){
-
-  }
-
+  saveArticulo() {}
 }

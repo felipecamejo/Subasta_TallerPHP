@@ -21,17 +21,21 @@ class DatabaseSeeder extends Seeder
      * Seed the application's database.
      */
     public function run(): void
-    {
-        $this->call([
-            AdminSeeder::class,
-            CasaRemateSeeder::class,
-            SubastaSeeder::class,
-            LoteSeeder::class,
-            PujaSeeder::class,
-            CategoriaSeeder::class,
-            ArticuloSeeder::class,
-            ClienteSeeder::class,
-            RematadorSeeder::class,
-        ]);
-    }
+{
+    $this->call([
+  AdminSeeder::class,             // Admin (sin relaciones)
+  CategoriaSeeder::class,         // Necesaria para artículos
+
+  CasaRemateSeeder::class,        // Crea usuario + casa remate
+  RematadorSeeder::class,         // Crea usuario + rematador
+
+  SubastaSeeder::class,           // Necesita casa_remate_id y rematador_id
+  LoteSeeder::class,              // Necesita subasta_id
+
+  ClienteSeeder::class,           // Crea usuario + cliente
+
+  ArticuloSeeder::class,          // Necesita lote_id y categoria_id
+  PujaSeeder::class               // Necesita cliente_id y lote_id
+    ]);
+}
 }

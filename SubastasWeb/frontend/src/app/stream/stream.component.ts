@@ -348,7 +348,7 @@ export class StreamComponent implements OnInit, OnDestroy {
                 }
               });
 
-              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + this.clienteID, this.subasta?.casaremate.id || 0, true, chatId).subscribe({
+              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + this.clienteID, this.subasta?.casaremate.usuario_id || 0, true, chatId).subscribe({
                 next: (notificacion) => {
                   console.log('Notificación creada:', notificacion);
                 },
@@ -520,7 +520,7 @@ export class StreamComponent implements OnInit, OnDestroy {
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
 
-          this.notificacionService.crearNotificacion("Umbral Superado", "Su lote " + this.lotes[this.indexLotes].id + " ha superado su umbral", this.subasta?.casaremate.id || 0, false, 0).subscribe({
+          this.notificacionService.crearNotificacion("Umbral Superado", "Su lote " + this.lotes[this.indexLotes].id + " ha superado su umbral", this.subasta?.casaremate.usuario_id || 0, false, 0).subscribe({
                 next: (notificacion) => {
                   console.log('Notificación creada:', notificacion);
                 },
@@ -826,13 +826,13 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   // Métodos para el chat
   initializeChat(): void {
-    if (!this.clienteID || !this.subasta?.casaremate.id) {
+  if (!this.clienteID || !this.subasta?.casaremate.usuario_id) {
       console.error('No se puede inicializar el chat: faltan IDs de usuario o casa de remate');
       return;
     }
     
     // Crear un ID único para el chat entre el cliente y la casa de remate
-    this.chatRoomId = `chat_${this.clienteID}_${this.subasta.casaremate.id}`;
+    this.chatRoomId = `chat_${this.clienteID}_${this.subasta.casaremate.usuario_id}`;
     
     // Configurar el usuario actual
     this.chatCurrentUser = {
