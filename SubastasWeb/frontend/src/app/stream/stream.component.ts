@@ -494,81 +494,87 @@ export class StreamComponent implements OnInit, OnDestroy {
       loteActual: this.lotes[this.indexLotes]
     });
 
-    this.clienteMail = this.subastaService.getClienteMail(puja.cliente_id);
-    if (!this.clienteMail) {
-      console.error('No se pudo obtener el email del cliente');
-      return;
-    }
-    
-    console.log('Email del cliente:', this.clienteMail);
-    
-    const email: mailDto = {
-      email: this.clienteMail || '',
-      asunto: `Puja realizada en la subasta ${this.subasta?.nombre || 'desconocida'}`,
-      mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${this.lotes[this.indexLotes].id} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
-    };
-
-    this.subastaService.enviarMail(email).subscribe({
-      next: (response) => {
-        console.log('Email enviado exitosamente:', response);
-      },
-      error: (error) => {
-        console.error('Error al enviar email:', error);
-      }
-    });
-
-    this.clienteID = puja.cliente_id;
-
-    // Enviar via WebSocket primero para respuesta inmediata
-    this.sendWebSocketBid(puja);
-
-    this.pujaService.crearPuja(puja).subscribe({
-      next: (data) => {
-        console.log('Puja creada exitosamente en BD:', data);
-
-        this.pujaActual = data.monto;
-        this.pujaRapida = data.monto + 1;
-        this.pujaComun = null;
-
-        const nuevaPuja: pujaDto = {
-          id: data.id,
-          fechaHora: new Date(data.fechaHora),
-          monto: data.monto,
-          lote: this.lotes[this.indexLotes],
-          factura: null as any,
-          cliente: null as any
-        };
-        this.pujas.push(nuevaPuja);
-
-        if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
-          this.umbralSuperado = true;
-
-          const casaRemateId = this.subasta?.casaremate?.id;
-          if (casaRemateId) {
-            this.notificacionService.crearNotificacion(
-              "Umbral Superado", 
-              `El lote ID: ${this.lotes[this.indexLotes].id} ha superado su umbral de $${this.lotes[this.indexLotes].umbral}. Nueva puja: $${data.monto}`, 
-              casaRemateId, 
-              false, 
-              0
-            ).subscribe({
-              next: (notificacion) => {
-                console.log('Notificación de umbral superado creada:', notificacion);
-              },
-              error: (error) => {
-                console.error('Error al crear notificación de umbral:', error);
-              }
-            });
-          } else {
-            console.warn('No se pudo encontrar el ID del usuario del rematador para enviar la notificación de umbral');
-          }
+    this.subastaService.getClienteMail(puja.cliente_id).subscribe({
+      next: (mail) => {
+        if (!mail) {
+          console.error('No se pudo obtener el email del cliente');
+          return;
         }
+        this.clienteMail = mail;
+        console.log('Email del cliente:', this.clienteMail);
+        
+        const email: mailDto = {
+          email: this.clienteMail,
+          asunto: `Puja realizada en la subasta ${this.subasta?.nombre || 'desconocida'}`,
+          mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${this.lotes[this.indexLotes].id} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
+        };
 
-        this.actualizarDatosSinSobrescribir();
-        this.limpiarCamposPuja();
+        this.subastaService.enviarMail(email).subscribe({
+          next: (response) => {
+            console.log('Email enviado exitosamente:', response);
+          },
+          error: (error) => {
+            console.error('Error al enviar email:', error);
+          }
+        });
+
+        this.clienteID = puja.cliente_id;
+
+        // Enviar via WebSocket primero para respuesta inmediata
+        this.sendWebSocketBid(puja);
+
+        this.pujaService.crearPuja(puja).subscribe({
+          next: (data) => {
+            console.log('Puja creada exitosamente en BD:', data);
+
+            this.pujaActual = data.monto;
+            this.pujaRapida = data.monto + 1;
+            this.pujaComun = null;
+
+            const nuevaPuja: pujaDto = {
+              id: data.id,
+              fechaHora: new Date(data.fechaHora),
+              monto: data.monto,
+              lote: this.lotes[this.indexLotes],
+              factura: null as any,
+              cliente: null as any
+            };
+            this.pujas.push(nuevaPuja);
+
+            if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
+              this.umbralSuperado = true;
+
+              const casaRemateId = this.subasta?.casaremate?.id;
+              if (casaRemateId) {
+                this.notificacionService.crearNotificacion(
+                  "Umbral Superado", 
+                  `El lote ID: ${this.lotes[this.indexLotes].id} ha superado su umbral de $${this.lotes[this.indexLotes].umbral}. Nueva puja: $${data.monto}`, 
+                  casaRemateId, 
+                  false, 
+                  0
+                ).subscribe({
+                  next: (notificacion) => {
+                    console.log('Notificación de umbral superado creada:', notificacion);
+                  },
+                  error: (error) => {
+                    console.error('Error al crear notificación de umbral:', error);
+                  }
+                });
+              } else {
+                console.warn('No se pudo encontrar el ID del usuario del rematador para enviar la notificación de umbral');
+              }
+            }
+
+            this.actualizarDatosSinSobrescribir();
+            this.limpiarCamposPuja();
+          },
+          error: (err) => {
+            console.error('Error al crear la puja:', err);
+          }
+        });
       },
       error: (err) => {
-        console.error('Error al crear la puja:', err);
+        console.error('Error al obtener el email del cliente:', err);
       }
     });
   }
