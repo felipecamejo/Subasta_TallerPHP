@@ -181,7 +181,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
             id: msg.id,
             text: msg.text,
             senderName: msg.senderName,
-            timestamp: new Date(msg.timestamp),
+            timestamp: this.parseTimestamp(msg.timestamp),
             isOwn: msg.senderId === this.currentUserId
           }));
         }
@@ -444,9 +444,61 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     }
   }
 
-  formatMessageTime(date: Date): string {
+  private parseTimestamp(timestamp: any): Date {
+    // Si ya es un objeto Date válido, devolverlo
+    if (timestamp instanceof Date && !isNaN(timestamp.getTime())) {
+      return timestamp;
+    }
+    
+    // Si es un Date inválido, intentar obtener el valor original
+    if (timestamp instanceof Date && isNaN(timestamp.getTime())) {
+      // No podemos recuperar el valor original de un Date inválido
+      console.warn('Recibido Date inválido, usando fecha actual');
+      return new Date();
+    }
+    
+    // Si es string en formato 'YYYY-MM-DD HH:mm:ss', convertirlo
+    if (typeof timestamp === 'string') {
+      // Limpiar el string y verificar formato
+      const cleanTimestamp = timestamp.trim();
+      
+      // Formato típico de MySQL: 'YYYY-MM-DD HH:mm:ss'
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(cleanTimestamp)) {
+        // Convertir a formato ISO agregando 'T' y zona horaria local
+        const isoString = cleanTimestamp.replace(' ', 'T');
+        const date = new Date(isoString);
+        
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      // Intentar parsing directo si no coincide con el formato esperado
+      const fallbackDate = new Date(cleanTimestamp);
+      if (!isNaN(fallbackDate.getTime())) {
+        return fallbackDate;
+      }
+    }
+    
+    // Si es número (timestamp unix), convertir
+    if (typeof timestamp === 'number') {
+      return new Date(timestamp);
+    }
+    
+    // Fallback: devolver fecha actual si todo falla
+    console.warn('No se pudo parsear el timestamp:', timestamp);
+    return new Date();
+  }
+
+  formatMessageTime(date: any): string {
     const now = new Date();
-    const messageDate = new Date(date);
+    const messageDate = this.parseTimestamp(date);
+    
+    // Verificar que la fecha sea válida
+    if (isNaN(messageDate.getTime())) {
+      return 'Fecha inválida';
+    }
+    
     const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
@@ -792,7 +844,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
           id: msg.id,
           text: msg.text,
           senderName: msg.senderName,
-          timestamp: new Date(msg.timestamp),
+          timestamp: this.parseTimestamp(msg.timestamp),
           isOwn: msg.senderId === this.currentUserId
         }));
         

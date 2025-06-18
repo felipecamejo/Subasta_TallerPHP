@@ -482,6 +482,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   clienteID: number | null = null;
+  clienteMail: string | null = null;
 
   private enviarPuja(puja: PujaRequest): void {
     console.log('🔍 Enviando puja completa:', puja);
@@ -492,7 +493,30 @@ export class StreamComponent implements OnInit, OnDestroy {
       lote_id: puja.lote_id,
       loteActual: this.lotes[this.indexLotes]
     });
+
+    this.clienteMail = this.subastaService.getClienteMail(puja.cliente_id);
+    if (!this.clienteMail) {
+      console.error('No se pudo obtener el email del cliente');
+      return;
+    }
     
+    console.log('Email del cliente:', this.clienteMail);
+    
+    const email: mailDto = {
+      email: this.clienteMail || '',
+      asunto: `Puja realizada en la subasta ${this.subasta?.nombre || 'desconocida'}`,
+      mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${this.lotes[this.indexLotes].id} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
+    };
+
+    this.subastaService.enviarMail(email).subscribe({
+      next: (response) => {
+        console.log('Email enviado exitosamente:', response);
+      },
+      error: (error) => {
+        console.error('Error al enviar email:', error);
+      }
+    });
+
     this.clienteID = puja.cliente_id;
 
     // Enviar via WebSocket primero para respuesta inmediata
@@ -519,14 +543,25 @@ export class StreamComponent implements OnInit, OnDestroy {
         if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
           this.umbralSuperado = true;
 
-          this.notificacionService.crearNotificacion("Umbral Superado", "Su lote " + this.lotes[this.indexLotes].id + " ha superado su umbral", this.subasta?.casaremate.id || 0, false, 0).subscribe({
-                next: (notificacion) => {
-                  console.log('Notificación creada:', notificacion);
-                },
-                error: (error) => {
-                  console.error('Error al crear notificación:', error);
-                }
-          });
+          const casaRemateId = this.subasta?.casaremate?.id;
+          if (casaRemateId) {
+            this.notificacionService.crearNotificacion(
+              "Umbral Superado", 
+              `El lote ID: ${this.lotes[this.indexLotes].id} ha superado su umbral de $${this.lotes[this.indexLotes].umbral}. Nueva puja: $${data.monto}`, 
+              casaRemateId, 
+              false, 
+              0
+            ).subscribe({
+              next: (notificacion) => {
+                console.log('Notificación de umbral superado creada:', notificacion);
+              },
+              error: (error) => {
+                console.error('Error al crear notificación de umbral:', error);
+              }
+            });
+          } else {
+            console.warn('No se pudo encontrar el ID del usuario del rematador para enviar la notificación de umbral');
+          }
         }
 
         this.actualizarDatosSinSobrescribir();

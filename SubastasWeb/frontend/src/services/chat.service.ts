@@ -47,6 +47,45 @@ export class ChatService {
   
   private typingUsersSubject = new BehaviorSubject<Set<string>>(new Set());
   public typingUsers$ = this.typingUsersSubject.asObservable();
+
+  private parseTimestamp(timestamp: any): Date {
+    // Si ya es un objeto Date válido, devolverlo
+    if (timestamp instanceof Date && !isNaN(timestamp.getTime())) {
+      return timestamp;
+    }
+    
+    // Si es string en formato 'YYYY-MM-DD HH:mm:ss' o ISO, convertirlo
+    if (typeof timestamp === 'string') {
+      // Limpiar el string y verificar formato
+      const cleanTimestamp = timestamp.trim();
+      
+      // Formato típico de MySQL: 'YYYY-MM-DD HH:mm:ss'
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(cleanTimestamp)) {
+        // Convertir a formato ISO agregando 'T'
+        const isoString = cleanTimestamp.replace(' ', 'T');
+        const date = new Date(isoString);
+        
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      // Para formato ISO (como '2025-06-18T17:46:55+00:00')
+      const fallbackDate = new Date(cleanTimestamp);
+      if (!isNaN(fallbackDate.getTime())) {
+        return fallbackDate;
+      }
+    }
+    
+    // Si es número (timestamp unix), convertir
+    if (typeof timestamp === 'number') {
+      return new Date(timestamp);
+    }
+    
+    // Fallback: devolver fecha actual si todo falla
+    console.warn('ChatService: No se pudo parsear el timestamp:', timestamp);
+    return new Date();
+  }
   
   private chatId: string = '';
   private currentUserId: number = 0;
@@ -179,7 +218,7 @@ export class ChatService {
               text: msg.contenido,
               senderId: msg.usuario.id.toString(),
               senderName: msg.usuario.nombre,
-              timestamp: new Date(msg.enviadoAt),
+              timestamp: this.parseTimestamp(msg.enviado_at),
               leido: msg.leido,
               tipo: msg.tipo
             };
@@ -441,7 +480,7 @@ export class ChatService {
             text: msg.contenido,
             senderId: msg.usuario.id.toString(),
             senderName: msg.usuario.nombre,
-            timestamp: new Date(msg.enviadoAt),
+            timestamp: this.parseTimestamp(msg.enviado_at),
             leido: msg.leido,
             tipo: msg.tipo
           }));
