@@ -5,9 +5,9 @@ import { vendedorDto } from './vendedorDto';
 import { valoracionDto } from './valoracionDto';
 
 export interface casaRemateDto {
-    usuario_id: number;
+    usuario_id: number | null; // ID del usuario, puede ser null si no se ha asignado
     idFiscal: string;
-    usuario: usuarioDto;           // Datos personales del usuario
+    usuario: usuarioDto | null;           // Datos personales del usuario
     vendedor?: vendedorDto;        // Vendedor asociado (opcional)
     rematadores: rematadorDto[];   // Lista de rematadores
     subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre' | 'activa'>[]; // Subastas resumidas

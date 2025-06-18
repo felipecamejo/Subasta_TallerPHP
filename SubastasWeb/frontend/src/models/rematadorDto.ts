@@ -9,6 +9,6 @@ export interface rematadorDto{
     // Relaciones
     usuario: Pick<usuarioDto, 'id' | 'nombre' | 'imagen' | 'email'>;
     subasta: Pick<subastaDto, 'id' | 'fecha' | 'nombre'>[];
-    casasRemate: Pick<casaRemateDto, 'id' | 'nombre'>[];
+    casasRemate: Pick<casaRemateDto, 'usuario_id' | 'usuario'>[];
 
 }

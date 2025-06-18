@@ -32,13 +32,9 @@ export class CasaRemateComponent {
   promedioCalificacion: number = 0;
   estrellas: FormGroup;
   model: casaRemateDto = {
-    id: null,
-    nombre: '',
+    usuario_id: null,
+    usuario: null,
     idFiscal: '',
-    email: '',
-    telefono: '',
-    latitud: 0,
-    longitud: 0,
     rematadores: [],
     subastas: [],
     valoracion: null
