@@ -1,7 +1,7 @@
 import { environment } from '../../environments/environment';
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-admin-casas-remate',
@@ -45,8 +45,13 @@ export class AdminCasasRemateComponent implements OnInit {
     });
   }
 
-  aprobarCasa(id: number) {
-    this.http.post(`${environment.apiUrl}/api/admin/aprobar-casa/${id}`, {}).subscribe({
+  aprobarCasa(usuarioId: number | undefined) {
+    if (!usuarioId) {
+      console.error('ID de usuario no válido');
+      return;
+    }
+
+    this.http.post(`${environment.apiUrl}/api/admin/aprobar-casa/${usuarioId}`, {}).subscribe({
       next: () => {
         this.cargarPendientes();
         this.cargarActivas();
@@ -58,16 +63,21 @@ export class AdminCasasRemateComponent implements OnInit {
     });
   }
 
- desactivarCasa(id: number) {
-  this.http.post(`${environment.apiUrl}/api/admin/desaprobar-casa/${id}`, {}).subscribe({
-    next: () => {
-      this.cargarPendientes();
-      this.cargarActivas();
-    },
-    error: err => {
-      this.error = 'Error al desactivar casa.';
-      console.error(err);
+  desactivarCasa(usuarioId: number | undefined) {
+    if (!usuarioId) {
+      console.error('ID de usuario no válido');
+      return;
     }
-  });
-}
+
+    this.http.post(`${environment.apiUrl}/api/admin/desaprobar-casa/${usuarioId}`, {}).subscribe({
+      next: () => {
+        this.cargarPendientes();
+        this.cargarActivas();
+      },
+      error: err => {
+        this.error = 'Error al desactivar casa.';
+        console.error(err);
+      }
+    });
+  }
 }

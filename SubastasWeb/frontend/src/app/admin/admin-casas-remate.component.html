@@ -19,7 +19,7 @@
         <td>{{ casa.usuario?.telefono }}</td>
         <td>{{ casa.idFiscal }}</td>
         <td>
-          <button class="btn btn-success btn-sm" (click)="aprobarCasa(casa.id)">Aprobar</button>
+          <button class="btn btn-success btn-sm" (click)="aprobarCasa(casa.usuario?.id)">Aprobar</button>
         </td>
       </tr>
     </tbody>
@@ -46,7 +46,7 @@
         <td>{{ casa.usuario?.telefono }}</td>
         <td>{{ casa.idFiscal }}</td>
         <td>
-          <button class="btn btn-danger btn-sm" (click)="desactivarCasa(casa.id)">Desactivar</button>
+          <button class="btn btn-danger btn-sm" (click)="desactivarCasa(casa.usuario?.id)">Desactivar</button>
         </td>
       </tr>
     </tbody>
