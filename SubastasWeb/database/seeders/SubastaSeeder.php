@@ -4,13 +4,16 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Subasta;
+use App\Models\CasaRemate;
 
 class SubastaSeeder extends Seeder
 {
     public function run(): void
     {
+        // Get the first casa_remate to use its usuario_id
+        $casaRemate = CasaRemate::first();
+        
         Subasta::create([
-            'id' => 1,
             'nombre' => 'alexis',
             'duracionMinutos' => 30,
             'activa' => false,
@@ -19,14 +22,11 @@ class SubastaSeeder extends Seeder
             'longitud' => -50.1645000,
             'videoId' => 'DN8P7kukaGo',
             'rematador_id' => null,
-            'casa_remate_id' => 1,
+            'casa_remate_id' => $casaRemate ? $casaRemate->usuario_id : null,
             'loteIndex' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         Subasta::create([
-            'id' => 2,
             'nombre' => 'leo',
             'duracionMinutos' => 30,
             'activa' => false,
@@ -37,8 +37,6 @@ class SubastaSeeder extends Seeder
             'rematador_id' => null,
             'casa_remate_id' => null,
             'loteIndex' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 }
