@@ -14,7 +14,7 @@ return new class extends Migration {
 
             // Foreign keys
             $table->foreignId('casa_remate_id')
-                  ->constrained('casa_remates')
+                  ->references('usuario_id')->on('casa_remates')
                   ->onDelete('cascade');
 
             $table->unsignedBigInteger('rematador_id');

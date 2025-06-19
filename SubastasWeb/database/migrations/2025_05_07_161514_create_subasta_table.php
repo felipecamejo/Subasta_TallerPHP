@@ -22,9 +22,9 @@ return new class extends Migration
             $table->decimal('longitud', 10, 7);
             $table->string('videoId')->nullable();
             $table->integer('loteIndex')->default(0);
-        
-            $table->foreignId('casa_remate_id')->nullable()->constrained('casa_remates')->onDelete('cascade');
-            
+
+            $table->foreignId('casa_remate_id')->nullable()->references('usuario_id')->on('casa_remates')->onDelete('cascade');
+
             $table->foreignId('rematador_id')->nullable()->references('usuario_id')->on('rematadores')->onDelete('cascade');
 
             $table->timestamps();
