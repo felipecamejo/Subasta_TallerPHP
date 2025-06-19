@@ -3,17 +3,35 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app/app.routes';
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptorsFromDi
+} from '@angular/common/http';
+
 import { AppComponent } from './app/app.component';
-import { provideHttpClient, withFetch } from '@angular/common/http';
-import { SocialAuthServiceConfig, GoogleLoginProvider, SocialAuthService } from '@abacritt/angularx-social-login';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './app/interceptors/auth.interceptor';
+
+import {
+  SocialAuthServiceConfig,
+  GoogleLoginProvider,
+  SocialAuthService
+} from '@abacritt/angularx-social-login';
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi() // ✅ ahora inyecta desde los providers
+    ),
+    {
+      provide: HTTP_INTERCEPTORS, // ✅ Registro del interceptor como clase
+      useClass: AuthInterceptor,
+      multi: true
+    },
     provideAnimationsAsync(),
-
-    // ----- Configuración para Social Login -----
     {
       provide: 'SocialAuthServiceConfig',
       useValue: {
@@ -28,7 +46,6 @@ bootstrapApplication(AppComponent, {
         ]
       } as SocialAuthServiceConfig,
     },
-    SocialAuthService, // Proveedor del servicio de autenticación social
-    // --------------------------------------------
+    SocialAuthService,
   ],
 });

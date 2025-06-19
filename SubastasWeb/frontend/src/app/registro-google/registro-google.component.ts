@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import {
   Component,
   OnInit,
@@ -15,7 +16,7 @@ import {
 } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 
 export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): { [key: string]: boolean } | null => {
   const password = control.get('contrasenia');
@@ -33,7 +34,6 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): {
 })
 export class RegistroGoogleComponent implements OnInit, AfterViewInit {
   form!: FormGroup;
-  rol: string = 'cliente';
   imagenUrl: string = '';
   googleId: string | null = null;
 
@@ -49,7 +49,6 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
     const queryParams = this.route.snapshot.queryParams;
     const nombre = queryParams['nombre'] || '';
     const email = queryParams['email'] || '';
-    this.rol = queryParams['rol'] || 'cliente';
     this.imagenUrl = queryParams['imagen'] || '';
     this.googleId = queryParams['google_id'] || null;
 
@@ -58,12 +57,32 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
       email: [{ value: email, disabled: true }, [Validators.required, Validators.email]],
       cedula: ['', Validators.required],
       telefono: ['', Validators.required],
-      contrasenia: ['', [Validators.required, Validators.minLength(6)]],
+      contrasenia: ['', [Validators.required, Validators.minLength(8)]],
       contrasenia_confirmation: ['', Validators.required],
-      matricula: [{ value: '', disabled: this.rol !== 'rematador' }],
+      rol: ['', Validators.required],
+      matricula: [''],
+      idFiscal: [''],
       latitud: [null, Validators.required],
       longitud: [null, Validators.required],
     }, { validators: passwordMatchValidator });
+  }
+
+  onRolChange() {
+    const rol = this.form.get('rol')?.value;
+
+    if (rol === 'rematador') {
+      this.form.get('matricula')?.setValidators(Validators.required);
+      this.form.get('idFiscal')?.clearValidators();
+    } else if (rol === 'casa_remate') {
+      this.form.get('idFiscal')?.setValidators(Validators.required);
+      this.form.get('matricula')?.clearValidators();
+    } else {
+      this.form.get('matricula')?.clearValidators();
+      this.form.get('idFiscal')?.clearValidators();
+    }
+
+    this.form.get('matricula')?.updateValueAndValidity();
+    this.form.get('idFiscal')?.updateValueAndValidity();
   }
 
   async ngAfterViewInit() {
@@ -120,25 +139,40 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
 
     const payload = {
       ...this.form.getRawValue(),
-      rol: this.rol,
       imagen: this.imagenUrl,
       google_id: this.googleId,
     };
 
     delete payload.contrasenia_confirmation;
-    if (this.rol !== 'rematador') {
-      delete payload.matricula;
-    }
+    if (payload.rol !== 'rematador') delete payload.matricula;
+    if (payload.rol !== 'casa_remate') delete payload.idFiscal;
 
-    this.http.post('http://localhost:8000/api/register-google-user', payload).subscribe({
+    const url = payload.rol === 'casa_remate'
+      ? `${environment.apiUrl}/api/register-casa-remate`
+      : `${environment.apiUrl}/api/register-google-user`;
+
+    this.http.post(url, payload).subscribe({
       next: (res: any) => {
         localStorage.setItem('token', res.access_token);
-        this.router.navigate([
-          this.rol === 'rematador' ? '/dashboard-rematador' : '/dashboard-cliente'
-        ]);
+        localStorage.setItem('usuario_id', res.usuario_id);
+        localStorage.setItem('rol', res.rol);
+
+        if (res.rol === 'casa_remate') {
+          alert('Registro exitoso. Tu cuenta está pendiente de aprobación por el administrador.');
+          this.router.navigate(['/verificacion-pendiente']);
+        } else if (res.rol === 'rematador') {
+          this.router.navigate(['/dashboard-rematador']);
+        } else {
+          this.router.navigate(['/dashboard-cliente']);
+        }
       },
-      error: (err) => {
-        console.error('Error al registrar con Google:', err);
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 403 && err.error?.error?.includes('no fue aprobada')) {
+          alert('Tu casa de remate aún no fue aprobada por el administrador.');
+        } else {
+          console.error('Error al registrar con Google:', err);
+          alert('Ocurrió un error al registrar. Verificá los datos e intentá de nuevo.');
+        }
       },
     });
   }

@@ -1,9 +1,11 @@
+// src/app/services/notificacion.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, of, map } from 'rxjs';
+import { Observable, BehaviorSubject, interval, of, map, Subscription } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { UrlService } from './url.service';
 import { notificacionDto, notificacionUsuarioDto } from '../models/notificacionDto';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,41 +14,48 @@ export class NotificacionService {
   private baseUrl: string;
   private notificacionesSubject = new BehaviorSubject<notificacionUsuarioDto[]>([]);
   private contadorSubject = new BehaviorSubject<number>(0);
-  private actualizacionAutomaticaInterval: any;
-  private headers: HttpHeaders;
+  private actualizacionAutomaticaInterval?: Subscription;
 
   public notificaciones$ = this.notificacionesSubject.asObservable();
   public contador$ = this.contadorSubject.asObservable();
 
   constructor(
     private http: HttpClient,
-    private urlService: UrlService
+    private urlService: UrlService,
+    private authService: AuthService
   ) {
     this.baseUrl = this.urlService.baseUrl;
-    // Add Authorization header if token exists
-    const token = localStorage.getItem('token');
-    let headers = new HttpHeaders().set('Content-Type', 'application/json');
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    this.headers = headers;
-    this.iniciarActualizacionAutomatica();
+
+    this.authService.isAuthenticated$.subscribe((isAuth) => {
+      if (isAuth) {
+        this.iniciarActualizacionAutomatica();
+        this.actualizarNotificaciones();
+      } else {
+        this.destruir();
+      }
+    });
   }
 
   private iniciarActualizacionAutomatica(): void {
+    if (this.actualizacionAutomaticaInterval) {
+      this.actualizacionAutomaticaInterval.unsubscribe();
+    }
+
     this.actualizacionAutomaticaInterval = interval(30000).subscribe(() => {
       this.actualizarNotificaciones();
     });
   }
 
-  /**
-   * Inicializa el servicio cargando las notificaciones
-   */
-  inicializar(): void {
-    this.actualizarNotificaciones();
-  }
+  actualizarNotificaciones(): void {
+    const rol = this.authService.getRol();
+    if (rol === 'admin' || rol === 'casa_remate') {
+      this.destruir();
+      return;
+    }
 
-  private actualizarNotificaciones(): void {
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!usuarioId) return;
+
     this.obtenerNotificaciones().subscribe({
       next: (notificaciones) => {
         this.notificacionesSubject.next(notificaciones);
@@ -103,20 +112,7 @@ export class NotificacionService {
   }
 
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) {
-      return of([]); // Si no hay usuario, devolvemos un array vacío
-    }
-
-    const token = localStorage.getItem('token');
-    let currentHeaders = this.headers;
-    if (token) {
-      currentHeaders = currentHeaders.set('Authorization', `Bearer ${token}`);
-    }
-
-    return this.http.get<any>(`${this.baseUrl}/notificaciones`, {
-      headers: currentHeaders
-    }).pipe(
+    return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
         if (Array.isArray(notificaciones)) {
           return notificaciones.map((notif: any) => ({
@@ -142,18 +138,9 @@ export class NotificacionService {
     );
   }
 
-  /**
-   * Marca una notificación como leída y actualiza el estado
-   */  
   marcarLeidaYActualizar(id: number): void {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) return;
-
-    this.http.put(`${this.baseUrl}/notificaciones/${id}/leer`, {}, {
-      headers: this.headers
-    }).subscribe({
+    this.http.put(`${this.baseUrl}/notificaciones/${id}/leer`, {}).subscribe({
       next: () => {
-        // Actualizar localmente
         const notificaciones = this.notificacionesSubject.value;
         const notificacion = notificaciones.find(n => n.id === id);
         if (notificacion) {
@@ -168,18 +155,9 @@ export class NotificacionService {
     });
   }
 
-  /**
-   * Marca todas como leídas y actualiza el estado
-   */  
   marcarTodasLeidasYActualizar(): void {
-    const usuarioId = localStorage.getItem('usuario_id');
-    if (!usuarioId) return;
-
-    this.http.put(`${this.baseUrl}/notificaciones/leer-todas`, {}, {
-      headers: this.headers
-    }).subscribe({
+    this.http.put(`${this.baseUrl}/notificaciones/leer-todas`, {}).subscribe({
       next: () => {
-        // Actualizar localmente
         const notificaciones = this.notificacionesSubject.value;
         notificaciones.forEach(n => n.leido = true);
         this.notificacionesSubject.next(notificaciones);
@@ -234,6 +212,9 @@ export class NotificacionService {
   destruir(): void {
     if (this.actualizacionAutomaticaInterval) {
       this.actualizacionAutomaticaInterval.unsubscribe();
+      this.actualizacionAutomaticaInterval = undefined;
     }
+    this.notificacionesSubject.next([]);
+    this.contadorSubject.next(0);
   }
 }

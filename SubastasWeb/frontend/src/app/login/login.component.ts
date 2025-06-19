@@ -1,16 +1,18 @@
+import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { GoogleLoginComponent } from '../google-login/google-login.component';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   standalone: true,
   selector: 'app-login',
   templateUrl: './login.component.html',
-  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent,  RouterModule,],
+  styleUrls: ['./login.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent, RouterModule],
 })
 export class LoginComponent {
   form: FormGroup;
@@ -20,7 +22,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -33,26 +36,47 @@ export class LoginComponent {
 
     const datos = this.form.value;
 
-    this.http.post('http://localhost:8000/api/login', datos).subscribe({
+    this.http.post(`${environment.apiUrl}/api/login`, datos).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('usuario_id', res.usuario_id);
-        localStorage.setItem('rol', res.rol);
+        // Usamos el AuthService para guardar todo
+        this.authService.login({
+          token: res.token,
+          usuario_id: res.usuario_id,
+          rol: res.rol,
+          usuario: res.usuario
+        });
 
-        if (res.rol === 'cliente') {
-          this.router.navigate(['/dashboard-cliente']);
-        } else if (res.rol === 'rematador') {
-          this.router.navigate(['/dashboard-rematador']);
+        // Redirigir según rol
+        switch (res.rol) {
+          case 'cliente':
+            this.router.navigate(['/dashboard-cliente']);
+            break;
+          case 'rematador':
+            this.router.navigate(['/dashboard-rematador']);
+            break;
+          case 'casa_remate':
+            this.router.navigate(['/dashboard-casa-remate']);
+            break;
+          case 'admin':
+            this.router.navigate(['/admin']);
+            break;
+          default:
+            this.router.navigate(['/']);
         }
       },
-      error: () => {
-        this.error = 'Email o contraseña incorrectos';
+      error: (err) => {
+        if (err.status === 403) {
+          this.router.navigate(['/verificacion-pendiente'], {
+            queryParams: { email: this.form.get('email')?.value }
+          });
+        } else {
+          this.error = 'Email o contraseña incorrectos';
+        }
       },
     });
   }
 
   mostrarFormularioRegistro(usuarioGoogle: any) {
-    console.log('Usuario nuevo desde Google:', usuarioGoogle);
     this.router.navigate(['/registro'], { state: { usuarioGoogle } });
   }
 }

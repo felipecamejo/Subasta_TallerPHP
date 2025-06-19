@@ -17,13 +17,21 @@ use App\Http\Controllers\PujaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\AdminController;
+
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\PasswordReset;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register-casa-remate', [AuthController::class, 'registerCasaRemate']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
+Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
+Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
 
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
@@ -56,6 +64,18 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::get('/check-auth', function () {
+        return response()->json(['authenticated' => true]);
+    });
+
+    Route::post('/email/resend', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'El correo ya está verificado.'], 400);
+        }
+
+        return response()->json(['message' => 'Correo de verificación reenviado.']);
+    });
+
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);
     Route::apiResource('categorias', CategoriaController::class);
@@ -64,7 +84,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
     Route::apiResource('vendedores', VendedorController::class);
-    //Route::apiResource('subastas', SubastaController::class);
     Route::apiResource('casa-remates', CasaRemateController::class);
 
     // Rutas de notificaciones
@@ -78,5 +97,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/casa-remates/{id}/asociar-rematadores', [CasaRemateController::class, 'asociarRematadores']);
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
-    
+
+    // Rutas de administración
+    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
+    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
+    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
 });

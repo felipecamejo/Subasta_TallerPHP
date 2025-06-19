@@ -32,44 +32,44 @@ class NotificacionController extends Controller
      *     @OA\Response(response=500, description="Error del servidor")
      * )
      */
-    public function index(Request $request)
-    {
-        try {
-            $usuario = Auth::user();
-            $cliente = Cliente::where('usuario_id', $usuario->id)->first();
-            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-            
-            if (!$cliente && !$rematador) {
-                return response()->json(['error' => 'Usuario no encontrado'], 404);
-            }
+  public function index(Request $request)
+{
+    try {
+        $usuario = Auth::user();
+        $cliente = Cliente::where('usuario_id', $usuario->id)->first();
+        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+        $casa = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
+        $admin = \App\Models\Admin::where('usuario_id', $usuario->id)->first();
 
-            $notificaciones = [];
-            
-            if ($cliente) {
-                $notificaciones = $cliente->notificaciones()
-                    ->orderBy('fecha_hora', 'desc')
-                    ->get()
-                    ->map(function ($notificacion) use ($cliente) {
-                        return $this->formatNotification($notificacion, $cliente->usuario);
-                    });
-            } else if ($rematador) {
-                $notificaciones = $rematador->notificaciones()
-                    ->orderBy('fecha_hora', 'desc')
-                    ->get()
-                    ->map(function ($notificacion) use ($rematador) {
-                        return $this->formatNotification($notificacion, $rematador->usuario);
-                    });
-            }
-
-            return response()->json($notificaciones);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => 'Error al obtener notificaciones',
-                'message' => $e->getMessage()
-            ], 500);
+        // Si no tiene ningún tipo válido
+        if (!$cliente && !$rematador && !$casa && !$admin) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
+
+        // Solo cliente y rematador reciben notificaciones
+        if ($cliente) {
+            $notificaciones = $cliente->notificaciones()
+                ->orderBy('fecha_hora', 'desc')
+                ->get()
+                ->map(fn($n) => $this->formatNotification($n, $cliente->usuario));
+        } elseif ($rematador) {
+            $notificaciones = $rematador->notificaciones()
+                ->orderBy('fecha_hora', 'desc')
+                ->get()
+                ->map(fn($n) => $this->formatNotification($n, $rematador->usuario));
+        } else {
+            // Admins o casas de remate no reciben notificaciones por ahora
+            return response()->json([]);
+        }
+
+        return response()->json($notificaciones);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => 'Error al obtener notificaciones',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Formatea una notificación para la respuesta de la API
