@@ -67,7 +67,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/admin/casas-activas": {
@@ -91,21 +96,26 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/admin/aprobar-casa/{id}": {
+        "/api/admin/aprobar-casa/{usuarioId}": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Aprobar una casa de remate",
-                "operationId": "416bc3bbf2bf470513649f252dc376c3",
+                "operationId": "1a39b38234d52b1d2486505f24a7fc25",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuarioId",
                         "in": "path",
-                        "description": "ID de la casa de remate",
+                        "description": "ID del usuario asociado a la casa de remate",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -145,7 +155,71 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/desaprobar-casa/{usuarioId}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Desaprobar o desactivar una casa de remate",
+                "operationId": "b3fb78369507a14e555fc5fa8b4055a7",
+                "parameters": [
+                    {
+                        "name": "usuarioId",
+                        "in": "path",
+                        "description": "ID del usuario asociado a la casa de remate",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Casa desaprobada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Casa de remate desaprobada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Casa no encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Casa de remate no encontrada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/admin/eliminar-usuario/{usuario_id}": {
@@ -199,61 +273,12 @@
                             }
                         }
                     }
-                }
-            }
-        },
-        "/api/admin/desaprobar-casa/{id}": {
-            "post": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Desaprobar o desactivar una casa de remate",
-                "operationId": "0c593281dbb7a80b74d49d0f9b73fc47",
-                "parameters": [
+                },
+                "security": [
                     {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la casa de remate",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "bearerAuth": []
                     }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Casa desaprobada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Casa de remate desaprobada"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Casa no encontrada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Casa de remate no encontrada"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
+                ]
             }
         },
         "/api/articulos": {
@@ -501,6 +526,41 @@
                         "description": "Credenciales inválidas"
                     }
                 }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Cerrar sesión del usuario autenticado",
+                "operationId": "fe8f3429cd6979b3b4517e186505f9f9",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sesión cerrada correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/register": {
@@ -3918,6 +3978,16 @@
             }
         }
     },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Pegar el token en formato: Bearer {token}"
+            }
+        }
+    },
     "tags": [
         {
             "name": "Admin",
@@ -3978,6 +4048,11 @@
         {
             "name": "Autenticación Social",
             "description": "Autenticación Social"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
         }
     ]
 }
