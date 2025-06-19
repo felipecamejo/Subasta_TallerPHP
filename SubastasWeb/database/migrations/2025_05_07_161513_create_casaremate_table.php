@@ -6,23 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('casa_remates', function (Blueprint $table) {
             $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
+            
             $table->string('idFiscal');
-            $table->json('calificacion')->default(json_encode([]));
-            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade'); // FOREIGN KEY
+            
+            $table->boolean('activo')->default(false);
+            
+            $table->string('aprobado_por')->nullable();   // ← nombre o email del admin
+            
+            $table->timestamp('aprobado_en')->nullable(); // ← fecha y hora de aprobación
+            
             $table->timestamps();
+
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('casa_remates');
