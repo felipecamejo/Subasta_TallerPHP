@@ -503,6 +503,546 @@
                 }
             }
         },
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "operationId": "8a56853624e025573120a09a4c75d468",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "telefono",
+                                    "contrasenia",
+                                    "tipo"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Ana Gómez"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "45678901"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "ana@example.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "098765432"
+                                    },
+                                    "imagen": {
+                                        "type": "string",
+                                        "example": "https://example.com/avatar.jpg",
+                                        "nullable": true
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "example": "clave123"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.9011
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.1645
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "rematador",
+                                            "casa_remate"
+                                        ]
+                                    },
+                                    "matricula": {
+                                        "type": "string",
+                                        "example": "MAT456",
+                                        "nullable": true
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "FISC999",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario registrado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario registrado exitosamente. Se envió un correo de verificación."
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/register-casa-remate": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar una nueva casa de remate",
+                "operationId": "69aa36276e8cba46ef0c229592b7325d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "idFiscal",
+                                    "email",
+                                    "telefono",
+                                    "contrasenia",
+                                    "latitud",
+                                    "longitud"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Casa Los Robles"
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "CR123456"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "casa@remates.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "092334455"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "example": "supersegura123"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.9
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.15
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Casa de remate registrada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Casa de remate registrada exitosamente. Se envió un correo de verificación. Queda pendiente de aprobación del admin."
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/registro/google": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Iniciar sesión o registrarse con Google",
+                "operationId": "ddb728cc149e42ee7132597b03ccc924",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "rol"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "GOOGLE_ID_TOKEN"
+                                    },
+                                    "rol": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "rematador",
+                                            "casa_remate"
+                                        ],
+                                        "example": "rematador"
+                                    },
+                                    "matricula": {
+                                        "type": "string",
+                                        "example": "MAT1234",
+                                        "nullable": true
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "CR9876",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Inicio de sesión o registro exitoso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "token123"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "rol": {
+                                            "type": "string",
+                                            "example": "rematador"
+                                        },
+                                        "usuario": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "La casa de remate aún no fue aprobada por un administrador"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/register-google-user": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Completar registro de usuario con Google",
+                "operationId": "4c5e1711bebfc9f444bc29141c1ed8a3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "telefono",
+                                    "contrasenia",
+                                    "latitud",
+                                    "longitud",
+                                    "rol",
+                                    "google_id"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Lucía Fernández"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "56789012"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "lucia@gmail.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "098112233"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "example": "claveGoogle2024"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.91
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.16
+                                    },
+                                    "rol": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "rematador",
+                                            "casa_remate"
+                                        ],
+                                        "example": "rematador"
+                                    },
+                                    "google_id": {
+                                        "type": "string",
+                                        "example": "1234567890abcdef"
+                                    },
+                                    "matricula": {
+                                        "type": "string",
+                                        "example": "MAT9876",
+                                        "nullable": true
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "FISC1234",
+                                        "nullable": true
+                                    },
+                                    "imagen": {
+                                        "type": "string",
+                                        "example": "https://example.com/foto.png",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario registrado exitosamente con Google",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuario registrado con Google exitosamente."
+                                        },
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "google_token_123"
+                                        },
+                                        "usuario_id": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "rol": {
+                                            "type": "string",
+                                            "example": "rematador"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/forgot-password": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Enviar enlace de recuperación de contraseña",
+                "operationId": "27192d4d04cb48a2f83216053554a56c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "usuario@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Enlace de recuperación enviado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "We have emailed your password reset link!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No se pudo enviar el correo de recuperación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "No se pudo enviar el enlace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reset-password": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Restablecer contraseña del usuario",
+                "operationId": "90632c5f7ebd82e9ce2e51301484a00d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "TOKEN123"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "usuario@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "nuevaClaveSegura"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "nuevaClaveSegura"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contraseña restablecida con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Your password has been reset!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error al restablecer contraseña",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Este token es inválido"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/casa-remates": {
             "get": {
                 "tags": [

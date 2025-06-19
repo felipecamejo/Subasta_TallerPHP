@@ -22,7 +22,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
   cargarPendientes() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/admin/usuarios-pendientes`).subscribe({
+    this.http.get<any[]>('${environment.apiUrl}/api/admin/usuarios-pendientes').subscribe({
       next: data => {
         this.pendientes = data;
       },
@@ -34,7 +34,7 @@ export class AdminCasasRemateComponent implements OnInit {
   }
 
   cargarActivas() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/admin/casas-activas`).subscribe({
+    this.http.get<any[]>('${environment.apiUrl}/api/admin/casas-activas').subscribe({
       next: data => {
         this.activas = data;
       },
