@@ -1,8 +1,18 @@
 <div class="container mt-4">
-  <h2>Panel de Administrador</h2>
+  <h2>Panel de Administración</h2>
 
-  <button class="btn btn-outline-danger mb-3" (click)="logout()">Cerrar sesión</button>
+  <div class="btn-group-vertical mt-3" role="group">
+    <button class="btn btn-primary mb-2" routerLink="/admin/aprobar-casas">
+      🟢 Aprobar Casas de Remate
+    </button>
 
-  <!-- Aquí se inserta el componente -->
-  <app-admin-casas-remate></app-admin-casas-remate>
+    <button class="btn btn-warning mb-2" routerLink="/admin/desaprobar-casas">
+      🟡 Desaprobar Casas de Remate
+    </button>
+  </div>
+
+  <hr />
+
+  <!-- Botón de cerrar sesión -->
+  <app-logout-button></app-logout-button>
 </div>

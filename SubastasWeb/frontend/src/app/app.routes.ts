@@ -18,6 +18,7 @@ import { VerificacionPendienteComponent } from './verificacion-pendiente/verific
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 
+
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
 import { DashboardRematadorComponent } from './dashboards/dashboard-rematador/dashboard-rematador.component';
@@ -46,6 +47,11 @@ export const routes: Routes = [
   { path: 'perfil/:id', loadComponent: () => PerfilComponent },
   { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
   { path: 'buscadorRemates', loadComponent: () => BuscadorRematesComponent },
+
+  // Cosas del admin
+  { path: 'admin/aprobar-casas', loadComponent: () => import('./admin/aprobar-casas/aprobar-casas.component').then(m => m.AdminAprobarCasasComponent) },
+  { path: 'admin/desaprobar-casas', loadComponent: () => import('./admin/desaprobar-casas/desaprobar-casas.component').then(m => m.DesaprobarCasasComponent) },
+ 
 
   // Dashboards
   { path: 'dashboard-cliente', component: DashboardClienteComponent },

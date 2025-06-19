@@ -1,20 +1,13 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AdminCasasRemateComponent } from '../admin/admin-casas-remate.component'; // ruta correcta según tu estructura
+import { LogoutButtonComponent } from '../logout-button/logout-button.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, AdminCasasRemateComponent],
+  imports: [CommonModule, LogoutButtonComponent, RouterModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrl: './admin-dashboard.component.scss',
+  styleUrls: ['./admin-dashboard.component.scss'],
 })
-export class AdminDashboardComponent {
-  constructor(private router: Router) {}
-
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['/login']);
-  }
-}
+export class AdminDashboardComponent {}

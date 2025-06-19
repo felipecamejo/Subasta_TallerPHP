@@ -28,74 +28,119 @@ class AdminController extends Controller
     /**
     * @OA\Get(
     *     path="/api/admin/usuarios-pendientes",
-    *     summary="Listar casas de remate pendientes de aprobación",
+    *     summary="Listar casas de remate pendientes de aprobación (paginado)",
     *     tags={"Admin"},
     *     security={{"bearerAuth": {}}},
+    *     @OA\Parameter(
+    *         name="page",
+    *         in="query",
+    *         description="Número de página",
+    *         required=false,
+    *         @OA\Schema(type="integer", example=1)
+    *     ),
     *     @OA\Response(
     *         response=200,
-    *         description="Lista de casas pendientes",
+    *         description="Lista paginada de casas pendientes",
     *         @OA\JsonContent(
-    *             type="array",
-    *             @OA\Items(
-    *                 @OA\Property(property="id", type="integer", example=1),
-    *                 @OA\Property(property="idFiscal", type="string", example="212345670018"),
-    *                 @OA\Property(property="aprobada", type="boolean", example=false),
-    *                 @OA\Property(property="usuario", type="object",
-    *                     @OA\Property(property="id", type="integer", example=5),
-    *                     @OA\Property(property="nombre", type="string", example="Casa Aurora"),
-    *                     @OA\Property(property="email", type="string", example="casa@example.com")
+    *             @OA\Property(property="current_page", type="integer", example=1),
+    *             @OA\Property(property="last_page", type="integer", example=5),
+    *             @OA\Property(property="per_page", type="integer", example=10),
+    *             @OA\Property(property="total", type="integer", example=50),
+    *             @OA\Property(
+    *                 property="data",
+    *                 type="array",
+    *                 @OA\Items(
+    *                     @OA\Property(property="id", type="integer", example=1),
+    *                     @OA\Property(property="idFiscal", type="string", example="212345670018"),
+    *                     @OA\Property(property="aprobado_en", type="string", format="date-time", nullable=true),
+    *                     @OA\Property(property="aprobado_por", type="string", nullable=true),
+    *                     @OA\Property(property="usuario", type="object",
+    *                         @OA\Property(property="id", type="integer", example=5),
+    *                         @OA\Property(property="nombre", type="string", example="Casa Aurora"),
+    *                         @OA\Property(property="email", type="string", example="casa@example.com"),
+    *                         @OA\Property(property="telefono", type="string", example="099123456")
+    *                     )
     *                 )
     *             )
     *         )
     *     )
     * )
     */
-    public function casasPendientes(){
-        try {
-            $pendientes = CasaRemate::where('activo', false)
-                ->with('usuario')
-                ->get();
 
-            return response()->json($pendientes);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener casas pendientes',
-                'mensaje' => $e->getMessage(),
-            ], 500);
-        }
+    public function casasPendientes(){
+
+    try {
+        $pendientes = CasaRemate::where('activo', false)
+            ->with('usuario')
+            ->paginate(10); 
+
+        return response()->json($pendientes);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener casas pendientes',
+            'mensaje' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     /**
     * @OA\Get(
     *     path="/api/admin/casas-activas",
-    *     summary="Listar casas de remate activas",
+    *     summary="Listar casas de remate activas (paginado)",
     *     tags={"Admin"},
     *     security={{"bearerAuth": {}}},
+    *     @OA\Parameter(
+    *         name="page",
+    *         in="query",
+    *         description="Número de página",
+    *         required=false,
+    *         @OA\Schema(type="integer", example=1)
+    *     ),
     *     @OA\Response(
     *         response=200,
-    *         description="Lista de casas activas",
+    *         description="Lista paginada de casas activas",
     *         @OA\JsonContent(
-    *             type="array",
-    *             @OA\Items(type="object")
+    *             @OA\Property(property="current_page", type="integer", example=1),
+    *             @OA\Property(property="last_page", type="integer", example=5),
+    *             @OA\Property(property="per_page", type="integer", example=10),
+    *             @OA\Property(property="total", type="integer", example=50),
+    *             @OA\Property(
+    *                 property="data",
+    *                 type="array",
+    *                 @OA\Items(
+    *                     @OA\Property(property="id", type="integer", example=2),
+    *                     @OA\Property(property="idFiscal", type="string", example="211234560019"),
+    *                     @OA\Property(property="aprobado_en", type="string", format="date-time", example="2025-06-19T15:45:00Z"),
+    *                     @OA\Property(property="aprobado_por", type="string", example="admin@example.com"),
+    *                     @OA\Property(property="usuario", type="object",
+    *                         @OA\Property(property="id", type="integer", example=6),
+    *                         @OA\Property(property="nombre", type="string", example="Casa Solis"),
+    *                         @OA\Property(property="email", type="string", example="solis@example.com"),
+    *                         @OA\Property(property="telefono", type="string", example="098765432")
+    *                     )
+    *                 )
+    *             )
     *         )
     *     )
     * )
     */
+    
     public function casasActivas(){
-        try {
-            $activas = CasaRemate::where('activo', true)
-                ->with('usuario')
-                ->get();
+        
+    try {
+        $activas = CasaRemate::where('activo', true)
+            ->with('usuario')
+            ->paginate(10); 
 
-            return response()->json($activas);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener casas activas',
-                'mensaje' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json($activas);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener casas activas',
+            'mensaje' => $e->getMessage(),
+        ], 500);
     }
-
+}
     /**
     * @OA\Post(
     *     path="/api/admin/aprobar-casa/{usuarioId}",

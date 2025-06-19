@@ -468,7 +468,6 @@ class AuthController extends Controller
     * )
     */
 
-
     public function enviarLinkReset(Request $request){
         $request->validate(['email' => 'required|email']);
 

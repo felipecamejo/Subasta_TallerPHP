@@ -24,10 +24,10 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptorsFromDi() // ✅ ahora inyecta desde los providers
+      withInterceptorsFromDi() //  ahora inyecta desde los providers
     ),
     {
-      provide: HTTP_INTERCEPTORS, // ✅ Registro del interceptor como clase
+      provide: HTTP_INTERCEPTORS, //  Registro del interceptor como clase
       useClass: AuthInterceptor,
       multi: true
     },
