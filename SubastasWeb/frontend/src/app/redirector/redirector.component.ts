@@ -28,7 +28,7 @@ export class RedirectorComponent implements OnInit {
       case 'rematador':
         this.router.navigate(['/dashboard-rematador']);
         break;
-      case 'casaremate':
+      case 'casa_remate':
         this.router.navigate(['/dashboard-casa-remate']);
         break;
       default:
