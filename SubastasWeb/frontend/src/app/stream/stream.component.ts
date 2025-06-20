@@ -31,6 +31,7 @@ interface TimerState {
   timer: string;
   timerActivo: boolean;
   timerSubscription?: Subscription;
+  tiempoRestanteSegundos?: number; // Para sincronización
 }
 
 const TIMER_CONSTANTS = {
@@ -66,7 +67,8 @@ export class StreamComponent implements OnInit, OnDestroy {
   
   public timerState: TimerState = {
     timer: "Sin iniciar",
-    timerActivo: false
+    timerActivo: false,
+    tiempoRestanteSegundos: 0
   };
   
   private subastaSubscription?: Subscription;
@@ -109,7 +111,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   get puedeIniciarSubasta(): boolean {
-    return !!(this.subasta && !this.subasta.activa && this.subasta.fecha);
+    return !!(this.subasta && !this.subasta.activa && this.subasta.duracionMinutos && this.subasta.duracionMinutos > 0);
   }
 
   constructor(
@@ -269,12 +271,25 @@ export class StreamComponent implements OnInit, OnDestroy {
         
         this.cargarPujas(this.indexLotes);
 
-        if (this.subasta.activa && this.subasta.fecha && !this.timerInitialized) {
+        if (this.subasta.activa && this.subasta.duracionMinutos && !this.timerInitialized) {
           this.timerInitialized = true;
           
-          requestAnimationFrame(() => {
-            this.iniciarTimer();
-          });
+          if (this.isRematador()) {
+            // Si soy rematador y la subasta está activa, asumir duración completa
+            // (En una implementación real, deberías guardar el tiempo restante en el backend)
+            const tiempoInicialSegundos = this.subasta.duracionMinutos * 60;
+            this.timerState.timer = this.formatearTiempo(tiempoInicialSegundos);
+            this.timerState.tiempoRestanteSegundos = tiempoInicialSegundos;
+            
+            requestAnimationFrame(() => {
+              this.iniciarTimer();
+            });
+          } else {
+            // Si no soy rematador, mostrar estado "esperando sincronización"
+            this.timerState.timer = "Sincronizando...";
+            this.timerState.timerActivo = true; // Marcar como activo para recibir actualizaciones
+            // El timer se sincronizará cuando reciba la primera actualización por WebSocket
+          }
         }
 
         // Configurar WebSocket
@@ -287,8 +302,14 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   iniciarSubasta() {
-    if (!this.subasta || !this.subasta.fecha || this.subasta.activa) {
+    if (!this.subasta || this.subasta.activa) {
       console.warn('No se puede iniciar la subasta: subasta ya activa o datos faltantes');
+      return;
+    }
+
+    if (!this.subasta.duracionMinutos || this.subasta.duracionMinutos <= 0) {
+      console.warn('No se puede iniciar la subasta: duración inválida');
+      alert('Error: La subasta debe tener una duración válida en minutos');
       return;
     }
 
@@ -300,10 +321,17 @@ export class StreamComponent implements OnInit, OnDestroy {
         console.log('Subasta actualizada correctamente');
         if (!this.timerInitialized) {
           this.timerInitialized = true;
-          // Inicializar el timer con 00:00:00 antes de comenzar
-          this.timerState.timer = "00:00:00";
+          // Mostrar el tiempo inicial basado en la duración
+          const tiempoInicialSegundos = this.subasta!.duracionMinutos * 60;
+          this.timerState.timer = this.formatearTiempo(tiempoInicialSegundos);
+          this.timerState.tiempoRestanteSegundos = tiempoInicialSegundos;
+          
           requestAnimationFrame(() => {
             this.iniciarTimer();
+            // Si soy rematador, enviar estado inicial del timer
+            if (this.isRematador()) {
+              this.sendTimerUpdateToWebSocket(tiempoInicialSegundos);
+            }
           });
         }
       },
@@ -319,7 +347,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   paypalMonto: number = 0;
 
 
-  iniciarTimer() {
+  iniciarTimer(tiempoInicialSegundos?: number) {
     if (this.timerState.timerActivo) {
       console.warn('Timer ya está activo, ignorando nueva inicialización');
       return;
@@ -327,91 +355,65 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     this.detenerTimer();
 
-    if (!this.subasta?.fecha) {
-      console.warn('No hay fecha de subasta definida');
+    if (!this.subasta?.duracionMinutos) {
+      console.warn('No hay duración de subasta definida');
       return;
     }
 
-    const fechaInicio = new Date(this.subasta.fecha).getTime();
-    
-    if (isNaN(fechaInicio)) {
-      console.error('Fecha de subasta inválida:', this.subasta.fecha);
-      return;
-    }
+    // Usar tiempo inicial proporcionado o la duración completa
+    let tiempoRestanteSegundos = tiempoInicialSegundos ?? (this.subasta.duracionMinutos * 60);
+    this.timerState.tiempoRestanteSegundos = tiempoRestanteSegundos;
 
-    const duracionMs = this.subasta.duracionMinutos * 60 * 1000;
-    const fechaFin = fechaInicio + duracionMs;
-
-    console.log('Iniciando timer para subasta:', {
-      fechaInicio: new Date(fechaInicio),
-      fechaFin: new Date(fechaFin),
-      duracion: this.subasta.duracionMinutos
-    });
+    console.log('Iniciando timer con tiempo restante:', tiempoRestanteSegundos, 'segundos');
 
     this.timerState.timerActivo = true;
+    
+    // Mostrar tiempo inicial
+    this.timerState.timer = this.formatearTiempo(tiempoRestanteSegundos);
 
-    this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
-      takeWhile(() => this.timerState.timerActivo)
-    ).subscribe({
-      next: () => {
-        try {
-          const ahora = Date.now();
-          
-          if (ahora < fechaInicio) {
-            const diff = Math.floor((fechaInicio - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
-            this.timerState.timer = this.formatearTiempo(diff);
-          } else if (ahora <= fechaFin) {
-            const diff = Math.floor((fechaFin - ahora) / TIMER_CONSTANTS.INTERVAL_MS);
-            this.timerState.timer = this.formatearTiempo(diff);
-          } else {
-            this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+    // Solo el rematador ejecuta el timer maestro
+    const esRematador = this.isRematador();
+    console.log('🔍 Es rematador?', esRematador);
 
-            // Encontrar al ganador (quien tiene la puja más alta)
-            const ganadorId = this.encontrarGanador();
-            
-            if(ganadorId && this.esUsuarioGanador(ganadorId)) {
-              this.paypalMonto = this.pujaActual;
-              this.pagando = true;
+    if (esRematador) {
+      // REMATADOR: Ejecuta el timer maestro y envía actualizaciones
+      this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
+        takeWhile(() => this.timerState.timerActivo)
+      ).subscribe({
+        next: () => {
+          try {
+            if (this.timerState.tiempoRestanteSegundos! > 0) {
+              this.timerState.tiempoRestanteSegundos!--;
+              this.timerState.timer = this.formatearTiempo(this.timerState.tiempoRestanteSegundos!);
               
-              const chatId = 0; // Usando 0 como valor numérico para el chatId
-
-              this.notificacionService.crearNotificacion("Subasta finalizada", "Usted ha ganado la subasta por el lote " + this.lotes[this.indexLotes].id, ganadorId, true, chatId).subscribe({
-                next: (notificacion) => {
-                  console.log('Notificación creada:', notificacion);
-                },
-                error: (error) => {
-                  console.error('Error al crear notificación:', error);
-                }
-              });
-
-              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + ganadorId, this.subasta?.casaremate.usuario_id || 0, true, chatId).subscribe({
-                next: (notificacion) => {
-                  console.log('Notificación creada:', notificacion);
-                },
-                error: (error) => {
-                  console.error('Error al crear notificación:', error);
-                }
-              });
-
-            } 
-
-            this.detenerTimer();
-            
-            if (this.subasta && this.subasta.activa) {
-              this.subasta.activa = false;
-              this.boton = false;
+              // Enviar actualización cada 3 segundos para optimizar WebSocket
+              if (this.timerState.tiempoRestanteSegundos! % 3 === 0 || this.timerState.tiempoRestanteSegundos! <= 10) {
+                this.sendTimerUpdateToWebSocket(this.timerState.tiempoRestanteSegundos!);
+              }
+            } else {
+              this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+              this.timerState.tiempoRestanteSegundos = 0;
+              
+              // Notificar finalización
+              this.sendTimerUpdateToWebSocket(0);
+              this.manejarFinalizacionSubasta();
+              this.detenerTimer();
             }
+          } catch (error) {
+            console.error('Error en timer:', error);
+            this.detenerTimer();
           }
-        } catch (error) {
-          console.error('Error en timer:', error);
+        },
+        error: (error) => {
+          console.error('Error en suscripción del timer:', error);
           this.detenerTimer();
         }
-      },
-      error: (error) => {
-        console.error('Error en suscripción del timer:', error);
-        this.detenerTimer();
-      }
-    });
+      });
+    } else {
+      // USUARIOS: Ejecutan timer local que se sincroniza con actualizaciones del rematador
+      console.log('👀 Usuario: Iniciando timer local sincronizado');
+      this.iniciarTimerLocalUsuario();
+    }
   }
 
   detenerTimer(): void {
@@ -420,6 +422,45 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.timerState.timerSubscription.unsubscribe();
       this.timerState.timerSubscription = undefined;
     }
+  }
+
+  /**
+   * Inicia un timer local para usuarios que se sincroniza con las actualizaciones del rematador
+   */
+  private iniciarTimerLocalUsuario(): void {
+    console.log('🕐 Usuario: Iniciando timer local con tiempo inicial:', this.timerState.tiempoRestanteSegundos);
+    
+    if (!this.timerState.tiempoRestanteSegundos || this.timerState.tiempoRestanteSegundos <= 0) {
+      console.warn('⚠️ No se puede iniciar timer local: tiempo inválido');
+      return;
+    }
+
+    this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
+      takeWhile(() => this.timerState.timerActivo)
+    ).subscribe({
+      next: () => {
+        try {
+          if (this.timerState.tiempoRestanteSegundos! > 0) {
+            this.timerState.tiempoRestanteSegundos!--;
+            this.timerState.timer = this.formatearTiempo(this.timerState.tiempoRestanteSegundos!);
+            
+            console.log('🕐 Usuario timer local:', this.timerState.timer);
+          } else {
+            this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+            this.timerState.tiempoRestanteSegundos = 0;
+            this.timerState.timerActivo = false;
+            this.detenerTimer();
+          }
+        } catch (error) {
+          console.error('Error en timer local del usuario:', error);
+          this.detenerTimer();
+        }
+      },
+      error: (error) => {
+        console.error('Error en suscripción del timer local:', error);
+        this.detenerTimer();
+      }
+    });
   }
 
   formatearTiempo(segundos: number): string {
@@ -751,8 +792,8 @@ export class StreamComponent implements OnInit, OnDestroy {
     // Escuchar actualizaciones del timer
     const timerSubscription = this.websocketService.onTimerUpdated().subscribe({
       next: (timerData) => {
-        console.log('Timer actualizado via WebSocket:', timerData);
-        // Sincronizar timer si es necesario
+        console.log('⏰ Timer actualizado via WebSocket:', timerData);
+        this.handleTimerUpdateFromWebSocket(timerData);
       }
     });
 
@@ -920,6 +961,65 @@ export class StreamComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Envía actualizaciones del timer por WebSocket (solo rematador)
+   */
+  private sendTimerUpdateToWebSocket(tiempoRestanteSegundos: number): void {
+    if (!this.subasta?.id) {
+      console.warn('❌ No se puede enviar timer update: no hay subasta ID');
+      return;
+    }
+
+    console.log('📡 Rematador enviando actualización de timer:', {
+      auctionId: this.subasta.id,
+      tiempoRestante: tiempoRestanteSegundos,
+      timestamp: new Date().toISOString()
+    });
+
+    this.websocketService.sendTimerUpdate(
+      this.subasta.id,
+      tiempoRestanteSegundos
+    );
+  }
+
+  /**
+   * Maneja la finalización de la subasta (solo rematador)
+   */
+  private manejarFinalizacionSubasta(): void {
+    // Encontrar al ganador (quien tiene la puja más alta)
+    const ganadorId = this.encontrarGanador();
+    
+    if(ganadorId && this.esUsuarioGanador(ganadorId)) {
+      this.paypalMonto = this.pujaActual;
+      this.pagando = true;
+      
+      const chatId = 0;
+
+      this.notificacionService.crearNotificacion("Subasta finalizada", "Usted ha ganado la subasta por el lote " + this.lotes[this.indexLotes].id, ganadorId, true, chatId).subscribe({
+        next: (notificacion) => {
+          console.log('Notificación creada:', notificacion);
+        },
+        error: (error) => {
+          console.error('Error al crear notificación:', error);
+        }
+      });
+
+      this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + ganadorId, this.subasta?.casaremate.usuario_id || 0, true, chatId).subscribe({
+        next: (notificacion) => {
+          console.log('Notificación creada:', notificacion);
+        },
+        error: (error) => {
+          console.error('Error al crear notificación:', error);
+        }
+      });
+    }
+    
+    if (this.subasta && this.subasta.activa) {
+      this.subasta.activa = false;
+      this.boton = false;
+    }
+  }
+
   isCurrentUser(): boolean {
     const storedUserId = localStorage.getItem('usuario_id');
     return storedUserId !== null && this.clienteID !== null && this.clienteID === Number(storedUserId);
@@ -1077,6 +1177,73 @@ export class StreamComponent implements OnInit, OnDestroy {
       console.error('Error al crear invitación de chat:', error);
       alert('Error al enviar la invitación de chat');
     });
+  }
+
+  /**
+   * Maneja actualizaciones del timer que llegan por WebSocket
+   */
+  private handleTimerUpdateFromWebSocket(timerData: any): void {
+    console.log('🔍 Timer update recibido:', timerData);
+    console.log('🔍 Soy rematador?', this.isRematador());
+    console.log('🔍 Estado actual del timer:', this.timerState);
+
+    // Solo sincronizar si no somos el rematador (para evitar conflictos)
+    if (this.isRematador()) {
+      console.log('⏰ Ignorando actualización de timer (soy rematador)');
+      return;
+    }
+
+    console.log('⏰ Usuario sincronizando timer desde WebSocket:', timerData);
+
+    if (timerData.tiempoRestante !== undefined) {
+      const nuevoTiempo = timerData.tiempoRestante;
+      const tiempoAnterior = this.timerState.tiempoRestanteSegundos;
+      
+      // Sincronizar el tiempo
+      this.timerState.tiempoRestanteSegundos = nuevoTiempo;
+      this.timerState.timer = this.formatearTiempo(nuevoTiempo);
+
+      console.log('⏰ Timer sincronizado:', {
+        anterior: tiempoAnterior,
+        nuevo: nuevoTiempo,
+        timer: this.timerState.timer
+      });
+
+      // Si el timer se terminó
+      if (nuevoTiempo <= 0) {
+        this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+        this.timerState.tiempoRestanteSegundos = 0;
+        this.timerState.timerActivo = false;
+        this.detenerTimer();
+        
+        if (this.subasta && this.subasta.activa) {
+          this.subasta.activa = false;
+          this.boton = false;
+        }
+
+        // Verificar si el usuario actual es el ganador
+        const ganadorId = this.encontrarGanador();
+        if(ganadorId && this.esUsuarioGanador(ganadorId)) {
+          this.paypalMonto = this.pujaActual;
+          this.pagando = true;
+        }
+      }
+      // Si el timer debe estar activo y no está corriendo
+      else if (nuevoTiempo > 0 && !this.timerState.timerActivo) {
+        this.timerState.timerActivo = true;
+        console.log('⏰ Iniciando timer local del usuario');
+        this.iniciarTimerLocalUsuario();
+      }
+      // Si ya está activo pero hay una diferencia significativa (mayor a 5 segundos), reiniciar
+      else if (tiempoAnterior && Math.abs(tiempoAnterior - nuevoTiempo) > 5) {
+        console.log('⏰ Diferencia significativa detectada, reiniciando timer local');
+        this.detenerTimer();
+        this.timerState.timerActivo = true;
+        this.iniciarTimerLocalUsuario();
+      }
+    } else {
+      console.warn('⚠️ Timer update no tiene tiempoRestante:', timerData);
+    }
   }
 }
 
