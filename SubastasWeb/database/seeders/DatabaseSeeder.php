@@ -26,13 +26,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             CasaRemateSeeder::class,
+            ClienteSeeder::class,
+            RematadorSeeder::class,  
             SubastaSeeder::class,
             LoteSeeder::class,
             PujaSeeder::class,
             CategoriaSeeder::class,
             ArticuloSeeder::class,
-            ClienteSeeder::class,
-            RematadorSeeder::class,
         ]);
     }
 }

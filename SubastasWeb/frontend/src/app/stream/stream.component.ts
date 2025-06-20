@@ -18,7 +18,6 @@ import { mailDto } from '../../models/mailDto';
 import { WebsocketService } from '../../services/webSocketService';
 import { PayPalComponent } from '../pay-pal/pay-pal.component';
 import { NotificacionService } from '../../services/notificacion.service';
-import { ChatComponent } from '../chat/chat.component';
 import { ChatService } from '../../services/chat.service';
 
 interface PujaRequest {
@@ -45,7 +44,7 @@ const TIMER_CONSTANTS = {
 @Component({
   selector: 'app-stream',
   standalone: true,
-  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule, PayPalComponent, ChatComponent],
+  imports: [CommonModule, InputTextModule, FormsModule, ButtonModule, DialogModule, PayPalComponent],
   templateUrl: './stream.component.html',
   styleUrls: ['./stream.component.scss']
 })
@@ -62,13 +61,11 @@ export class StreamComponent implements OnInit, OnDestroy {
   videoUrl: SafeResourceUrl | null = null;
   
   // Propiedades para el chat
-  chatVisible: boolean = false;
+  chatCreado: boolean = false;
   chatRoomId: string = '';
-  chatCurrentUser: { id: string, name: string } | null = null;
-  chatMessages: Array<{ fromUserId: number, message: string, timestamp: string }> = [];
   
   public timerState: TimerState = {
-    timer: "00:00:00",
+    timer: "Sin iniciar",
     timerActivo: false
   };
   
@@ -87,6 +84,32 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   get timerActivo(): boolean {
     return this.timerState.timerActivo;
+  }
+
+  get timerDisplayText(): string {
+    if (!this.subasta?.activa && !this.timerState.timerActivo) {
+      return "Sin iniciar";
+    }
+    return this.timerState.timer;
+  }
+
+  get timerCssClass(): string {
+    if (!this.subasta?.activa && !this.timerState.timerActivo) {
+      return "timer-input sin-iniciar";
+    } else if (this.timerState.timerActivo) {
+      return "timer-input activo";
+    } else if (this.timerState.timer === TIMER_CONSTANTS.FINISHED_MESSAGE) {
+      return "timer-input finalizada";
+    }
+    return "timer-input";
+  }
+
+  get puedeNavegerLotes(): boolean {
+    return !!(this.subasta?.activa && this.timerState.timerActivo);
+  }
+
+  get puedeIniciarSubasta(): boolean {
+    return !!(this.subasta && !this.subasta.activa && this.subasta.fecha);
   }
 
   constructor(
@@ -140,6 +163,11 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   anteriorLote(): void {
+    if (!this.subasta?.activa) {
+      console.warn('No se puede cambiar de lote: la subasta no está activa');
+      return;
+    }
+
     if (this.indexLotes > 0 && this.subasta) {
       this.indexLotes--;
       this.subasta.loteIndex = this.indexLotes;
@@ -160,6 +188,11 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   siguienteLote(): void {
+    if (!this.subasta?.activa) {
+      console.warn('No se puede cambiar de lote: la subasta no está activa');
+      return;
+    }
+
     if (this.indexLotes < this.lotes.length - 1 && this.subasta) {
       this.indexLotes++;
       this.subasta.loteIndex = this.indexLotes;
@@ -221,6 +254,9 @@ export class StreamComponent implements OnInit, OnDestroy {
         }));
 
         console.log('Lotes cargados:', this.lotes);
+        //console.log('🔍 DEBUG - Subasta completa:', this.subasta);
+        //console.log('🔍 DEBUG - Rematador:', this.subasta.rematador);
+        //console.log('🔍 DEBUG - Usuario logueado:', localStorage.getItem('usuario_id'));
 
         
         if(this.subasta.videoId && this.subasta.videoId.trim() !== '') {
@@ -264,6 +300,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         console.log('Subasta actualizada correctamente');
         if (!this.timerInitialized) {
           this.timerInitialized = true;
+          // Inicializar el timer con 00:00:00 antes de comenzar
+          this.timerState.timer = "00:00:00";
           requestAnimationFrame(() => {
             this.iniciarTimer();
           });
@@ -328,17 +366,16 @@ export class StreamComponent implements OnInit, OnDestroy {
           } else {
             this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
 
-            if(this.isCurrentUser()) {
-
+            // Encontrar al ganador (quien tiene la puja más alta)
+            const ganadorId = this.encontrarGanador();
+            
+            if(ganadorId && this.esUsuarioGanador(ganadorId)) {
               this.paypalMonto = this.pujaActual;
               this.pagando = true;
               
-              // Inicializar chat entre el cliente ganador y la casa de remate
-              this.initializeChat();
-
               const chatId = 0; // Usando 0 como valor numérico para el chatId
 
-              this.notificacionService.crearNotificacion("Subasta finalizada", "Usted ha ganado la subasta por el lote " + this.lotes[this.indexLotes].id, this.clienteID || 0, true, chatId).subscribe({
+              this.notificacionService.crearNotificacion("Subasta finalizada", "Usted ha ganado la subasta por el lote " + this.lotes[this.indexLotes].id, ganadorId, true, chatId).subscribe({
                 next: (notificacion) => {
                   console.log('Notificación creada:', notificacion);
                 },
@@ -347,7 +384,7 @@ export class StreamComponent implements OnInit, OnDestroy {
                 }
               });
 
-              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + this.clienteID, this.subasta?.casaremate.usuario_id || 0, true, chatId).subscribe({
+              this.notificacionService.crearNotificacion("Subasta finalizada", "Su lote " + this.lotes[this.indexLotes].id + " ha sido ganado por el usuario: " + ganadorId, this.subasta?.casaremate.usuario_id || 0, true, chatId).subscribe({
                 next: (notificacion) => {
                   console.log('Notificación creada:', notificacion);
                 },
@@ -494,6 +531,27 @@ export class StreamComponent implements OnInit, OnDestroy {
       loteActual: this.lotes[this.indexLotes]
     });
 
+    // Validar datos antes de enviar
+    if (!puja.lote_id || puja.lote_id <= 0) {
+      console.error('❌ Error: lote_id inválido:', puja.lote_id);
+      alert('Error: ID de lote inválido');
+      return;
+    }
+
+    // Validar que el usuario esté logueado
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!usuarioId) {
+      console.error('❌ Error: Usuario no está logueado');
+      alert('Debe iniciar sesión para realizar una puja');
+      return;
+    }
+
+    // Actualizar el cliente_id con el usuario logueado si es null
+    if (puja.cliente_id === null) {
+      puja.cliente_id = Number(usuarioId);
+      console.log('🔄 Actualizando cliente_id con usuario logueado:', puja.cliente_id);
+    }
+
     this.subastaService.getClienteMail(puja.cliente_id).subscribe({
       next: (mail) => {
         if (!mail) {
@@ -520,9 +578,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
         this.clienteID = puja.cliente_id;
 
-        // Enviar via WebSocket primero para respuesta inmediata
-        this.sendWebSocketBid(puja);
-
+        // Primero persistir en base de datos, luego enviar por WebSocket
         this.pujaService.crearPuja(puja).subscribe({
           next: (data) => {
             console.log('Puja creada exitosamente en BD:', data);
@@ -540,6 +596,9 @@ export class StreamComponent implements OnInit, OnDestroy {
               cliente: null as any
             };
             this.pujas.push(nuevaPuja);
+
+            // Solo enviar por WebSocket después de la persistencia exitosa
+            this.sendWebSocketBid(puja);
 
             if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
               this.umbralSuperado = true;
@@ -569,7 +628,9 @@ export class StreamComponent implements OnInit, OnDestroy {
             this.limpiarCamposPuja();
           },
           error: (err) => {
-            console.error('Error al crear la puja:', err);
+            console.error('Error al crear la puja en BD:', err);
+            // No enviar por WebSocket si la persistencia falló
+            alert('Error al procesar la puja. Por favor, intente nuevamente.');
           }
         });
       },
@@ -703,18 +764,13 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Escuchar nuevos mensajes de chat
-    const chatMessageSubscription = this.websocketService.onNewMessage().subscribe({
-      next: (messageData) => {
-        console.log('Mensaje de chat recibido:', messageData);
-        this.chatMessages.push({
-          fromUserId: messageData.fromUserId,
-          message: messageData.message,
-          timestamp: messageData.timestamp
-        });
-      },
-      error: (err) => console.error('Error en WebSocket chat:', err)
-    });
+    // Escuchar nuevos mensajes de chat - Removido porque el chat es una página separada
+    // const chatMessageSubscription = this.websocketService.onNewMessage().subscribe({
+    //   next: (messageData) => {
+    //     console.log('Mensaje de chat recibido:', messageData);
+    //   },
+    //   error: (err) => console.error('Error en WebSocket chat:', err)
+    // });
 
     this.websocketSubscriptions.push(
       auctionJoinedSubscription,
@@ -722,8 +778,8 @@ export class StreamComponent implements OnInit, OnDestroy {
       userJoinedSubscription,
       loteUpdateSubscription,
       timerSubscription,
-      stateSubscription,
-      chatMessageSubscription
+      stateSubscription
+      // chatMessageSubscription - removido
     );
   }
 
@@ -864,51 +920,136 @@ export class StreamComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Métodos para el chat
-  initializeChat(): void {
-    if (!this.clienteID || !this.subasta?.casaremate.usuario_id) {
-      console.error('No se puede inicializar el chat: faltan IDs de usuario o casa de remate');
-      return;
-    }
-    
-    // Crear un ID único para el chat entre el cliente y la casa de remate
-    this.chatRoomId = `chat_${this.clienteID}_${this.subasta.casaremate.usuario_id}`;
-    
-    // Configurar el usuario actual
-    this.chatCurrentUser = {
-      id: this.clienteID.toString(),
-      name: 'Usuario ' + this.clienteID
-    };
-    
-    // Inicializar el chat en el servicio
-    this.chatService.initializeChat(
-      this.chatRoomId,
-      Number(this.clienteID),
-      this.chatCurrentUser.name
-    );
-    
-    // Mostrar el chat
-    this.chatVisible = true;
-    
-    console.log('Chat inicializado:', this.chatRoomId);
-  }
-  
-  toggleChat(): void {
-    if (!this.chatVisible && this.isCurrentUser()) {
-      this.initializeChat();
-    } else {
-      this.chatVisible = !this.chatVisible;
-    }
-  }
-  
-  closeChat(): void {
-    this.chatVisible = false;
-    this.chatService.clearChat();
-  }
-  
   isCurrentUser(): boolean {
     const storedUserId = localStorage.getItem('usuario_id');
     return storedUserId !== null && this.clienteID !== null && this.clienteID === Number(storedUserId);
+  }
+
+  isRematador(): boolean {
+    const storedUserId = localStorage.getItem('usuario_id');
+    if (!storedUserId || !this.subasta?.rematador) {
+      //console.log('🔍 DEBUG isRematador - No hay usuario logueado o no hay rematador');
+      return false;
+    }
+
+    const userId = Number(storedUserId);
+    
+    // Verificar diferentes estructuras posibles del rematador
+    let rematadorId: number | undefined;
+    
+    // Opción 1: rematador.usuario.id
+    if (this.subasta.rematador.usuario?.id) {
+      rematadorId = this.subasta.rematador.usuario.id;
+    }
+    // Opción 2: rematador.usuario_id
+    else if ((this.subasta.rematador as any).usuario_id) {
+      rematadorId = (this.subasta.rematador as any).usuario_id;
+    }
+    // Opción 3: rematador directamente es el ID
+    else if (typeof this.subasta.rematador === 'number') {
+      rematadorId = this.subasta.rematador;
+    }
+    
+    /*
+    console.log('🔍 DEBUG isRematador:', {
+      usuarioLogueado: userId,
+      rematadorId: rematadorId,
+      estructuraRematador: this.subasta.rematador,
+      esRematador: userId === rematadorId
+    });
+    */
+
+    return rematadorId !== undefined && userId === rematadorId;
+  }
+
+  /**
+   * Encuentra al ganador de la subasta (quien tiene la puja más alta)
+   */
+  private encontrarGanador(): number | null {
+    if (!this.pujas || this.pujas.length === 0) {
+      return null;
+    }
+
+    // Encontrar la puja con el monto más alto
+    const pujaGanadora = this.pujas.reduce((maxPuja, pujaActual) => {
+      return pujaActual.monto > maxPuja.monto ? pujaActual : maxPuja;
+    });
+
+    // Obtener el cliente_id de la puja ganadora
+    // Nota: Necesitarías tener el cliente_id en el objeto pujaDto
+    // Por ahora, usaremos la lógica existente del clienteID
+    if (pujaGanadora.monto === this.pujaActual) {
+      return this.clienteID;
+    }
+
+    return null;
+  }
+
+  /**
+   * Verifica si el usuario actual es el ganador
+   */
+  private esUsuarioGanador(ganadorId: number): boolean {
+    const usuarioActual = localStorage.getItem('usuario_id');
+    return usuarioActual !== null && Number(usuarioActual) === ganadorId;
+  }
+
+  /**
+   * Maneja el pago exitoso de PayPal
+   */
+  async onPaymentSuccess(paymentData: any): Promise<void> {
+    console.log('💰 Pago exitoso:', paymentData);
+    
+    try {
+      // Cerrar modal de pago
+      this.pagando = false;
+      
+      // Obtener el ID del usuario ganador
+      const ganadorId = Number(localStorage.getItem('usuario_id')) || this.clienteID;
+      const ganadorNombre = localStorage.getItem('usuario_nombre') || `Usuario ${ganadorId}`;
+      
+      // Crear chat post-pago si no existe
+      if (ganadorId && this.subasta?.casaremate && this.subasta.id) {
+        const chatResult = await this.chatService.crearInvitacionChat(
+          ganadorId,
+          ganadorNombre,
+          this.subasta.casaremate.usuario_id || 0, // Usar el ID de la casa de remate
+          this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
+        );
+
+        console.log('✅ Chat creado post-pago:', chatResult);
+        
+        // Establecer el chatRoomId y marcar como creado
+        this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casaremate.usuario_id}`;
+        this.chatCreado = true;
+        
+        // Mostrar mensaje de éxito
+        alert('¡Pago exitoso! Se ha creado un chat con la casa de remate. Haz clic en el botón "Abrir Chat" para coordinar la entrega.');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error post-pago:', error);
+      alert('Pago exitoso, pero hubo un error al crear el chat. Contacte al soporte.');
+    }
+  }
+
+  /**
+   * Maneja errores en el pago de PayPal
+   */
+  onPaymentError(error: any): void {
+    console.error('❌ Error en el pago:', error);
+    alert('Error en el pago. Por favor, intente nuevamente.');
+  }
+
+  /**
+   * Abre el chat en una nueva pestaña usando el chatId creado
+   */
+  abrirChatEnNuevaPestana(): void {
+    if (this.chatRoomId) {
+      const chatUrl = `/chat/${this.chatRoomId}`;
+      window.open(chatUrl, '_blank');
+    } else {
+      alert('Chat no disponible. Contacte al soporte.');
+    }
   }
 
   /**
@@ -936,50 +1077,6 @@ export class StreamComponent implements OnInit, OnDestroy {
       console.error('Error al crear invitación de chat:', error);
       alert('Error al enviar la invitación de chat');
     });
-  }
-
-  /**
-   * Maneja el pago exitoso de PayPal
-   */
-  async onPaymentSuccess(paymentData: any): Promise<void> {
-    console.log('💰 Pago exitoso:', paymentData);
-    
-    try {
-      // Cerrar modal de pago
-      this.pagando = false;
-      
-      // Crear chat post-pago si no existe
-      if (this.clienteID && this.subasta?.casaremate && this.subasta.id) {
-        const chatResult = await this.chatService.crearInvitacionChat(
-          this.clienteID,
-          `Usuario ${this.clienteID}`,
-          this.subasta.casaremate.usuario_id || 0, // Usar el ID de la casa de remate
-          this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
-        );
-
-
-        
-        console.log('✅ Chat creado post-pago:', chatResult);
-        
-        // Inicializar el chat creado
-        this.initializeChat();
-        
-        // Mostrar mensaje de éxito
-        alert('¡Pago exitoso! Se ha creado un chat con la casa de remate para coordinar la entrega.');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error post-pago:', error);
-      alert('Pago exitoso, pero hubo un error al crear el chat. Contacte al soporte.');
-    }
-  }
-
-  /**
-   * Maneja errores en el pago de PayPal
-   */
-  onPaymentError(error: any): void {
-    console.error('❌ Error en el pago:', error);
-    alert('Error en el pago. Por favor, intente nuevamente.');
   }
 }
 
