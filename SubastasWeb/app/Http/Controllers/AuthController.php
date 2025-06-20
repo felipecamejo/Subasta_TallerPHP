@@ -111,7 +111,7 @@ class AuthController extends Controller
     *     @OA\RequestBody(
     *         required=true,
     *         @OA\JsonContent(
-    *             required={"nombre", "cedula", "email", "telefono", "contrasenia", "tipo"},
+    *             required={"nombre", "cedula", "email", "telefono", "contrasenia", "rol"},
     *             @OA\Property(property="nombre", type="string", example="Ana Gómez"),
     *             @OA\Property(property="cedula", type="string", example="45678901"),
     *             @OA\Property(property="email", type="string", example="ana@example.com"),
@@ -120,7 +120,7 @@ class AuthController extends Controller
     *             @OA\Property(property="contrasenia", type="string", example="clave123"),
     *             @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
     *             @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
-    *             @OA\Property(property="tipo", type="string", enum={"cliente", "rematador", "casa_remate"}),
+    *             @OA\Property(property="rol", type="string", enum={"cliente", "rematador", "casa_remate"}),
     *             @OA\Property(property="matricula", type="string", nullable=true, example="MAT456"),
     *             @OA\Property(property="idFiscal", type="string", nullable=true, example="FISC999")
     *         )
@@ -137,7 +137,8 @@ class AuthController extends Controller
     * )
     */
 
-    public function register(Request $request){
+
+public function register(Request $request){
     $request->validate([
         'nombre' => 'required|string|max:255',
         'cedula' => 'required|string|max:255|unique:usuarios',
@@ -147,9 +148,9 @@ class AuthController extends Controller
         'contrasenia' => 'required|string|min:6',
         'latitud' => 'nullable|numeric',
         'longitud' => 'nullable|numeric',
-        'tipo' => 'required|in:cliente,rematador,casa_remate',
-        'matricula' => 'required_if:tipo,rematador|string|nullable',
-        'idFiscal' => 'required_if:tipo,casa_remate|string|nullable',
+        'rol' => 'required|in:cliente,rematador,casa_remate',
+        'matricula' => 'required_if:rol,rematador|string|nullable',
+        'idFiscal' => 'required_if:rol,casa_remate|string|nullable',
     ]);
 
     $usuario = Usuario::create([
@@ -169,22 +170,31 @@ class AuthController extends Controller
             'usuario_id' => $usuario->id,
             'matricula' => $request->matricula,
         ]);
-    } else if ($request->tipo === 'casa_remate') {
+    } elseif ($request->rol === 'casa_remate') {
         $usuario->casaRemate()->create([
             'idFiscal' => $request->idFiscal,
             'calificacion' => json_encode([])
         ]);
     }
 
+    try {
     event(new Registered($usuario));
 
     return response()->json([
         'message' => 'Usuario registrado exitosamente. Se envió un correo de verificación.',
         'usuario_id' => $usuario->id,
     ], 201);
+    } catch (\Exception $e) {
+    \Log::error('Error al enviar correo de verificación en el registro: ' . $e->getMessage());
 
-   }
+    return response()->json([
+        'message' => 'Usuario registrado exitosamente, pero no se pudo enviar el correo de verificación. Intente más tarde.',
+        'usuario_id' => $usuario->id,
+    ], 201);
+}
 
+    }
+    
     /**
     * @OA\Post(
     *     path="/api/register-casa-remate",
@@ -538,4 +548,67 @@ class AuthController extends Controller
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
+
+    /**
+    * @OA\Post(
+    *     path="/api/email/resend",
+    *     summary="Reenviar correo de verificación",
+    *     tags={"Autenticación"},
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\JsonContent(
+    *             required={"email"},
+    *             @OA\Property(property="email", type="string", format="email", example="usuario@example.com")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response=200,
+    *         description="Correo de verificación reenviado exitosamente",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="message", type="string", example="Correo de verificación reenviado.")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response=400,
+    *         description="El correo ya fue verificado",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="message", type="string", example="El correo ya fue verificado.")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response=404,
+    *         description="Usuario no encontrado",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="error", type="string", example="Usuario no encontrado.")
+    *         )
+    *     )
+    * )
+    */
+
+
+public function reenviarEmailVerificacion(Request $request)
+{
+    $request->validate(['email' => 'required|email']);
+
+    $usuario = Usuario::where('email', $request->email)->first();
+
+    if (!$usuario) {
+        return response()->json(['error' => 'Usuario no encontrado.'], 404);
+    }
+
+    if ($usuario->hasVerifiedEmail()) {
+        return response()->json(['message' => 'El correo ya fue verificado.'], 400);
+    }
+
+    try {
+        $usuario->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Correo de verificación reenviado.'], 200);
+    } catch (\Exception $e) {
+        \Log::error('Error al reenviar correo de verificación: ' . $e->getMessage());
+
+        return response()->json([
+            'error' => 'No se pudo enviar el correo de verificación. Por favor, intente más tarde.'
+        ], 500);
+    }
+}
 }

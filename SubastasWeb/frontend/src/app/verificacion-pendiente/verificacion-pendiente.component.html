@@ -1,16 +1,12 @@
-<div class="container mt-5 text-center">
-  <h2>Verificación pendiente</h2>
-  <p>Tu cuenta fue creada, pero necesitás verificar tu correo electrónico antes de continuar.</p>
+<div class="container mt-4">
+  <h2>Verificación de correo pendiente</h2>
+  <p>Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada.</p>
 
   <button class="btn btn-primary" (click)="reenviarCorreo()" [disabled]="loading">
-    {{ loading ? 'Reenviando...' : 'Reenviar correo de verificación' }}
+    Reenviar correo de verificación
   </button>
 
   <div *ngIf="mensaje" class="alert alert-success mt-3">{{ mensaje }}</div>
   <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
-
-  <p class="mt-3">
-    ¿Ya verificaste tu correo?
-    <a routerLink="/login">Iniciar sesión</a>
-  </p>
 </div>
+<button class="btn btn-secondary mt-2" routerLink="/login">Volver al login</button>

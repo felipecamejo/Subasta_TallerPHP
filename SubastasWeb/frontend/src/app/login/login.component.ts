@@ -64,15 +64,16 @@ export class LoginComponent {
             this.router.navigate(['/']);
         }
       },
-      error: (err) => {
-        if (err.status === 403) {
-          this.router.navigate(['/verificacion-pendiente'], {
-            queryParams: { email: this.form.get('email')?.value }
-          });
-        } else {
-          this.error = 'Email o contraseña incorrectos';
-        }
-      },
+     error: (err) => {
+  if (err.status === 403) {
+    const email = this.form.get('email')?.value;
+    localStorage.setItem('email_para_verificar', email);
+
+    this.router.navigate(['/verificacion-pendiente']);
+  } else {
+    this.error = 'Email o contraseña incorrectos';
+  }
+},
     });
   }
 

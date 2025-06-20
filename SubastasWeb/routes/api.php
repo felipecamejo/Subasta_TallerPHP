@@ -33,6 +33,7 @@ Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
 Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
 Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
+Route::post('/email/resend', [AuthController::class, 'reenviarEmailVerificacion']);
 
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
@@ -69,14 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/check-auth', function () {
         return response()->json(['authenticated' => true]);
-    });
-
-    Route::post('/email/resend', function (Request $request) {
-        if ($request->user()->hasVerifiedEmail()) {
-            return response()->json(['message' => 'El correo ya está verificado.'], 400);
-        }
-
-        return response()->json(['message' => 'Correo de verificación reenviado.']);
     });
 
     Route::apiResource('lotes', LoteController::class);
