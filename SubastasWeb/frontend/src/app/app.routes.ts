@@ -17,6 +17,7 @@ import { EmailVerificadoComponent } from './email-verificado/email-verificado.co
 import { VerificacionPendienteComponent } from './verificacion-pendiente/verificacion-pendiente.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { RedirectorComponent } from './redirector/redirector.component';
 
 
 // Dashboards
@@ -26,10 +27,12 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { CasaRemateDashboardComponent } from './casa-remate-dashboard/casa-remate-dashboard.component';
 
 export const routes: Routes = [
+
+  
   
   { path: 'chat/:chatId', component: ChatComponent }, // Nueva ruta para chat
   { path: 'test-chat', component: TestChatComponent }, // Ruta para pruebas
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegisterComponent },
   { path: 'google-login', component: GoogleLoginComponent },
@@ -47,6 +50,7 @@ export const routes: Routes = [
   { path: 'perfil/:id', loadComponent: () => PerfilComponent },
   { path: 'estadisticas', loadComponent: () => EstadisticasComponent },
   { path: 'buscadorRemates', loadComponent: () => BuscadorRematesComponent },
+  { path: '', component: RedirectorComponent },
 
   // Cosas del admin
   { path: 'admin/aprobar-casas', loadComponent: () => import('./admin/aprobar-casas/aprobar-casas.component').then(m => m.AdminAprobarCasasComponent) },
@@ -60,5 +64,5 @@ export const routes: Routes = [
   { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent },
 
   // Ruta por defecto en caso de error
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '' },
 ];

@@ -18,6 +18,7 @@ use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UsuarioController;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -63,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::get('/usuario-autenticado', [UsuarioController::class, 'autenticado']);
 
     Route::get('/check-auth', function () {
         return response()->json(['authenticated' => true]);
