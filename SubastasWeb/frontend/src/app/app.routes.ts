@@ -55,7 +55,7 @@ export const routes: Routes = [
   // Cosas del admin
   { path: 'admin/aprobar-casas', loadComponent: () => import('./admin/aprobar-casas/aprobar-casas.component').then(m => m.AdminAprobarCasasComponent) },
   { path: 'admin/desaprobar-casas', loadComponent: () => import('./admin/desaprobar-casas/desaprobar-casas.component').then(m => m.DesaprobarCasasComponent) },
- 
+  { path: 'admin/usuarios',  loadComponent: () => import('./admin/admin-usuarios/admin-usuarios.component').then(m => m.AdminUsuariosComponent), title: 'Administrar usuarios'},
 
   // Dashboards
   { path: 'dashboard-cliente', component: DashboardClienteComponent },

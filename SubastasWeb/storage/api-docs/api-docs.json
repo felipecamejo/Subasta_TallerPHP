@@ -20,49 +20,91 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Listar casas de remate pendientes de aprobación",
+                "summary": "Listar casas de remate pendientes de aprobación (paginado)",
                 "operationId": "6640c0779752fc9ef54b71752d2f0e88",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Lista de casas pendientes",
+                        "description": "Lista paginada de casas pendientes",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "idFiscal": {
-                                                "type": "string",
-                                                "example": "212345670018"
-                                            },
-                                            "aprobada": {
-                                                "type": "boolean",
-                                                "example": false
-                                            },
-                                            "usuario": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
                                                 "properties": {
                                                     "id": {
                                                         "type": "integer",
-                                                        "example": 5
+                                                        "example": 1
                                                     },
-                                                    "nombre": {
+                                                    "idFiscal": {
                                                         "type": "string",
-                                                        "example": "Casa Aurora"
+                                                        "example": "212345670018"
                                                     },
-                                                    "email": {
+                                                    "aprobado_en": {
                                                         "type": "string",
-                                                        "example": "casa@example.com"
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "aprobado_por": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "usuario": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string",
+                                                                "example": "Casa Aurora"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": "casa@example.com"
+                                                            },
+                                                            "telefono": {
+                                                                "type": "string",
+                                                                "example": "099123456"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
                                                 },
                                                 "type": "object"
                                             }
-                                        },
-                                        "type": "object"
-                                    }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -80,18 +122,91 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Listar casas de remate activas",
+                "summary": "Listar casas de remate activas (paginado)",
                 "operationId": "72dcef9b203a64839f8c450e025f71f9",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Lista de casas activas",
+                        "description": "Lista paginada de casas activas",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object"
-                                    }
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "idFiscal": {
+                                                        "type": "string",
+                                                        "example": "211234560019"
+                                                    },
+                                                    "aprobado_en": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-06-19T15:45:00Z"
+                                                    },
+                                                    "aprobado_por": {
+                                                        "type": "string",
+                                                        "example": "admin@example.com"
+                                                    },
+                                                    "usuario": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string",
+                                                                "example": "Casa Solis"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": "solis@example.com"
+                                                            },
+                                                            "telefono": {
+                                                                "type": "string",
+                                                                "example": "098765432"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -581,7 +696,7 @@
                                     "email",
                                     "telefono",
                                     "contrasenia",
-                                    "tipo"
+                                    "rol"
                                 ],
                                 "properties": {
                                     "nombre": {
@@ -619,7 +734,7 @@
                                         "format": "float",
                                         "example": -56.1645
                                     },
-                                    "tipo": {
+                                    "rol": {
                                         "type": "string",
                                         "enum": [
                                             "cliente",
@@ -1093,6 +1208,85 @@
                                         "error": {
                                             "type": "string",
                                             "example": "Este token es inválido"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/email/resend": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Reenviar correo de verificación",
+                "operationId": "00b68c94777b416704024c1ab8fe6f6c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Correo de verificación reenviado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Correo de verificación reenviado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "El correo ya fue verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El correo ya fue verificado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Usuario no encontrado."
                                         }
                                     },
                                     "type": "object"
@@ -3325,13 +3519,14 @@
                     {
                         "name": "rol",
                         "in": "query",
-                        "description": "Rol del usuario: cliente o rematador",
+                        "description": "Rol del usuario: cliente, rematador o casa_remate",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "cliente",
-                                "rematador"
+                                "rematador",
+                                "casa_remate"
                             ]
                         }
                     }
@@ -3666,6 +3861,53 @@
                         "description": "Error interno del servidor"
                     }
                 }
+            }
+        },
+        "/api/usuario-autenticado": {
+            "get": {
+                "tags": [
+                    "Usuario"
+                ],
+                "summary": "Obtener información del usuario autenticado",
+                "operationId": "2b45d8bdadf46ffa5365b85048dba474",
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "nombre": {
+                                            "type": "string",
+                                            "example": "Juan Pérez"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "juan@example.com"
+                                        },
+                                        "rol": {
+                                            "type": "string",
+                                            "example": "cliente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/vendedores": {
@@ -4028,6 +4270,10 @@
         {
             "name": "Subastas",
             "description": "API para gestionar subastas"
+        },
+        {
+            "name": "Usuario",
+            "description": "Operaciones relacionadas al usuario autenticado"
         },
         {
             "name": "Vendedores",

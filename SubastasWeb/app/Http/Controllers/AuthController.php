@@ -289,7 +289,6 @@ public function register(Request $request){
     *     @OA\Response(response=422, description="Error de validación")
     * )
     */
-
     public function loginWithGoogle(Request $request){
         $request->validate([
             'token' => 'required|string',
@@ -394,7 +393,6 @@ public function register(Request $request){
     *     @OA\Response(response=422, description="Error de validación")
     * )
     */
-
     public function registerGoogleUser(Request $request){
         $data = $request->validate([
             'nombre' => 'required|string|max:255',

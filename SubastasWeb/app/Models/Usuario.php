@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class Usuario extends Authenticatable implements MustVerifyEmail
 {
@@ -28,8 +28,14 @@ class Usuario extends Authenticatable implements MustVerifyEmail
     ]; 
 
     protected $hidden = [
-        'contrasenia'
+        'contrasenia',
+        'remember_token',
     ];
+
+    public function getAuthPassword()
+    {
+        return $this->contrasenia;
+    }
 
     public function cliente()
     {
@@ -41,15 +47,22 @@ class Usuario extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Rematador::class, 'usuario_id');
     }
 
-    public function casaRemate(){
+    public function casaRemate()
+    {
         return $this->hasOne(CasaRemate::class, 'usuario_id');
     }
 
-    public function getAuthPassword(){
-        return $this->contrasenia;
+    public function admin()
+    {
+        return $this->hasOne(Admin::class, 'usuario_id');
     }
 
-    public function admin(){
-    return $this->hasOne(Admin::class, 'usuario_id');
+    public function getRolAttribute()
+    {
+        if ($this->admin()->exists()) return 'admin';
+        if ($this->rematador()->exists()) return 'rematador';
+        if ($this->cliente()->exists()) return 'cliente';
+        if ($this->casaRemate()->exists()) return 'casa_remate';
+        return 'desconocido';
     }
 }

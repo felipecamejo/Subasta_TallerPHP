@@ -1,0 +1,35 @@
+<div class="container mt-4">
+  <h2>Gestión de Usuarios por Rol</h2>
+
+  <label for="rol">Seleccioná un rol:</label>
+  <select [(ngModel)]="rolSeleccionado" (change)="cargarUsuarios()" class="form-control w-50 mb-3" id="rol">
+    <option value="">-- Seleccionar --</option>
+    <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+  </select>
+
+  <div *ngIf="cargando">Cargando usuarios...</div>
+  <div *ngIf="error" class="text-danger">{{ error }}</div>
+
+  <table *ngIf="usuarios.length > 0" class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of usuarios">
+        <td>{{ item.usuario?.nombre }}</td>
+        <td>{{ item.usuario?.email }}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" (click)="eliminarUsuario(item.usuario.id)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="usuarios.length === 0 && !cargando && rolSeleccionado">
+    No se encontraron usuarios para el rol seleccionado.
+  </div>
+</div>

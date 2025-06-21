@@ -94,10 +94,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
 
-    // Rutas de administración
-    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
-    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
-    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
-    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
-    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+    Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+        Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+        Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
+        Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+        Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
+        Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+        Route::get('/admin/usuarios-por-rol', [AdminController::class, 'usuariosPorRol']); 
+    });
 });

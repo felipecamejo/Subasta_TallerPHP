@@ -1,9 +1,11 @@
 <?php
 
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Providers\AppServiceProvider; // 👈 Agregá este `use`
+use App\Http\Middleware\IsAdmin;
+use App\Providers\AppServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,16 +15,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Habilitar middleware de CORS nativo de Laravel
+        //  CORS y Sanctum en orden
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            EnsureFrontendRequestsAreStateful::class, // 👈 AGREGALO ACÁ
         ]);
-        // Agregar middleware de CORS personalizado
-        // $middleware->api(prepend: [
-        //     \App\Http\Middleware\CorsMiddleware::class,
-        // ]);
+
+        //  Alias para middlewares personalizados
+        $middleware->alias([
+            'isAdmin' => IsAdmin::class,
+        ]);
     })
-    ->withProviders([ // 👈 Agregá esta línea
+    ->withProviders([
         AppServiceProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions) {

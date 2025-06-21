@@ -278,4 +278,70 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Usuario y perfil asociado eliminados con éxito']);
     }
+
+    /**
+ * @OA\Get(
+ *     path="/api/admin/usuarios",
+ *     summary="Listar usuarios por rol (paginado)",
+ *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="rol",
+ *         in="query",
+ *         required=true,
+ *         description="Rol de los usuarios a listar: cliente, rematador o casa_remate",
+ *         @OA\Schema(type="string", enum={"cliente", "rematador", "casa_remate"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Número de página",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Parameter(
+ *         name="per_page",
+ *         in="query",
+ *         required=false,
+ *         description="Cantidad de resultados por página",
+ *         @OA\Schema(type="integer", example=10)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Lista paginada de usuarios por rol",
+ *         @OA\JsonContent(type="object",
+ *             @OA\Property(property="current_page", type="integer"),
+ *             @OA\Property(property="last_page", type="integer"),
+ *             @OA\Property(property="per_page", type="integer"),
+ *             @OA\Property(property="total", type="integer"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(type="object")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Rol inválido"
+ *     )
+ * )
+ */
+public function usuariosPorRol(Request $request)
+{
+    $rol = $request->query('rol');
+    $perPage = $request->query('per_page', 10); // por defecto 10
+
+    if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
+        return response()->json(['error' => 'Rol inválido'], 400);
+    }
+
+    $usuarios = match ($rol) {
+        'cliente' => \App\Models\Cliente::with('usuario')->paginate($perPage),
+        'rematador' => \App\Models\Rematador::with('usuario')->paginate($perPage),
+        'casa_remate' => \App\Models\CasaRemate::with('usuario')->paginate($perPage),
+    };
+
+    return response()->json($usuarios);
+}
 }
