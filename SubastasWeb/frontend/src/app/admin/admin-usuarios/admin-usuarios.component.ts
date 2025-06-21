@@ -18,32 +18,37 @@ export class AdminUsuariosComponent implements OnInit {
   cargando = false;
   error = '';
 
+  currentPage = 1;
+  lastPage = 1;
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {}
 
-  cargarUsuarios() {
+  cargarUsuarios(page: number = 1) {
     if (!this.rolSeleccionado) return;
     this.cargando = true;
     this.error = '';
 
-    this.http.get<any>(`${environment.apiUrl}/admin/usuarios?rol=${this.rolSeleccionado}`)
-  .subscribe({
-    next: (respuesta) => {
-      this.usuarios = respuesta.data;
-      this.cargando = false;
-    },
-    error: (err) => {
-      this.error = 'No se pudieron cargar los usuarios';
-      this.cargando = false;
-    }
-  });
+    this.http.get<any>(`${environment.apiUrl}/api/admin/usuarios-por-rol?rol=${this.rolSeleccionado}&page=${page}`)
+      .subscribe({
+        next: (respuesta) => {
+          this.usuarios = respuesta.data;
+          this.currentPage = respuesta.current_page;
+          this.lastPage = respuesta.last_page;
+          this.cargando = false;
+        },
+        error: () => {
+          this.error = 'No se pudieron cargar los usuarios';
+          this.cargando = false;
+        }
+      });
   }
 
   eliminarUsuario(usuarioId: number) {
     if (!confirm('¿Estás seguro de que querés eliminar este usuario?')) return;
 
-    this.http.delete(`http://localhost:8000/api/admin/eliminar-usuario/${usuarioId}`)
+    this.http.delete(`${environment.apiUrl}/api/admin/eliminar-usuario/${usuarioId}`)
       .subscribe({
         next: () => {
           this.usuarios = this.usuarios.filter(u => u.usuario.id !== usuarioId);
@@ -52,5 +57,17 @@ export class AdminUsuariosComponent implements OnInit {
           alert('Error al eliminar el usuario');
         }
       });
+  }
+
+  paginaAnterior() {
+    if (this.currentPage > 1) {
+      this.cargarUsuarios(this.currentPage - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this.currentPage < this.lastPage) {
+      this.cargarUsuarios(this.currentPage + 1);
+    }
   }
 }
