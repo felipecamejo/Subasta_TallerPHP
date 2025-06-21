@@ -21,13 +21,6 @@
     <article class="article-1 col-12 md:col-6 paddingArticle" *ngIf="subasta">
         <div class="w-full flex padreTituloReloj">
             <h1 class="titulo"> {{ subasta.nombre }} </h1>
-            <p-button 
-                *ngIf="isRematador()" 
-                label="Iniciar" 
-                severity="secondary" 
-                class="iniciar-btn"
-                [disabled]="!puedeIniciarSubasta" 
-                (click)="iniciarSubasta()"/>
             <div class="clock-input-group">
                 <span class="pi pi-clock"></span>
                 <input type="text" [class]="timerCssClass" pInputText [value]="timerDisplayText" readonly />
@@ -65,16 +58,26 @@
             </div>
         </div>
 
+        <!-- Mensaje de ganador (solo se muestra cuando la subasta termina) -->
+        <div class="winner-notification" *ngIf="esGanador && !pagando">
+            <div class="alert alert-success">
+                <i class="pi pi-trophy"></i>
+                <strong>¡Felicidades!</strong> Has ganado la subasta con una puja de <strong>${{pujaActual}}</strong>
+                <p>El pago se procesará automáticamente.</p>
+            </div>
+        </div>
+
         <p-dialog 
-            header="Metodo de Pago" 
+            header="🏆 ¡Subasta Ganada! - Método de Pago" 
             [(visible)]="pagando" 
             [modal]="true" 
             [style]="{width: '80vw', height: '80vh'}"
             [closable]="true">
 
             <section class="payment-section">
-                <h3>Pago Requerido - Subasta Ganada</h3>
-                <p>Felicidades! Has ganado la subasta por <strong>${{paypalMonto}}</strong></p>
+                <h3>🎉 ¡Felicidades! Has ganado la subasta</h3>
+                <p>Has ganado el <strong>Lote {{indexLotes + 1}}</strong> con una puja de <strong>${{paypalMonto}}</strong></p>
+                <p>Por favor, procede con el pago para completar la transacción:</p>
                 <div class="payment-container">
                     <app-paypal 
                         [amount]="paypalMonto"
@@ -82,18 +85,26 @@
                         (paymentError)="onPaymentError($event)">
                     </app-paypal> 
                 </div>
+                <div class="payment-info">
+                    <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega.</small></p>
+                </div>
             </section>
         </p-dialog>
 
         <!-- Chat Toggle Button para mostrar después del pago -->
-        <p-button 
-            *ngIf="chatCreado" 
-            label="Abrir Chat con Casa de Remate" 
-            icon="pi pi-comments" 
-            severity="secondary"
-            class="chat-toggle-button"
-            (click)="abrirChatEnNuevaPestana()">
-        </p-button>
+        <div class="chat-section" *ngIf="chatCreado">
+            <div class="alert alert-info">
+                <i class="pi pi-check-circle"></i>
+                <strong>Chat creado exitosamente!</strong> Se ha establecido comunicación con la casa de remate.
+            </div>
+            <p-button 
+                label="Abrir Chat con Casa de Remate" 
+                icon="pi pi-comments" 
+                severity="secondary"
+                class="chat-toggle-button"
+                (click)="abrirChatEnNuevaPestana()">
+            </p-button>
+        </div>
         
     </article>
 </main>

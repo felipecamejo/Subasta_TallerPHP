@@ -10,13 +10,10 @@ import { rematadorDto } from '../../models/rematadorDto';
 import { subastaDto } from '../../models/subastaDto';
 
 
-import { PayPalComponent } from '../pay-pal/pay-pal.component';
-
-
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, TableModule, PaginatorModule, PayPalComponent],
+  imports: [CommonModule, TableModule, PaginatorModule],
   providers: [DatePipe],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
