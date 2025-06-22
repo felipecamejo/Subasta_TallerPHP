@@ -49,19 +49,12 @@ public function login(Request $request)
         $rol = 'admin';
     }
 
-      \Log::debug('🔐 Login detectado', [
-        'usuario_id' => $usuario->id,
-        'rol' => $rol,
-        'admin_relation' => $usuario->admin
-    ]);
-
     return response()->json([
-        'access_token' => $usuario->createToken('token')->plainTextToken,
+        'token' => $usuario->createToken('token')->plainTextToken,
         'usuario_id' => $usuario->id,
         'rol' => $rol
     ]);
 }
-
 
     /**
      * Registro tradicional de cliente o rematador
