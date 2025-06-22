@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../environments/environment';
+import { HttpClientModule } from '@angular/common/http';
+
+import { AdminUsuariosService } from '../../../services/AdminUsuarios.service';
+import { adminCasaRemateDto } from '../../../models/adminCasaRemateDto';
 
 @Component({
   selector: 'app-desaprobar-casas',
@@ -10,23 +12,27 @@ import { environment } from '../../../environments/environment';
   templateUrl: './desaprobar-casas.component.html',
 })
 export class DesaprobarCasasComponent implements OnInit {
-  activas: any[] = [];
+  activas: adminCasaRemateDto[] = [];
   paginacionLinks: any[] = [];
   error: string = '';
+  currentPage = 1;
+  lastPage = 1;
 
-  constructor(private http: HttpClient) {}
+  constructor(private adminService: AdminUsuariosService) {}
 
   ngOnInit(): void {
     this.cargarActivas();
   }
 
-  cargarActivas(url: string = `${environment.apiUrl}/api/admin/casas-activas`): void {
-    this.http.get<any>(url).subscribe({
-      next: res => {
+  cargarActivas(page: number = 1): void {
+    this.adminService.getCasasAprobadas(page).subscribe({
+      next: (res) => {
         this.activas = res.data;
         this.paginacionLinks = res.links;
+        this.currentPage = res.current_page;
+        this.lastPage = res.last_page;
       },
-      error: err => {
+      error: (err) => {
         this.error = 'Error al cargar casas activas.';
         console.error(err);
       }
@@ -34,14 +40,22 @@ export class DesaprobarCasasComponent implements OnInit {
   }
 
   desactivarCasa(usuarioId: number): void {
-    this.http.post(`${environment.apiUrl}/api/admin/desaprobar-casa/${usuarioId}`, {}).subscribe({
+    this.adminService.desaprobarCasa(usuarioId).subscribe({
       next: () => {
         this.activas = this.activas.filter(c => c.usuario_id !== usuarioId);
       },
-      error: err => {
+      error: (err) => {
         this.error = 'Error al desactivar casa.';
         console.error(err);
       }
     });
+  }
+
+  paginaAnterior(): void {
+    if (this.currentPage > 1) this.cargarActivas(this.currentPage - 1);
+  }
+
+  paginaSiguiente(): void {
+    if (this.currentPage < this.lastPage) this.cargarActivas(this.currentPage + 1);
   }
 }

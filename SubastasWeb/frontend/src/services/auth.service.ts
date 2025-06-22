@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from './../environments/environment';
+import { EmailResendRequest } from '../models/emailResendRequest';
 
 export interface AuthData {
   token: string;
@@ -25,12 +26,9 @@ export class AuthService {
 
   login(authData: AuthData): void {
     localStorage.setItem('auth', JSON.stringify(authData));
-
-    // Compatibilidad con código antiguo
     localStorage.setItem('token', authData.token);
     localStorage.setItem('rol', authData.rol);
     localStorage.setItem('usuario_id', authData.usuario_id.toString());
-
     this.isAuthenticatedSubject.next(true);
   }
 
@@ -44,7 +42,6 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('rol');
     localStorage.removeItem('usuario_id');
-
     this.isAuthenticatedSubject.next(false);
     this.router.navigate(['/login']);
   }
@@ -89,6 +86,17 @@ export class AuthService {
     }
   }
 
+  loginTradicional(email: string, password: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/login`, {
+      email,
+      password
+    });
+  }
+
+  reenviarVerificacionEmail(payload: EmailResendRequest): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/email/resend`, payload);
+  }
+
   private getAuthObject(): AuthData | null {
     try {
       const data = localStorage.getItem('auth');
@@ -101,12 +109,5 @@ export class AuthService {
   private hasToken(): boolean {
     const auth = this.getAuthObject();
     return !!auth?.token;
-  }
-
-  loginTradicional(email: string, password: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/login`, {
-      email,
-      password
-    });
   }
 }

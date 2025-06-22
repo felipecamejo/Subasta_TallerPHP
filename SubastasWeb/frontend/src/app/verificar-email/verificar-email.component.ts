@@ -12,7 +12,7 @@ import { RouterModule, Router } from '@angular/router';
 export class VerificarEmailComponent {
   constructor(private router: Router) {}
 
-  irAlLogin() {
+  irAlLogin(): void {
     this.router.navigate(['/login']);
   }
 }

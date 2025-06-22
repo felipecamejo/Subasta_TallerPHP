@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../environments/environment';
+import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
+import { EmailResendRequest } from '../../models/emailResendRequest';
 
 @Component({
   selector: 'app-verificacion-pendiente',
@@ -16,17 +17,19 @@ export class VerificacionPendienteComponent {
   loading = false;
   email = localStorage.getItem('email_para_verificar') || '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private authService: AuthService) {}
 
-  reenviarCorreo() {
+  reenviarCorreo(): void {
     if (!this.email) {
       this.error = 'No se encontró el email para reenviar la verificación.';
       return;
     }
 
     this.loading = true;
-    this.http.post(`${environment.apiUrl}/api/email/resend`, { email: this.email }).subscribe({
-      next: (res: any) => {
+    const payload: EmailResendRequest = { email: this.email };
+
+    this.authService.reenviarVerificacionEmail(payload).subscribe({
+      next: () => {
         this.mensaje = 'Correo de verificación reenviado correctamente.';
         this.loading = false;
         localStorage.removeItem('email_para_verificar');

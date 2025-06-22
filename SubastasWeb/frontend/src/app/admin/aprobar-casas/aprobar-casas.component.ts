@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../environments/environment';
+import { HttpClientModule } from '@angular/common/http';
+
+import { AdminUsuariosService } from '../../../services/AdminUsuarios.service';
+import { adminCasaRemateDto } from '../../../models/adminCasaRemateDto';
 
 @Component({
   selector: 'app-admin-aprobar-casas',
@@ -11,21 +13,25 @@ import { environment } from '../../../environments/environment';
 })
 export class AdminAprobarCasasComponent implements OnInit {
 
-  pendientes: any[] = [];
+  pendientes: adminCasaRemateDto[] = [];
   paginacionLinks: any[] = [];
   error: string = '';
+  currentPage = 1;
+  lastPage = 1;
 
-  constructor(private http: HttpClient) {}
+  constructor(private adminService: AdminUsuariosService) {}
 
   ngOnInit(): void {
-    this.cargarCasasPendientes(); // carga página 1 al iniciar
+    this.cargarCasasPendientes();
   }
 
-  cargarCasasPendientes(url: string = `${environment.apiUrl}/api/admin/usuarios-pendientes`): void {
-    this.http.get<any>(url).subscribe({
+  cargarCasasPendientes(page: number = 1): void {
+    this.adminService.getCasasPendientes(page).subscribe({
       next: (res) => {
         this.pendientes = res.data;
         this.paginacionLinks = res.links;
+        this.currentPage = res.current_page;
+        this.lastPage = res.last_page;
       },
       error: (err) => {
         console.error(err);
@@ -35,7 +41,7 @@ export class AdminAprobarCasasComponent implements OnInit {
   }
 
   aprobarCasa(usuario_id: number): void {
-    this.http.post(`${environment.apiUrl}/api/admin/aprobar-casa/${usuario_id}`, {}).subscribe({
+    this.adminService.aprobarCasa(usuario_id).subscribe({
       next: () => {
         this.pendientes = this.pendientes.filter(c => c.usuario_id !== usuario_id);
       },
@@ -44,5 +50,13 @@ export class AdminAprobarCasasComponent implements OnInit {
         this.error = 'No se pudo aprobar la casa.';
       }
     });
+  }
+
+  paginaAnterior() {
+    if (this.currentPage > 1) this.cargarCasasPendientes(this.currentPage - 1);
+  }
+
+  paginaSiguiente() {
+    if (this.currentPage < this.lastPage) this.cargarCasasPendientes(this.currentPage + 1);
   }
 }
