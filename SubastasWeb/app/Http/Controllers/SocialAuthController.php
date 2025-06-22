@@ -40,7 +40,10 @@ class SocialAuthController extends Controller
 
         session(['rol' => $rol]);
 
-        return Socialite::driver('google')->stateless()->redirect();
+        return Socialite::driver('google')
+    ->stateless()
+    ->with(['state' => $rol]) // usamos el parámetro `state` para enviar el rol
+    ->redirect();
     }
 
     /**
@@ -58,7 +61,7 @@ class SocialAuthController extends Controller
      */
     public function handleGoogleCallback(Request $request)
     {
-        $rol = session('rol');
+        $rol = $request->input('state'); 
 
         if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
             return redirect('http://localhost:4200/login?error=rol-invalido');

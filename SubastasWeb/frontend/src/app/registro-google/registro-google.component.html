@@ -2,7 +2,6 @@
   <h1>Registro con Google</h1>
 
   <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
-
     <fieldset class="mb-3">
       <legend>Información personal</legend>
 
@@ -11,19 +10,13 @@
         <label for="nombre">Nombre:</label>
         <input type="text" id="nombre" class="form-control" formControlName="nombre"
                [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched">
-        <div class="text-danger" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
-          El nombre es obligatorio.
-        </div>
       </div>
 
       <!-- Email -->
       <div class="mb-2">
-        <label for="email">Email:</label>
-        <input formControlName="email" type="email" class="form-control" readonly
+        <label for="email">Correo electrónico:</label>
+        <input type="email" id="email" class="form-control" formControlName="email"
                [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched">
-        <div class="text-danger" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-          Ingresá un email válido.
-        </div>
       </div>
 
       <!-- Cédula -->
@@ -31,9 +24,6 @@
         <label for="cedula">Cédula:</label>
         <input type="text" id="cedula" class="form-control" formControlName="cedula"
                [class.is-invalid]="form.get('cedula')?.invalid && form.get('cedula')?.touched">
-        <div class="text-danger" *ngIf="form.get('cedula')?.invalid && form.get('cedula')?.touched">
-          La cédula es obligatoria.
-        </div>
       </div>
 
       <!-- Teléfono -->
@@ -41,79 +31,64 @@
         <label for="telefono">Teléfono:</label>
         <input type="text" id="telefono" class="form-control" formControlName="telefono"
                [class.is-invalid]="form.get('telefono')?.invalid && form.get('telefono')?.touched">
-        <div class="text-danger" *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched">
-          El teléfono es obligatorio.
-        </div>
       </div>
-    </fieldset>
-
-    <fieldset class="mb-3">
-      <legend>Seguridad</legend>
 
       <!-- Contraseña -->
       <div class="mb-2">
         <label for="contrasenia">Contraseña:</label>
         <input type="password" id="contrasenia" class="form-control" formControlName="contrasenia"
                [class.is-invalid]="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched">
-        <div class="text-danger" *ngIf="form.get('contrasenia')?.hasError('required') && form.get('contrasenia')?.touched">
-          La contraseña es obligatoria.
-        </div>
-        <div class="text-danger" *ngIf="form.get('contrasenia')?.hasError('minlength') && form.get('contrasenia')?.touched">
-          La contraseña debe tener al menos 8 caracteres.
-        </div>
       </div>
 
-      <!-- Confirmar Contraseña -->
+      <!-- Confirmar contraseña -->
       <div class="mb-2">
-        <label for="contrasenia_confirmation">Confirmar Contraseña:</label>
+        <label for="contrasenia_confirmation">Confirmar contraseña:</label>
         <input type="password" id="contrasenia_confirmation" class="form-control" formControlName="contrasenia_confirmation"
                [class.is-invalid]="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched">
-        <div class="text-danger" *ngIf="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched">
+        <div *ngIf="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched" class="text-danger">
           Las contraseñas no coinciden.
         </div>
       </div>
-    </fieldset>
-
-    <fieldset class="mb-3">
-      <legend>Tipo de usuario</legend>
 
       <!-- Rol -->
       <div class="mb-2">
         <label for="rol">Rol:</label>
-        <select id="rol" class="form-control" formControlName="rol" (change)="onRolChange()"
-                [class.is-invalid]="form.get('rol')?.invalid && form.get('rol')?.touched">
-          <option value="">Seleccioná un rol</option>
+        <select id="rol" class="form-control" formControlName="rol" (change)="onRolChange()">
+          <option value="">-- Seleccioná un rol --</option>
           <option value="cliente">Cliente</option>
           <option value="rematador">Rematador</option>
           <option value="casa_remate">Casa de Remate</option>
         </select>
-        <div class="text-danger" *ngIf="form.get('rol')?.invalid && form.get('rol')?.touched">
-          Seleccioná un rol.
+      </div>
+
+      <!-- Matrícula solo si es rematador -->
+      <div *ngIf="form.get('rol')?.value === 'rematador'" class="mb-2">
+        <label for="matricula">Matrícula:</label>
+        <input type="text" id="matricula" class="form-control" formControlName="matricula"
+               [class.is-invalid]="form.get('matricula')?.invalid && form.get('matricula')?.touched">
+        <div *ngIf="form.get('matricula')?.invalid && form.get('matricula')?.touched" class="text-danger">
+          La matrícula es obligatoria.
         </div>
       </div>
 
-      <!-- ID Fiscal (solo para casa_remate) -->
-      <div class="mb-2" *ngIf="form.get('rol')?.value === 'casa_remate'">
+      <!-- ID Fiscal solo si es casa de remate -->
+      <div *ngIf="form.get('rol')?.value === 'casa_remate'" class="mb-2">
         <label for="idFiscal">ID Fiscal:</label>
         <input type="text" id="idFiscal" class="form-control" formControlName="idFiscal"
                [class.is-invalid]="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched">
-        <div class="text-danger" *ngIf="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched">
-          El ID Fiscal es obligatorio para casas de remate.
+        <div *ngIf="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched" class="text-danger">
+          El ID Fiscal es obligatorio.
         </div>
       </div>
     </fieldset>
 
+    <!-- Mapa -->
     <fieldset class="mb-3">
       <legend>Ubicación</legend>
-
-      <label for="map-registro-google">Seleccioná tu ubicación en el mapa:</label>
-      <div id="map-registro-google" style="height: 300px;"></div>
-
-      <div class="text-danger mt-2" *ngIf="form.get('latitud')?.invalid && form.get('latitud')?.touched">
-        Seleccioná una ubicación en el mapa.
-      </div>
+      <div id="map-registro-google" style="height: 300px; border: 1px solid #ccc;"></div>
     </fieldset>
 
-    <button class="btn btn-primary" type="submit">Registrarse</button>
+    <!-- Botón -->
+    <button type="submit" class="btn btn-primary">Registrarse</button>
   </form>
 </section>

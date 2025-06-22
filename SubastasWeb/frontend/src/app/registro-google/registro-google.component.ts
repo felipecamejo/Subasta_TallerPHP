@@ -37,16 +37,13 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
       email: new FormControl('', [Validators.required, Validators.email]),
       cedula: new FormControl('', Validators.required),
       telefono: new FormControl('', Validators.required),
-
       contrasenia: new FormControl('', [Validators.required, Validators.minLength(8)]),
       contrasenia_confirmation: new FormControl('', Validators.required),
-
       rol: new FormControl('', Validators.required),
       idFiscal: new FormControl(''),
-
+      matricula: new FormControl(''),
       latitud: new FormControl(null, Validators.required),
       longitud: new FormControl(null, Validators.required),
-
       google_id: new FormControl('', Validators.required),
     }, { validators: this.matchPasswords });
 
@@ -57,6 +54,8 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
         rol: params['rol'] || '',
         google_id: params['google_id'] || ''
       });
+
+      this.onRolChange();
     });
   }
 
@@ -66,7 +65,7 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
       (existingMap as any)._leaflet_id = null;
     }
 
-    this.map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13); // Montevideo
+    this.map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
@@ -94,39 +93,52 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
   onRolChange() {
     const rol = this.form.get('rol')?.value;
     const idFiscal = this.form.get('idFiscal');
+    const matricula = this.form.get('matricula');
 
     if (rol === 'casa_remate') {
       idFiscal?.setValidators([Validators.required]);
+      matricula?.clearValidators();
+    } else if (rol === 'rematador') {
+      matricula?.setValidators([Validators.required]);
+      idFiscal?.clearValidators();
     } else {
       idFiscal?.clearValidators();
+      matricula?.clearValidators();
     }
 
     idFiscal?.updateValueAndValidity();
+    matricula?.updateValueAndValidity();
   }
 
   enviar() {
     this.form.markAllAsTouched();
 
     if (this.form.invalid) {
-      console.log('🛑 Formulario inválido.');
+      console.log('Formulario inválido.');
       Object.entries(this.form.controls).forEach(([key, control]) => {
         if (control.invalid) {
-          console.warn(`❌ Campo inválido: ${key}`, control.errors);
+          console.warn(`Campo inválido: ${key}`, control.errors);
         }
       });
       return;
     }
 
-    console.log('✅ Formulario válido.');
-    const payload = this.form.value;
+    console.log('Formulario válido.');
 
-    const url = payload.rol === 'casa_remate'
+    const rol = this.form.get('rol')?.value;
+    const url = rol === 'casa_remate'
       ? 'http://localhost:8000/api/register-google-casa-remate'
       : 'http://localhost:8000/api/register-google-user';
 
+    const payload = {
+      ...this.form.value,
+      ...(rol !== 'rematador' && { matricula: undefined }),
+      ...(rol !== 'casa_remate' && { idFiscal: undefined })
+    };
+
     this.http.post(url, payload).subscribe({
       next: (res: any) => {
-        console.log('✅ Registro exitoso', res);
+        console.log('Registro exitoso', res);
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('usuario_id', res.usuario_id);
         localStorage.setItem('rol', res.rol);
@@ -136,7 +148,7 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
         else if (res.rol === 'casa_remate') this.router.navigate(['/dashboard-casa']);
       },
       error: err => {
-        console.error('❌ Error al registrar con Google:', err);
+        console.error('Error al registrar con Google:', err);
         alert('Error: ' + JSON.stringify(err.error.details || err.error));
       }
     });

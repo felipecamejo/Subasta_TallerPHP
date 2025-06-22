@@ -30,6 +30,8 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegisterComponent },
   { path: 'google-login', component: GoogleLoginComponent },
+  
+  { path: 'google-login', component: GoogleLoginComponent },
 
   // ✅ Standalone cargado correctamente:
   {
@@ -62,6 +64,11 @@ export const routes: Routes = [
   {
   path: 'testeo',
   loadComponent: () => import('./testeo/testeo.component').then(m => m.TesteoComponent)
+},
+{
+  path: 'login-google',
+  loadComponent: () =>
+    import('./login-google/login-google.component').then(m => m.LoginGoogleComponent),
 },
 
   { path: '**', redirectTo: '' },
