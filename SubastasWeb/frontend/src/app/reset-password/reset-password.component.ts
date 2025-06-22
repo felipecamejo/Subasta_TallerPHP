@@ -1,9 +1,9 @@
-import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PasswordService } from '../../services/password.service'; // Servicio que ya tenés
+import { ResetPasswordPayload } from './../../services/password.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -19,35 +19,40 @@ export class ResetPasswordComponent {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private passwordService: PasswordService
   ) {
     const token = this.route.snapshot.queryParamMap.get('token') || '';
     const email = this.route.snapshot.queryParamMap.get('email') || '';
 
     this.form = this.fb.group({
       email: [email, [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      password_confirmation: ['', Validators.required],
+      password: ['', [Validators.required]],
+      password_confirmation: ['', [Validators.required]],
       token: [token, Validators.required],
-    });
+    }, { validators: this.passwordsCoinciden });
   }
 
-enviar() {
-  if (this.form.invalid) return;
+  passwordsCoinciden(control: AbstractControl): { [key: string]: boolean } | null {
+    const password = control.get('password')?.value;
+    const confirm = control.get('password_confirmation')?.value;
+    return password === confirm ? null : { noCoinciden: true };
+  }
 
-  // Mostrá lo que se está enviando
-  console.log('Datos enviados al backend:', this.form.value);
+  enviar() {
+    if (this.form.invalid) return;
 
-  this.http.post(`${environment.apiUrl}/api/reset-password`, this.form.value).subscribe({
-    next: () => {
-      this.mensaje = 'Contraseña actualizada correctamente.';
-      this.router.navigate(['/login']);
-    },
-    error: err => {
-      console.error('Error desde backend:', err);
-      this.mensaje = err.error?.message || 'Error al restablecer la contraseña';
-    },
-  });
-}
+    const data: ResetPasswordPayload = this.form.value;
+
+    this.passwordService.resetPassword(data).subscribe({
+      next: () => {
+        this.mensaje = 'Contraseña actualizada correctamente.';
+        this.router.navigate(['/login']);
+      },
+      error: err => {
+        console.error('Error desde backend:', err);
+        this.mensaje = err.error?.message || 'Error al restablecer la contraseña';
+      },
+    });
+  }
 }

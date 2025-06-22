@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login-google',
@@ -10,36 +11,23 @@ export class LoginGoogleComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const token = params['token'];
-      const usuario_id = params['usuario_id'];
+      const usuarioId = params['usuario_id'];
       const rol = params['rol'];
 
-      if (token && usuario_id && rol) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('usuario_id', usuario_id);
-        localStorage.setItem('rol', rol);
-
-        switch (rol) {
-          case 'cliente':
-            this.router.navigate(['/dashboard-cliente']);
-            break;
-          case 'rematador':
-            this.router.navigate(['/dashboard-rematador']);
-            break;
-          case 'casa_remate':
-            this.router.navigate(['/dashboard-casa-remate']);
-            break;
-          default:
-            this.router.navigate(['/']);
-        }
+      if (token && usuarioId && rol) {
+        this.authService.loginYRedirigir({
+          token,
+          rol,
+          usuario_id: Number(usuarioId)
+        });
       } else {
-        // Si faltan datos, redirige al login
-        this.router.navigate(['/login']);
+        this.authService.logout();
       }
     });
   }

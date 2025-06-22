@@ -1,151 +1,98 @@
-<div class="register-container" [class.loading]="loading">
-  <h2>Registro de Usuario</h2>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+<section class="container mt-4">
+  <h1>Registro</h1>
 
-    <!-- Nombre -->
-    <div class="form-group">
-      <label for="nombre">Nombre:</label>
-      <input type="text" id="nombre" formControlName="nombre" class="form-control"
-             [class.is-invalid]="nombre?.invalid && (nombre?.touched || fieldErrors['nombre'])">
-      <div *ngIf="nombre?.errors?.['required'] && nombre?.touched" class="text-danger">
-        El nombre es requerido.
-      </div>
-      <div *ngIf="fieldErrors['nombre']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['nombre']">{{ error }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+    <div class="mb-3">
+      <label for="nombre" class="form-label">Nombre</label>
+      <input type="text" id="nombre" class="form-control" formControlName="nombre">
+      <div *ngIf="nombre?.touched && nombre?.invalid" class="text-danger">
+        El nombre es obligatorio.
       </div>
     </div>
 
-    <!-- Cédula -->
-    <div class="form-group">
-      <label for="cedula">Cédula:</label>
-      <input type="text" id="cedula" formControlName="cedula" class="form-control"
-             [class.is-invalid]="cedula?.invalid && (cedula?.touched || fieldErrors['cedula'])">
-      <div *ngIf="cedula?.errors?.['required'] && cedula?.touched" class="text-danger">
-        La cédula es requerida.
-      </div>
-      <div *ngIf="fieldErrors['cedula']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['cedula']">{{ error }}</div>
+    <div class="mb-3">
+      <label for="cedula" class="form-label">Cédula</label>
+      <input type="text" id="cedula" class="form-control" formControlName="cedula">
+      <div *ngIf="cedula?.touched && cedula?.invalid" class="text-danger">
+        La cédula es obligatoria.
       </div>
     </div>
 
-    <!-- Email -->
-    <div class="form-group">
-      <label for="email">Correo Electrónico:</label>
-      <input type="email" id="email" formControlName="email" class="form-control"
-             [class.is-invalid]="email?.invalid && (email?.touched || fieldErrors['email'])">
-      <div *ngIf="email?.errors?.['required'] && email?.touched" class="text-danger">
-        El correo electrónico es requerido.
-      </div>
-      <div *ngIf="email?.errors?.['email'] && email?.touched" class="text-danger">
-        El formato del correo electrónico no es válido.
-      </div>
-      <div *ngIf="fieldErrors['email']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['email']">{{ error }}</div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Correo electrónico</label>
+      <input type="email" id="email" class="form-control" formControlName="email">
+      <div *ngIf="email?.touched && email?.invalid" class="text-danger">
+        Ingresa un email válido.
       </div>
     </div>
 
-    <!-- Teléfono -->
-    <div class="form-group">
-      <label for="telefono">Teléfono:</label>
-      <input type="text" id="telefono" formControlName="telefono" class="form-control"
-             [class.is-invalid]="telefono?.invalid && (telefono?.touched || fieldErrors['telefono'])">
-      <div *ngIf="telefono?.errors?.['required'] && telefono?.touched" class="text-danger">
-        El teléfono es requerido.
-      </div>
-      <div *ngIf="fieldErrors['telefono']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['telefono']">{{ error }}</div>
+    <div class="mb-3">
+      <label for="telefono" class="form-label">Teléfono</label>
+      <input type="text" id="telefono" class="form-control" formControlName="telefono">
+      <div *ngIf="telefono?.touched && telefono?.invalid" class="text-danger">
+        El teléfono es obligatorio.
       </div>
     </div>
 
-    <!-- Contraseña -->
-    <div class="form-group">
-      <label for="contrasenia">Contraseña:</label>
-      <input type="password" id="contrasenia" formControlName="contrasenia" class="form-control"
-             [class.is-invalid]="contrasenia?.invalid && contrasenia?.touched">
-      <div *ngIf="contrasenia?.errors?.['required'] && contrasenia?.touched" class="text-danger">
-        La contraseña es requerida.
-      </div>
-      <div *ngIf="contrasenia?.errors?.['minlength'] && contrasenia?.touched" class="text-danger">
-        Mínimo 8 caracteres.
+    <div class="mb-3">
+      <label for="contrasenia" class="form-label">Contraseña</label>
+      <input type="password" id="contrasenia" class="form-control" formControlName="contrasenia">
+      <div *ngIf="contrasenia?.touched && contrasenia?.invalid" class="text-danger">
+        La contraseña debe tener al menos 8 caracteres.
       </div>
     </div>
 
-    <!-- Confirmar contraseña -->
-    <div class="form-group">
-      <label for="confirmarContrasenia">Confirmar Contraseña:</label>
-      <input type="password" id="confirmarContrasenia" formControlName="confirmarContrasenia" class="form-control"
-             [class.is-invalid]="confirmarContrasenia?.invalid && confirmarContrasenia?.touched">
-      <div *ngIf="confirmarContrasenia?.errors?.['required'] && confirmarContrasenia?.touched" class="text-danger">
-        Confirma tu contraseña.
+    <div class="mb-3">
+      <label for="confirmarContrasenia" class="form-label">Confirmar contraseña</label>
+      <input type="password" id="confirmarContrasenia" class="form-control" formControlName="confirmarContrasenia">
+      <div *ngIf="confirmarContrasenia?.touched && confirmarContrasenia?.invalid" class="text-danger">
+        La confirmación es obligatoria.
       </div>
-      <div *ngIf="form.errors?.['passwordsMismatch'] && confirmarContrasenia?.touched" class="text-danger">
+      <div *ngIf="form.errors?.passwordsMismatch" class="text-danger">
         Las contraseñas no coinciden.
       </div>
     </div>
 
-    <!-- Tipo -->
-    <div class="form-group">
-      <label>Rol de Usuario:</label><br>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" id="tipoCliente" formControlName="tipo" value="cliente">
-        <label class="form-check-label" for="tipoCliente">Cliente</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" id="tipoRematador" formControlName="tipo" value="rematador">
-        <label class="form-check-label" for="tipoRematador">Rematador</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" id="tipoCasa" formControlName="tipo" value="casa_remate">
-        <label class="form-check-label" for="tipoCasa">Casa de Remate</label>
+    <div class="mb-3">
+      <label for="tipo" class="form-label">Rol</label>
+      <select id="tipo" class="form-select" formControlName="tipo">
+        <option value="cliente">Cliente</option>
+        <option value="rematador">Rematador</option>
+        <option value="casa_remate">Casa de Remate</option>
+      </select>
+    </div>
+
+    <div class="mb-3" *ngIf="esRematador">
+      <label for="matricula" class="form-label">Matrícula</label>
+      <input type="text" id="matricula" class="form-control" formControlName="matricula">
+      <div *ngIf="matricula?.touched && matricula?.invalid" class="text-danger">
+        La matrícula es obligatoria para rematadores.
       </div>
     </div>
 
-    <!-- Matrícula -->
-    <div class="form-group" *ngIf="esRematador">
-      <label for="matricula">Matrícula (solo rematadores):</label>
-      <input type="text" id="matricula" formControlName="matricula" class="form-control"
-             [class.is-invalid]="matricula?.invalid && (matricula?.touched || fieldErrors['matricula'])">
-      <div *ngIf="matricula?.errors?.['required'] && matricula?.touched" class="text-danger">
-        La matrícula es requerida.
-      </div>
-      <div *ngIf="fieldErrors['matricula']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['matricula']">{{ error }}</div>
+    <div class="mb-3" *ngIf="esCasaRemate">
+      <label for="idFiscal" class="form-label">ID Fiscal</label>
+      <input type="text" id="idFiscal" class="form-control" formControlName="idFiscal">
+      <div *ngIf="idFiscal?.touched && idFiscal?.invalid" class="text-danger">
+        El ID Fiscal es obligatorio para casas de remate.
       </div>
     </div>
 
-    <!-- ID Fiscal -->
-    <div class="form-group" *ngIf="esCasaRemate">
-      <label for="idFiscal">ID Fiscal (solo casas de remate):</label>
-      <input type="text" id="idFiscal" formControlName="idFiscal" class="form-control"
-             [class.is-invalid]="idFiscal?.invalid && (idFiscal?.touched || fieldErrors['idFiscal'])">
-      <div *ngIf="idFiscal?.errors?.['required'] && idFiscal?.touched" class="text-danger">
-        El ID Fiscal es requerido.
-      </div>
-      <div *ngIf="fieldErrors['idFiscal']" class="text-danger">
-        <div *ngFor="let error of fieldErrors['idFiscal']">{{ error }}</div>
+    <div class="mb-3">
+      <label class="form-label">Ubicación</label>
+      <div id="map" style="height: 300px;"></div>
+      <div *ngIf="latitud?.invalid || longitud?.invalid" class="text-danger mt-1">
+        Hacé clic en el mapa para seleccionar tu ubicación.
       </div>
     </div>
 
-    <!-- Mapa -->
-    <div class="form-group">
-      <label>Selecciona tu ubicación en el mapa:</label>
-      <div id="map" style="height: 300px; width: 100%;"></div>
-      <div *ngIf="latitud?.invalid && latitud?.touched" class="text-danger">
-        La ubicación es requerida. Hacé clic en el mapa.
-      </div>
-      <p *ngIf="latitud?.value != null && longitud?.value != null">
-        Ubicación: {{ latitud?.value | number:'1.4-4' }}, {{ longitud?.value | number:'1.4-4' }}
-      </p>
-    </div>
-
-    <!-- Errores generales -->
     <div *ngIf="submissionError" class="alert alert-danger mt-3">
       {{ submissionError }}
     </div>
 
-    <!-- Botón -->
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading">
+    <button class="btn btn-primary mt-3" type="submit" [disabled]="loading">
       {{ loading ? 'Registrando...' : 'Registrarse' }}
     </button>
   </form>
-</div>
+</section>

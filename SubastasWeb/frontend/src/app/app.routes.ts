@@ -14,7 +14,7 @@ import { VerificarEmailComponent } from './verificar-email/verificar-email.compo
 import { EmailVerificadoComponent } from './email-verificado/email-verificado.component';
 import { VerificacionPendienteComponent } from './verificacion-pendiente/verificacion-pendiente.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
-import { ResetPasswordComponent } from './reset-password/reset-password.component';
+
 import { RedirectorComponent } from './redirector/redirector.component';
 
 // Dashboards
@@ -33,18 +33,13 @@ export const routes: Routes = [
   
   { path: 'google-login', component: GoogleLoginComponent },
 
-  // ✅ Standalone cargado correctamente:
-  {
-    path: 'registro-google',
-    loadComponent: () =>
-      import('./registro-google/registro-google.component').then(m => m.RegistroGoogleComponent)
-  },
-
+  // Standalone cargado correctamente:
+  { path: 'registro-google', loadComponent: () => import('./registro-google/registro-google.component').then(m => m.RegistroGoogleComponent) },
   { path: 'verificar-email', component: VerificarEmailComponent },
   { path: 'email-verificado', component: EmailVerificadoComponent },
   { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'restablecer-contrasena', component: ResetPasswordComponent },
+  { path: 'restablecer-contrasena', loadComponent: () => import('./reset-password/reset-password.component').then(m => m.ResetPasswordComponent)},
 
   { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
   { path: 'stream/:id', loadComponent: () => StreamComponent },
@@ -61,15 +56,7 @@ export const routes: Routes = [
   { path: 'dashboard-rematador', component: DashboardRematadorComponent },
   { path: 'admin', component: AdminDashboardComponent },
   { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent },
-  {
-  path: 'testeo',
-  loadComponent: () => import('./testeo/testeo.component').then(m => m.TesteoComponent)
-},
-{
-  path: 'login-google',
-  loadComponent: () =>
-    import('./login-google/login-google.component').then(m => m.LoginGoogleComponent),
-},
+  { path: 'login-google', loadComponent: () => import('./login-google/login-google.component').then(m => m.LoginGoogleComponent),},
 
   { path: '**', redirectTo: '' },
 ];

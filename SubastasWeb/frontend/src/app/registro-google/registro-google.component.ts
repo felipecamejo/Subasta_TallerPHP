@@ -8,9 +8,12 @@ import {
   ReactiveFormsModule
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import * as L from 'leaflet';
+
+import { RegistroGoogleService } from '../../services/registro-google.service';
+import { RegistroGooglePayload } from '../../models/registro-google-payload';
 
 @Component({
   selector: 'app-registro-google',
@@ -20,13 +23,12 @@ import * as L from 'leaflet';
   styleUrls: ['./registro-google.component.scss']
 })
 export class RegistroGoogleComponent implements OnInit, AfterViewInit {
-
   form!: FormGroup;
   map!: L.Map;
   marker!: L.Marker;
 
   constructor(
-    private http: HttpClient,
+    private registroGoogleService: RegistroGoogleService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -111,46 +113,54 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
   }
 
   enviar() {
-    this.form.markAllAsTouched();
-
-    if (this.form.invalid) {
-      console.log('Formulario inválido.');
-      Object.entries(this.form.controls).forEach(([key, control]) => {
-        if (control.invalid) {
-          console.warn(`Campo inválido: ${key}`, control.errors);
-        }
-      });
-      return;
-    }
-
-    console.log('Formulario válido.');
-
-    const rol = this.form.get('rol')?.value;
-    const url = rol === 'casa_remate'
-      ? 'http://localhost:8000/api/register-google-casa-remate'
-      : 'http://localhost:8000/api/register-google-user';
-
-    const payload = {
-      ...this.form.value,
-      ...(rol !== 'rematador' && { matricula: undefined }),
-      ...(rol !== 'casa_remate' && { idFiscal: undefined })
-    };
-
-    this.http.post(url, payload).subscribe({
-      next: (res: any) => {
-        console.log('Registro exitoso', res);
-        localStorage.setItem('token', res.access_token);
-        localStorage.setItem('usuario_id', res.usuario_id);
-        localStorage.setItem('rol', res.rol);
-
-        if (res.rol === 'cliente') this.router.navigate(['/dashboard-cliente']);
-        else if (res.rol === 'rematador') this.router.navigate(['/dashboard-rematador']);
-        else if (res.rol === 'casa_remate') this.router.navigate(['/dashboard-casa']);
-      },
-      error: err => {
-        console.error('Error al registrar con Google:', err);
-        alert('Error: ' + JSON.stringify(err.error.details || err.error));
-      }
-    });
+  this.form.markAllAsTouched();
+  if (this.form.invalid) {
+    console.warn('Formulario inválido.');
+    return;
   }
+
+  const rol = this.form.get('rol')?.value;
+
+  const rutasPorRol: Record<'cliente' | 'rematador' | 'casa_remate', string> = {
+    cliente: '/dashboard-cliente',
+    rematador: '/dashboard-rematador',
+    casa_remate: '/dashboard-casa-remate'
+  };
+
+  const url = rol === 'casa_remate'
+    ? 'http://localhost:8000/api/register-google-casa-remate'
+    : 'http://localhost:8000/api/register-google-user';
+
+  const payload: RegistroGooglePayload = {
+    nombre: this.form.value.nombre,
+    email: this.form.value.email,
+    cedula: this.form.value.cedula,
+    telefono: this.form.value.telefono,
+    contrasenia: this.form.value.contrasenia,
+    contrasenia_confirmation: this.form.value.contrasenia_confirmation,
+    rol: rol,
+    latitud: this.form.value.latitud,
+    longitud: this.form.value.longitud,
+    google_id: this.form.value.google_id,
+    ...(rol === 'rematador' && { matricula: this.form.value.matricula }),
+    ...(rol === 'casa_remate' && { idFiscal: this.form.value.idFiscal })
+  };
+
+  this.registroGoogleService.registrarUsuario(url, payload).subscribe({
+    next: (res: any) => {
+      console.log('Registro exitoso', res);
+      localStorage.setItem('token', res.access_token);
+      localStorage.setItem('usuario_id', res.usuario_id);
+      localStorage.setItem('rol', res.rol);
+
+      const destino = rutasPorRol[rol as keyof typeof rutasPorRol] || '/';
+      this.router.navigate([destino]);
+    },
+    error: err => {
+      console.error('Error al registrar con Google:', err);
+      alert('Error: ' + JSON.stringify(err.error.details || err.error));
+    }
+  });
+}
+
 }
