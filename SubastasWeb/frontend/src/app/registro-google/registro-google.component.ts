@@ -1,179 +1,144 @@
-import { environment } from '../../environments/environment';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  Inject,
-  PLATFORM_ID,
-} from '@angular/core';
-import {
-  FormBuilder,
   FormGroup,
+  FormControl,
   Validators,
-  ReactiveFormsModule,
   AbstractControl,
-  ValidatorFn,
+  ValidationErrors,
+  ReactiveFormsModule
 } from '@angular/forms';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
-
-export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): { [key: string]: boolean } | null => {
-  const password = control.get('contrasenia');
-  const confirmPassword = control.get('contrasenia_confirmation');
-  return password && confirmPassword && password.value !== confirmPassword.value
-    ? { passwordMismatch: true }
-    : null;
-};
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-registro-google',
   standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
   templateUrl: './registro-google.component.html',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  styleUrls: ['./registro-google.component.scss']
 })
 export class RegistroGoogleComponent implements OnInit, AfterViewInit {
+
   form!: FormGroup;
-  imagenUrl: string = '';
-  googleId: string | null = null;
+  map!: L.Map;
+  marker!: L.Marker;
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
     private http: HttpClient,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const nombre = queryParams['nombre'] || '';
-    const email = queryParams['email'] || '';
-    this.imagenUrl = queryParams['imagen'] || '';
-    this.googleId = queryParams['google_id'] || null;
+    this.form = new FormGroup({
+      nombre: new FormControl('', Validators.required),
+      email: new FormControl('', [Validators.required, Validators.email]),
+      cedula: new FormControl('', Validators.required),
+      telefono: new FormControl('', Validators.required),
 
-    this.form = this.fb.group({
-      nombre: [nombre, Validators.required],
-      email: [{ value: email, disabled: true }, [Validators.required, Validators.email]],
-      cedula: ['', Validators.required],
-      telefono: ['', Validators.required],
-      contrasenia: ['', [Validators.required, Validators.minLength(8)]],
-      contrasenia_confirmation: ['', Validators.required],
-      rol: ['', Validators.required],
-      matricula: [''],
-      idFiscal: [''],
-      latitud: [null, Validators.required],
-      longitud: [null, Validators.required],
-    }, { validators: passwordMatchValidator });
+      contrasenia: new FormControl('', [Validators.required, Validators.minLength(8)]),
+      contrasenia_confirmation: new FormControl('', Validators.required),
+
+      rol: new FormControl('', Validators.required),
+      idFiscal: new FormControl(''),
+
+      latitud: new FormControl(null, Validators.required),
+      longitud: new FormControl(null, Validators.required),
+
+      google_id: new FormControl('', Validators.required),
+    }, { validators: this.matchPasswords });
+
+    this.route.queryParams.subscribe(params => {
+      this.form.patchValue({
+        nombre: params['nombre'] || '',
+        email: params['email'] || '',
+        rol: params['rol'] || '',
+        google_id: params['google_id'] || ''
+      });
+    });
+  }
+
+  ngAfterViewInit(): void {
+    const existingMap = L.DomUtil.get('map-registro-google');
+    if (existingMap != null) {
+      (existingMap as any)._leaflet_id = null;
+    }
+
+    this.map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13); // Montevideo
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+
+      if (this.marker) {
+        this.marker.setLatLng([lat, lng]);
+      } else {
+        this.marker = L.marker([lat, lng]).addTo(this.map);
+      }
+
+      this.form.patchValue({ latitud: lat, longitud: lng });
+    });
+  }
+
+  matchPasswords(group: AbstractControl): ValidationErrors | null {
+    const pass = group.get('contrasenia')?.value;
+    const confirm = group.get('contrasenia_confirmation')?.value;
+    return pass === confirm ? null : { passwordMismatch: true };
   }
 
   onRolChange() {
     const rol = this.form.get('rol')?.value;
+    const idFiscal = this.form.get('idFiscal');
 
-    if (rol === 'rematador') {
-      this.form.get('matricula')?.setValidators(Validators.required);
-      this.form.get('idFiscal')?.clearValidators();
-    } else if (rol === 'casa_remate') {
-      this.form.get('idFiscal')?.setValidators(Validators.required);
-      this.form.get('matricula')?.clearValidators();
+    if (rol === 'casa_remate') {
+      idFiscal?.setValidators([Validators.required]);
     } else {
-      this.form.get('matricula')?.clearValidators();
-      this.form.get('idFiscal')?.clearValidators();
+      idFiscal?.clearValidators();
     }
 
-    this.form.get('matricula')?.updateValueAndValidity();
-    this.form.get('idFiscal')?.updateValueAndValidity();
-  }
-
-  async ngAfterViewInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const L = await import('leaflet');
-
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
-          iconUrl: 'assets/leaflet/marker-icon.png',
-          shadowUrl: 'assets/leaflet/marker-shadow.png',
-        });
-
-        const map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: 'Map data © OpenStreetMap contributors',
-        }).addTo(map);
-
-        let marker: L.Marker | undefined;
-
-        map.on('click', (e: any) => {
-          const { lat, lng } = e.latlng;
-
-          this.form.patchValue({ latitud: lat, longitud: lng });
-          this.form.get('latitud')?.markAsTouched();
-          this.form.get('longitud')?.markAsTouched();
-
-          if (marker) {
-            marker.setLatLng([lat, lng]);
-          } else {
-            marker = L.marker([lat, lng]).addTo(map);
-          }
-        });
-      } catch (e) {
-        console.error('Error cargando Leaflet:', e);
-      }
-    }
+    idFiscal?.updateValueAndValidity();
   }
 
   enviar() {
     this.form.markAllAsTouched();
 
     if (this.form.invalid) {
-      console.error('Formulario inválido.');
+      console.log('🛑 Formulario inválido.');
+      Object.entries(this.form.controls).forEach(([key, control]) => {
+        if (control.invalid) {
+          console.warn(`❌ Campo inválido: ${key}`, control.errors);
+        }
+      });
       return;
     }
 
-    if (!this.googleId) {
-      console.error('google_id no está presente.');
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    const payload = {
-      ...this.form.getRawValue(),
-      imagen: this.imagenUrl,
-      google_id: this.googleId,
-    };
-
-    delete payload.contrasenia_confirmation;
-    if (payload.rol !== 'rematador') delete payload.matricula;
-    if (payload.rol !== 'casa_remate') delete payload.idFiscal;
+    console.log('✅ Formulario válido.');
+    const payload = this.form.value;
 
     const url = payload.rol === 'casa_remate'
-      ? `${environment.apiUrl}/api/register-casa-remate`
-      : `${environment.apiUrl}/api/register-google-user`;
+      ? 'http://localhost:8000/api/register-google-casa-remate'
+      : 'http://localhost:8000/api/register-google-user';
 
     this.http.post(url, payload).subscribe({
       next: (res: any) => {
+        console.log('✅ Registro exitoso', res);
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('usuario_id', res.usuario_id);
         localStorage.setItem('rol', res.rol);
 
-        if (res.rol === 'casa_remate') {
-          alert('Registro exitoso. Tu cuenta está pendiente de aprobación por el administrador.');
-          this.router.navigate(['/verificacion-pendiente']);
-        } else if (res.rol === 'rematador') {
-          this.router.navigate(['/dashboard-rematador']);
-        } else {
-          this.router.navigate(['/dashboard-cliente']);
-        }
+        if (res.rol === 'cliente') this.router.navigate(['/dashboard-cliente']);
+        else if (res.rol === 'rematador') this.router.navigate(['/dashboard-rematador']);
+        else if (res.rol === 'casa_remate') this.router.navigate(['/dashboard-casa']);
       },
-      error: (err: HttpErrorResponse) => {
-        if (err.status === 403 && err.error?.error?.includes('no fue aprobada')) {
-          alert('Tu casa de remate aún no fue aprobada por el administrador.');
-        } else {
-          console.error('Error al registrar con Google:', err);
-          alert('Ocurrió un error al registrar. Verificá los datos e intentá de nuevo.');
-        }
-      },
+      error: err => {
+        console.error('❌ Error al registrar con Google:', err);
+        alert('Error: ' + JSON.stringify(err.error.details || err.error));
+      }
     });
   }
 }

@@ -8,8 +8,6 @@ import { BuscadorRematesComponent } from './buscador-remates/buscador-remates.co
 import { PerfilComponent } from './perfil/perfil.component';
 import { RegisterComponent } from './register/register.component';
 import { GoogleLoginComponent } from './google-login/google-login.component';
-import { LoginGoogleComponent } from './login-google.component/login-google.component';
-import { RegistroGoogleComponent } from './registro-google/registro-google.component';
 import { ChatComponent } from './chat/chat.component';
 import { TestChatComponent } from './test-chat/test-chat.component';
 import { VerificarEmailComponent } from './verificar-email/verificar-email.component';
@@ -19,7 +17,6 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { RedirectorComponent } from './redirector/redirector.component';
 
-
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
 import { DashboardRematadorComponent } from './dashboards/dashboard-rematador/dashboard-rematador.component';
@@ -27,24 +24,26 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { CasaRemateDashboardComponent } from './casa-remate-dashboard/casa-remate-dashboard.component';
 
 export const routes: Routes = [
-
-  
-  
-  { path: 'chat/:chatId', component: ChatComponent }, // Nueva ruta para chat
-  { path: 'test-chat', component: TestChatComponent }, // Ruta para pruebas
+  { path: 'chat/:chatId', component: ChatComponent },
+  { path: 'test-chat', component: TestChatComponent },
   
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegisterComponent },
   { path: 'google-login', component: GoogleLoginComponent },
-  { path: 'login-google', component: LoginGoogleComponent },
-  { path: 'registro-google', component: RegistroGoogleComponent },
+
+  // ✅ Standalone cargado correctamente:
+  {
+    path: 'registro-google',
+    loadComponent: () =>
+      import('./registro-google/registro-google.component').then(m => m.RegistroGoogleComponent)
+  },
+
   { path: 'verificar-email', component: VerificarEmailComponent },
   { path: 'email-verificado', component: EmailVerificadoComponent },
   { path: 'verificacion-pendiente', component: VerificacionPendienteComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'restablecer-contrasena', component: ResetPasswordComponent },
 
-  // Componentes funcionales
   { path: 'casa-remates', loadComponent: () => CasaRemateComponent },
   { path: 'stream/:id', loadComponent: () => StreamComponent },
   { path: 'perfil/:id', loadComponent: () => PerfilComponent },
@@ -52,17 +51,18 @@ export const routes: Routes = [
   { path: 'buscadorRemates', loadComponent: () => BuscadorRematesComponent },
   { path: '', component: RedirectorComponent },
 
-  // Cosas del admin
   { path: 'admin/aprobar-casas', loadComponent: () => import('./admin/aprobar-casas/aprobar-casas.component').then(m => m.AdminAprobarCasasComponent) },
   { path: 'admin/desaprobar-casas', loadComponent: () => import('./admin/desaprobar-casas/desaprobar-casas.component').then(m => m.DesaprobarCasasComponent) },
-  { path: 'admin/usuarios',  loadComponent: () => import('./admin/admin-usuarios/admin-usuarios.component').then(m => m.AdminUsuariosComponent), title: 'Administrar usuarios'},
+  { path: 'admin/usuarios', loadComponent: () => import('./admin/admin-usuarios/admin-usuarios.component').then(m => m.AdminUsuariosComponent), title: 'Administrar usuarios' },
 
-  // Dashboards
   { path: 'dashboard-cliente', component: DashboardClienteComponent },
   { path: 'dashboard-rematador', component: DashboardRematadorComponent },
   { path: 'admin', component: AdminDashboardComponent },
   { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent },
+  {
+  path: 'testeo',
+  loadComponent: () => import('./testeo/testeo.component').then(m => m.TesteoComponent)
+},
 
-  // Ruta por defecto en caso de error
   { path: '**', redirectTo: '' },
 ];

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('casa_remates', function (Blueprint $table) {
             $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
             
-            $table->string('idFiscal');
+            $table->string('idFiscal')->unique();
             
             $table->boolean('activo')->default(false);
             

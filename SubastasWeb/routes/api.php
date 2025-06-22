@@ -31,9 +31,11 @@ Route::post('/register-casa-remate', [AuthController::class, 'registerCasaRemate
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
 Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
 Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
+Route::post('/register-google-casa-remate', [AuthController::class, 'registerGoogleCasaRemate']);
 Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
 Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
 Route::post('/email/resend', [AuthController::class, 'reenviarEmailVerificacion']);
+
 
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
@@ -71,6 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/check-auth', function () {
         return response()->json(['authenticated' => true]);
     });
+
+    
 
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);

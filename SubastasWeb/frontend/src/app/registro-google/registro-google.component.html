@@ -1,117 +1,119 @@
-<div class="p-4 max-w-xl mx-auto">
-  <h2 class="text-2xl font-bold mb-4">Completa tu registro</h2>
+<section class="container mt-4">
+  <h1>Registro con Google</h1>
 
-  <img *ngIf="imagenUrl" [src]="imagenUrl" alt="avatar" width="100" class="rounded-full mb-4" />
+  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
 
-  <form [formGroup]="form" (ngSubmit)="enviar()">
+    <fieldset class="mb-3">
+      <legend>Información personal</legend>
 
-    <!-- Rol -->
-    <div class="mb-3">
-      <label for="rol">Rol:</label>
-      <select id="rol" formControlName="rol" class="form-control p-2 border rounded w-full" (change)="onRolChange()">
-        <option value="cliente">Cliente</option>
-        <option value="rematador">Rematador</option>
-        <option value="casa_remate">Casa de Remate</option>
-      </select>
-      <div *ngIf="form.get('rol')?.invalid && form.get('rol')?.touched" class="text-red-500 text-sm">
-        Selecciona un rol válido.
+      <!-- Nombre -->
+      <div class="mb-2">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" class="form-control" formControlName="nombre"
+               [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched">
+        <div class="text-danger" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
+          El nombre es obligatorio.
+        </div>
       </div>
-    </div>
 
-    <!-- Nombre -->
-    <div class="mb-3">
-      <label for="nombre">Nombre:</label>
-      <input type="text" id="nombre" formControlName="nombre" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-red-500 text-sm">
-        El nombre es requerido.
+      <!-- Email -->
+      <div class="mb-2">
+        <label for="email">Email:</label>
+        <input formControlName="email" type="email" class="form-control" readonly
+               [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched">
+        <div class="text-danger" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+          Ingresá un email válido.
+        </div>
       </div>
-    </div>
 
-    <!-- Email (solo lectura) -->
-    <div class="mb-3">
-      <label for="email">Email:</label>
-      <input type="email" id="email" [value]="form.get('email')?.value" readonly class="form-control p-2 border rounded w-full bg-gray-100" />
-    </div>
-
-    <!-- Cédula -->
-    <div class="mb-3">
-      <label for="cedula">Cédula:</label>
-      <input type="text" id="cedula" formControlName="cedula" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('cedula')?.invalid && form.get('cedula')?.touched" class="text-red-500 text-sm">
-        La cédula es requerida.
+      <!-- Cédula -->
+      <div class="mb-2">
+        <label for="cedula">Cédula:</label>
+        <input type="text" id="cedula" class="form-control" formControlName="cedula"
+               [class.is-invalid]="form.get('cedula')?.invalid && form.get('cedula')?.touched">
+        <div class="text-danger" *ngIf="form.get('cedula')?.invalid && form.get('cedula')?.touched">
+          La cédula es obligatoria.
+        </div>
       </div>
-    </div>
 
-    <!-- Teléfono -->
-    <div class="mb-3">
-      <label for="telefono">Teléfono:</label>
-      <input type="text" id="telefono" formControlName="telefono" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched" class="text-red-500 text-sm">
-        El teléfono es requerido.
+      <!-- Teléfono -->
+      <div class="mb-2">
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" class="form-control" formControlName="telefono"
+               [class.is-invalid]="form.get('telefono')?.invalid && form.get('telefono')?.touched">
+        <div class="text-danger" *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched">
+          El teléfono es obligatorio.
+        </div>
       </div>
-    </div>
+    </fieldset>
 
-    <!-- Contraseña -->
-    <div class="mb-3">
-      <label for="contrasenia">Contraseña:</label>
-      <input type="password" id="contrasenia" formControlName="contrasenia" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched" class="text-red-500 text-sm">
-        La contraseña es requerida y debe tener al menos 8 caracteres.
-      </div>
-    </div>
+    <fieldset class="mb-3">
+      <legend>Seguridad</legend>
 
-    <!-- Confirmar contraseña -->
-    <div class="mb-3">
-      <label for="contrasenia_confirmation">Confirmar Contraseña:</label>
-      <input type="password" id="contrasenia_confirmation" formControlName="contrasenia_confirmation" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched" class="text-red-500 text-sm">
-        Las contraseñas no coinciden.
+      <!-- Contraseña -->
+      <div class="mb-2">
+        <label for="contrasenia">Contraseña:</label>
+        <input type="password" id="contrasenia" class="form-control" formControlName="contrasenia"
+               [class.is-invalid]="form.get('contrasenia')?.invalid && form.get('contrasenia')?.touched">
+        <div class="text-danger" *ngIf="form.get('contrasenia')?.hasError('required') && form.get('contrasenia')?.touched">
+          La contraseña es obligatoria.
+        </div>
+        <div class="text-danger" *ngIf="form.get('contrasenia')?.hasError('minlength') && form.get('contrasenia')?.touched">
+          La contraseña debe tener al menos 8 caracteres.
+        </div>
       </div>
-      <div *ngIf="form.get('contrasenia_confirmation')?.invalid && form.get('contrasenia_confirmation')?.touched && !form.hasError('passwordMismatch')" class="text-red-500 text-sm">
-        Confirmar contraseña es requerido.
-      </div>
-    </div>
 
-    <!-- Matrícula (solo rematador) -->
-    <div *ngIf="form.get('rol')?.value === 'rematador'" class="mb-3">
-      <label for="matricula">Matrícula:</label>
-      <input type="text" id="matricula" formControlName="matricula" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('matricula')?.invalid && form.get('matricula')?.touched" class="text-red-500 text-sm">
-        La matrícula es requerida para rematadores.
+      <!-- Confirmar Contraseña -->
+      <div class="mb-2">
+        <label for="contrasenia_confirmation">Confirmar Contraseña:</label>
+        <input type="password" id="contrasenia_confirmation" class="form-control" formControlName="contrasenia_confirmation"
+               [class.is-invalid]="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched">
+        <div class="text-danger" *ngIf="form.hasError('passwordMismatch') && form.get('contrasenia_confirmation')?.touched">
+          Las contraseñas no coinciden.
+        </div>
       </div>
-    </div>
+    </fieldset>
 
-    <!-- ID Fiscal (solo casa_remate) -->
-    <div *ngIf="form.get('rol')?.value === 'casa_remate'" class="mb-3">
-      <label for="idFiscal">ID Fiscal:</label>
-      <input type="text" id="idFiscal" formControlName="idFiscal" class="form-control p-2 border rounded w-full" />
-      <div *ngIf="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched" class="text-red-500 text-sm">
-        El ID Fiscal es requerido para casas de remate.
+    <fieldset class="mb-3">
+      <legend>Tipo de usuario</legend>
+
+      <!-- Rol -->
+      <div class="mb-2">
+        <label for="rol">Rol:</label>
+        <select id="rol" class="form-control" formControlName="rol" (change)="onRolChange()"
+                [class.is-invalid]="form.get('rol')?.invalid && form.get('rol')?.touched">
+          <option value="">Seleccioná un rol</option>
+          <option value="cliente">Cliente</option>
+          <option value="rematador">Rematador</option>
+          <option value="casa_remate">Casa de Remate</option>
+        </select>
+        <div class="text-danger" *ngIf="form.get('rol')?.invalid && form.get('rol')?.touched">
+          Seleccioná un rol.
+        </div>
       </div>
-    </div>
 
-    <!-- Mapa -->
-    <div class="mb-4">
-      <label>Ubicación:</label>
-      <div id="map-registro-google" style="height: 300px;" class="rounded border mb-2"></div>
-      <div class="text-sm text-gray-600">
-        Ubicación seleccionada:
-        {{ form.get('latitud')?.value | number:'1.4-4' }},
-        {{ form.get('longitud')?.value | number:'1.4-4' }}
+      <!-- ID Fiscal (solo para casa_remate) -->
+      <div class="mb-2" *ngIf="form.get('rol')?.value === 'casa_remate'">
+        <label for="idFiscal">ID Fiscal:</label>
+        <input type="text" id="idFiscal" class="form-control" formControlName="idFiscal"
+               [class.is-invalid]="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched">
+        <div class="text-danger" *ngIf="form.get('idFiscal')?.invalid && form.get('idFiscal')?.touched">
+          El ID Fiscal es obligatorio para casas de remate.
+        </div>
       </div>
-      <div *ngIf="(form.get('latitud')?.invalid || form.get('longitud')?.invalid) && (form.get('latitud')?.touched || form.get('longitud')?.touched)" class="text-red-500 text-sm">
-        Selecciona una ubicación en el mapa.
+    </fieldset>
+
+    <fieldset class="mb-3">
+      <legend>Ubicación</legend>
+
+      <label for="map-registro-google">Seleccioná tu ubicación en el mapa:</label>
+      <div id="map-registro-google" style="height: 300px;"></div>
+
+      <div class="text-danger mt-2" *ngIf="form.get('latitud')?.invalid && form.get('latitud')?.touched">
+        Seleccioná una ubicación en el mapa.
       </div>
-    </div>
+    </fieldset>
 
-    <!-- Botón -->
-    <button
-      type="submit"
-      [disabled]="form.invalid"
-      class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Finalizar registro
-    </button>
-
+    <button class="btn btn-primary" type="submit">Registrarse</button>
   </form>
-</div>
+</section>
