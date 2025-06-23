@@ -678,6 +678,37 @@ hr {
       }
     }
   }
+  
+  // Estilos específicos para el botón de pago en la notificación
+  .winner-actions {
+    margin-top: 1rem;
+    
+    .payment-button-winner {
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #28a745, #20c997) !important;
+      border: none !important;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+        background: linear-gradient(135deg, #218838, #1e7e34) !important;
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+      
+      .p-button-label {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      
+      .p-button-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+      }
+    }
+  }
 }
 
 // Estilos para la sección de chat

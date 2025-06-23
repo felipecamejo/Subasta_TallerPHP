@@ -63,7 +63,19 @@
             <div class="alert alert-success">
                 <i class="pi pi-trophy"></i>
                 <strong>¡Felicidades!</strong> Has ganado la subasta con una puja de <strong>${{pujaActual}}</strong>
-                <p>El pago se procesará automáticamente.</p>
+                <p>Completa el pago para finalizar tu compra.</p>
+                <div class="winner-actions" style="margin-top: 15px;">
+                    <p-button 
+                        label="Proceder al Pago" 
+                        icon="pi pi-credit-card" 
+                        severity="success"
+                        size="large"
+                        raised="true"
+                        (click)="reabrirModalPago()"
+                        styleClass="payment-button-winner"
+                        [style]="{'width': '100%', 'padding': '12px 24px', 'font-size': '16px', 'font-weight': 'bold', 'border-radius': '8px', 'box-shadow': '0 4px 12px rgba(0, 0, 0, 0.15)'}">
+                    </p-button>
+                </div>
             </div>
         </div>
 
@@ -85,6 +97,7 @@
                 <p>Por favor, procede con el pago para completar la transacción:</p>
                 <div class="payment-container">
                     <app-paypal 
+                        *ngIf="pagando && paypalComponentKey"
                         [amount]="paypalMonto"
                         (paymentSuccess)="onPaymentSuccess($event)"
                         (paymentError)="onPaymentError($event)">

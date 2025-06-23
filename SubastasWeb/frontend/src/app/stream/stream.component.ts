@@ -90,6 +90,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   video: string = '';
   pagando: boolean = false;
   paypalMonto: number = 0;
+  paypalComponentKey: boolean = true; // Para forzar recreación del componente PayPal
 
   // Getters
   get timer(): string {
@@ -1187,6 +1188,9 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (ganadorId && this.esUsuarioGanador(ganadorId)) {
       console.log('🎉 ¡ERES EL GANADOR! Mostrando modal de pago PayPal');
       this.paypalMonto = this.pujaActual;
+      
+      // Asegurar que el componente PayPal se inicialice correctamente
+      this.paypalComponentKey = true;
       this.pagando = true;
       
       // Mensaje de confirmación
@@ -1711,5 +1715,40 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
       subastaActiva: this.subasta?.activa,
       boton: this.boton
     });
+  }
+
+  /**
+   * Reabrir el modal de pago para el ganador
+   * Permite al ganador volver a ver el modal de pago si lo cerró accidentalmente
+   */
+  reabrirModalPago(): void {
+    console.log('🔄 Reabriendo modal de pago para el ganador');
+    
+    if (!this.esGanador) {
+      console.warn('⚠️ Usuario no es el ganador, no puede acceder al pago');
+      alert('Solo el ganador puede proceder al pago.');
+      return;
+    }
+    
+    if (this.chatCreado) {
+      console.log('✅ El pago ya fue completado (chat creado)');
+      alert('El pago ya fue completado exitosamente. El chat con la casa de remate está disponible.');
+      return;
+    }
+    
+    // Forzar recreación del componente PayPal
+    this.paypalComponentKey = false;
+    
+    // Reabrir modal de pago
+    this.paypalMonto = this.pujaActual;
+    this.pagando = true;
+    
+    // Recrear componente PayPal después de un pequeño delay
+    setTimeout(() => {
+      this.paypalComponentKey = true;
+      this.cdr.detectChanges();
+    }, 100);
+    
+    console.log('💰 Modal de pago reabierto para monto:', this.paypalMonto);
   }
 }
