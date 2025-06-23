@@ -1,27 +1,24 @@
-import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClientModule, HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 import { GoogleLoginComponent } from '../google-login/google-login.component';
-import { AuthService } from '../../services/auth.service'; 
 
 @Component({
-  standalone: true,
   selector: 'app-login',
+  standalone: true,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
-  imports: [CommonModule, ReactiveFormsModule, GoogleLoginComponent, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule, GoogleLoginComponent],
 })
 export class LoginComponent {
   form: FormGroup;
-  error: string = '';
-  mostrarFormulario: boolean = false;
+  error = '';
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
     private router: Router,
     private authService: AuthService
   ) {
@@ -32,52 +29,39 @@ export class LoginComponent {
   }
 
   login() {
+    this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
-    const datos = this.form.value;
+    const { email, password } = this.form.value;
 
-    this.http.post(`${environment.apiUrl}/api/login`, datos).subscribe({
+    this.authService.loginTradicional(email, password).subscribe({
       next: (res: any) => {
-        // Usamos el AuthService para guardar todo
         this.authService.login({
           token: res.token,
-          usuario_id: res.usuario_id,
           rol: res.rol,
-          usuario: res.usuario
+          usuario_id: res.usuario_id,
+          usuario: res.usuario,
         });
 
-        // Redirigir según rol
-        switch (res.rol) {
-          case 'cliente':
-            this.router.navigate(['/dashboard-cliente']);
-            break;
-          case 'rematador':
-            this.router.navigate(['/dashboard-rematador']);
-            break;
-          case 'casa_remate':
-            this.router.navigate(['/dashboard-casa-remate']);
-            break;
-          case 'admin':
-            this.router.navigate(['/admin']);
-            break;
-          default:
-            this.router.navigate(['/']);
+        this.authService.redirigirPorRol(res.rol);
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 403) {
+          const email = this.form.get('email')?.value;
+          localStorage.setItem('email_para_verificar', email);
+          this.router.navigate(['/verificacion-pendiente']);
+        } else {
+          this.error = 'Email o contraseña incorrectos';
         }
       },
-     error: (err) => {
-  if (err.status === 403) {
-    const email = this.form.get('email')?.value;
-    localStorage.setItem('email_para_verificar', email);
-
-    this.router.navigate(['/verificacion-pendiente']);
-  } else {
-    this.error = 'Email o contraseña incorrectos';
-  }
-},
     });
   }
 
-  mostrarFormularioRegistro(usuarioGoogle: any) {
-    this.router.navigate(['/registro'], { state: { usuarioGoogle } });
+  get email() {
+    return this.form.get('email');
+  }
+
+  get password() {
+    return this.form.get('password');
   }
 }

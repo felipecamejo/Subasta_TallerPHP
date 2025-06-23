@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use App\Models\Usuario;
 use App\Models\Cliente;
@@ -22,6 +23,26 @@ use OpenApi\Annotations as OA;
  */
 class AuthController extends Controller
 {
+
+
+public function enviarLinkReset(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|exists:usuarios,email',
+    ]);
+
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+
+    if ($status === Password::RESET_LINK_SENT) {
+        return response()->json(['message' => __($status)], 200);
+    }
+
+    return response()->json(['error' => __($status)], 500);
+}
+
+
     public function login(Request $request)
     {
         $request->validate([
@@ -286,4 +307,30 @@ class AuthController extends Controller
             ]);
         }
     }
+
+
+    public function resetearContrasena(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($usuario, $password) {
+            // Usar 'contrasenia' como en tu modelo
+            $usuario->contrasenia = Hash::make($password);
+            $usuario->save();
+        }
+    );
+
+    if ($status === Password::PASSWORD_RESET) {
+        return response()->json(['message' => 'Contraseña restablecida correctamente.']);
+    }
+
+    return response()->json(['error' => __($status)], 500);
+}
+
 }

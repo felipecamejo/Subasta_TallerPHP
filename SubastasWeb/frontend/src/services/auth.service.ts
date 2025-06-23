@@ -1,5 +1,15 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { environment } from './../environments/environment';
+
+export interface AuthData {
+  token: string;
+  rol: 'cliente' | 'rematador' | 'casa_remate' | 'admin' | string;
+  usuario_id: number;
+  usuario?: any;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,32 +18,54 @@ export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  login(authData: {
-    token: string,
-    rol: string,
-    usuario_id: number,
-    usuario: any
-  }): void {
-    // Nuevo formato unificado
-    localStorage.setItem('auth', JSON.stringify(authData));
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
-    // Compatibilidad con código viejo
+  login(authData: AuthData): void {
+    localStorage.setItem('auth', JSON.stringify(authData));
     localStorage.setItem('token', authData.token);
     localStorage.setItem('rol', authData.rol);
     localStorage.setItem('usuario_id', authData.usuario_id.toString());
-
     this.isAuthenticatedSubject.next(true);
+  }
+
+  loginYRedirigir(authData: AuthData): void {
+    this.login(authData);
+    this.redirigirPorRol(authData.rol);
+  }
+
+  redirigirPorRol(rol: string | undefined): void {
+    switch (rol) {
+      case 'cliente':
+        this.router.navigate(['/dashboard-cliente']);
+        break;
+      case 'rematador':
+        this.router.navigate(['/dashboard-rematador']);
+        break;
+      case 'casa_remate':
+        this.router.navigate(['/dashboard-casa-remate']);
+        break;
+      case 'admin':
+        this.router.navigate(['/admin']);
+        break;
+      default:
+        this.router.navigate(['/']);
+    }
   }
 
   logout(): void {
     localStorage.removeItem('auth');
-
-    // Limpieza de claves separadas (opcional, podés dejarlo si querés 100% compatibilidad)
     localStorage.removeItem('token');
     localStorage.removeItem('rol');
     localStorage.removeItem('usuario_id');
-
     this.isAuthenticatedSubject.next(false);
+    this.router.navigate(['/login']);
+  }
+
+  loginTradicional(email: string, password: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/login`, { email, password });
   }
 
   getToken(): string | null {
@@ -59,12 +91,17 @@ export class AuthService {
     return this.hasToken();
   }
 
-  private getAuthObject(): any {
-    return JSON.parse(localStorage.getItem('auth') || '{}');
+  private getAuthObject(): AuthData | null {
+    try {
+      const data = localStorage.getItem('auth');
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
   }
 
   private hasToken(): boolean {
     const auth = this.getAuthObject();
-    return !!auth.token || !!localStorage.getItem('token');
+    return !!auth?.token || !!localStorage.getItem('token');
   }
 }
