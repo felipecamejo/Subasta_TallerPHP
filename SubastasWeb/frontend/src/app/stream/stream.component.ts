@@ -165,38 +165,62 @@ export class StreamComponent implements OnInit, OnDestroy {
   get esGanador(): boolean {
     // CONDICIÓN 1: La subasta debe haber terminado
     if (!this.subasta || this.subasta.activa || this.timerState.timerActivo) {
-      console.log('🎯 GETTER esGanador: Subasta aún no ha terminado');
+      console.log('🎯 esGanador: FALSE - La subasta aún está activa');
       return false; // La subasta no ha terminado
     }
     
     // CONDICIÓN 2: Debe haber pujas para determinar un ganador
     if (!this.pujas || this.pujas.length === 0) {
-      console.log('🎯 GETTER esGanador: No hay pujas, no hay ganador');
+      console.log('🎯 esGanador: FALSE - No hay pujas');
       return false;
     }
     
-    const ganadorId = this.encontrarGanador();
     const usuarioActual = localStorage.getItem('usuario_id');
+    if (!usuarioActual) {
+      console.log('🎯 esGanador: FALSE - No hay usuario logueado');
+      return false;
+    }
     
-    // CONDICIÓN 3: El ganador debe existir y coincidir con el usuario actual
-    const esGanadorResult = ganadorId !== null && 
-                           usuarioActual !== null && 
-                           Number(usuarioActual) === ganadorId;
+    // MÉTODO 1: Usar encontrarGanador (más preciso)
+    const ganadorId = this.encontrarGanador();
+    if (ganadorId !== null && Number(usuarioActual) === ganadorId) {
+      console.log('🎯 esGanador: TRUE - Ganador encontrado por encontrarGanador()');
+      return true;
+    }
     
-    console.log('🎯 GETTER esGanador evaluación DETALLADA:', {
+    // MÉTODO 2: Verificar si el usuario actual hizo la última puja (fallback)
+    if (this.clienteID && Number(usuarioActual) === this.clienteID) {
+      // Verificar que la puja más alta coincida con la puja actual
+      const pujaMasAlta = Math.max(...this.pujas.map(p => p.monto));
+      if (pujaMasAlta === this.pujaActual) {
+        console.log('🎯 esGanador: TRUE - Usuario actual es clienteID y tiene la puja más alta');
+        return true;
+      }
+    }
+    
+    // MÉTODO 3: Verificar directamente en las pujas (último recurso)
+    const pujaMasAlta = Math.max(...this.pujas.map(p => p.monto));
+    const pujasGanadoras = this.pujas.filter(p => p.monto === pujaMasAlta);
+    
+    for (const puja of pujasGanadoras) {
+      // Verificar por cliente.usuario.id
+      if (puja.cliente?.usuario?.id && Number(usuarioActual) === puja.cliente.usuario.id) {
+        console.log('🎯 esGanador: TRUE - Usuario encontrado en puja ganadora');
+        return true;
+      }
+    }
+    
+    console.log('🎯 esGanador: FALSE - No se pudo determinar que el usuario es ganador');
+    console.log('🎯 Debug info:', {
       ganadorId,
       usuarioActual,
-      usuarioActualNumber: usuarioActual ? Number(usuarioActual) : null,
-      ganadorIdNumber: ganadorId,
-      sonIguales: usuarioActual !== null && Number(usuarioActual) === ganadorId,
-      esGanadorResult,
-      subastaActiva: this.subasta?.activa,
-      timerActivo: this.timerState.timerActivo,
-      totalPujas: this.pujas.length,
-      pujaActual: this.pujaActual
+      clienteID: this.clienteID,
+      pujaActual: this.pujaActual,
+      pujaMasAlta: this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0,
+      totalPujas: this.pujas.length
     });
     
-    return esGanadorResult;
+    return false;
   }
   constructor(
     private subastaService: SubastaService,
@@ -424,9 +448,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         return { ganadorId, esGanador };
       }
     };
-    console.log('%c[streamDebug] Métodos de testing disponibles en window.streamDebug', 'color: #1976d2; font-weight: bold;');
-    console.log('%cNuevos métodos: debugTimer(), forceStartTimer(), esGanador(), simularFinSubasta()', 'color: #ff9800; font-weight: bold;');
   }
+
   // Métodos de testing y debugging esenciales
   public getAuctionInfo() {
     return {
@@ -1274,32 +1297,48 @@ export class StreamComponent implements OnInit, OnDestroy {
       coincidencia: pujaGanadora.monto === this.pujaActual
     });
 
-    // MÉTODO PRINCIPAL: Usar cliente.usuario.id de la puja ganadora
+    // MÉTODO 1: Usar cliente.usuario.id de la puja ganadora
     if (pujaGanadora.cliente?.usuario?.id) {
       const ganadorId = Number(pujaGanadora.cliente.usuario.id);
       console.log('🏆 ✅ Ganador identificado por cliente.usuario.id de la puja ganadora:', ganadorId);
       return ganadorId;
     }
 
-    // FALLBACK SOLO para el usuario que acaba de pujar (pero SOLO si coincide con puja ganadora)
-    if (this.clienteID && 
-        this.clienteID > 0 && 
-        pujaGanadora.monto === this.pujaActual &&
-        localStorage.getItem('usuario_id') && 
-        Number(localStorage.getItem('usuario_id')) === this.clienteID) {
-      
-      console.log('🏆 ⚠️ Fallback: Ganador identificado por clienteID (usuario actual que pujó):', this.clienteID);
-      return this.clienteID;
+    // MÉTODO 2: Si no hay cliente.usuario.id pero el monto coincide con pujaActual y tenemos clienteID
+    if (pujaGanadora.monto === this.pujaActual && this.clienteID && this.clienteID > 0) {
+      const usuarioActual = localStorage.getItem('usuario_id');
+      if (usuarioActual && Number(usuarioActual) === this.clienteID) {
+        console.log('🏆 ✅ Ganador identificado por clienteID (usuario actual que pujó):', this.clienteID);
+        return this.clienteID;
+      }
+    }
+
+    // MÉTODO 3: Buscar en todas las pujas del monto ganador
+    const pujasGanadoras = this.pujas.filter(p => p.monto === pujaGanadora.monto);
+    for (const puja of pujasGanadoras) {
+      if (puja.cliente?.usuario?.id) {
+        const ganadorId = Number(puja.cliente.usuario.id);
+        console.log('🏆 ✅ Ganador encontrado en pujas del monto ganador:', ganadorId);
+        return ganadorId;
+      }
     }
 
     console.log('❌ No se pudo determinar el ganador de forma segura');
-    console.log('🔍 Información del cliente en puja ganadora:', {
+    console.log('🔍 Información de debugging:', {
       cliente: pujaGanadora.cliente,
       tieneUsuario: !!pujaGanadora.cliente?.usuario,
       usuarioId: pujaGanadora.cliente?.usuario?.id,
       clienteIDLocal: this.clienteID,
-      usuarioActual: localStorage.getItem('usuario_id')
+      usuarioActual: localStorage.getItem('usuario_id'),
+      pujasGanadoras: pujasGanadoras.length
     });
+    
+    // En caso de emergencia, si hay clienteID y coincide con el usuario actual
+    const usuarioActual = localStorage.getItem('usuario_id');
+    if (this.clienteID && usuarioActual && Number(usuarioActual) === this.clienteID) {
+      console.log('🏆 ⚠️ EMERGENCIA: Usando clienteID como ganador:', this.clienteID);
+      return this.clienteID;
+    }
     
     return null;
   }
