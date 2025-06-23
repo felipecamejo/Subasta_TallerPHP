@@ -19,7 +19,7 @@ class SubastaSeeder extends Seeder
         
         Subasta::create([
             'nombre' => 'alexis',
-            'duracionMinutos' => 30,
+            'duracionMinutos' => 2,
             'activa' => false,
             'fecha' => '2025-08-02 10:00:00',
             'latitud' => -30.9011000,
