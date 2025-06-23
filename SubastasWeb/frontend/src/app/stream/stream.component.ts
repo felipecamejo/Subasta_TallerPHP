@@ -159,25 +159,41 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   get puedeNavegerLotes(): boolean {
     return !!(this.subasta?.activa && this.timerState.timerActivo);
-  }
-  /**
+  }  /**
    * Getter que indica si el usuario actual es el ganador de la subasta
    */
   get esGanador(): boolean {
+    // CONDICIÓN 1: La subasta debe haber terminado
     if (!this.subasta || this.subasta.activa || this.timerState.timerActivo) {
+      console.log('🎯 GETTER esGanador: Subasta aún no ha terminado');
       return false; // La subasta no ha terminado
+    }
+    
+    // CONDICIÓN 2: Debe haber pujas para determinar un ganador
+    if (!this.pujas || this.pujas.length === 0) {
+      console.log('🎯 GETTER esGanador: No hay pujas, no hay ganador');
+      return false;
     }
     
     const ganadorId = this.encontrarGanador();
     const usuarioActual = localStorage.getItem('usuario_id');
-    const esGanadorResult = ganadorId !== null && this.esUsuarioGanador(ganadorId);
     
-    console.log('🎯 GETTER esGanador evaluación:', {
+    // CONDICIÓN 3: El ganador debe existir y coincidir con el usuario actual
+    const esGanadorResult = ganadorId !== null && 
+                           usuarioActual !== null && 
+                           Number(usuarioActual) === ganadorId;
+    
+    console.log('🎯 GETTER esGanador evaluación DETALLADA:', {
       ganadorId,
       usuarioActual,
+      usuarioActualNumber: usuarioActual ? Number(usuarioActual) : null,
+      ganadorIdNumber: ganadorId,
+      sonIguales: usuarioActual !== null && Number(usuarioActual) === ganadorId,
       esGanadorResult,
       subastaActiva: this.subasta?.activa,
-      timerActivo: this.timerState.timerActivo
+      timerActivo: this.timerState.timerActivo,
+      totalPujas: this.pujas.length,
+      pujaActual: this.pujaActual
     });
     
     return esGanadorResult;
@@ -367,8 +383,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       esGanador: () => this.esGanador,
       encontrarGanador: () => this.encontrarGanador(),
       pagando: () => this.pagando,
-      pujas: () => this.pujas,
-      simularFinSubasta: () => {
+      pujas: () => this.pujas,      simularFinSubasta: () => {
         console.log('🧪 SIMULANDO FIN DE SUBASTA...');
         if (this.subasta) {
           this.subasta.activa = false;
@@ -379,6 +394,34 @@ export class StreamComponent implements OnInit, OnDestroy {
         console.log('🏆 esGanador:', this.esGanador);
         console.log('💰 pagando:', this.pagando);
         this.cdr.detectChanges();
+      },
+      // Nuevo método para debugging detallado de detección de ganador
+      debugDeteccionGanador: () => {
+        console.log('🧪 [DEBUG] DETECCIÓN DETALLADA DE GANADOR:');
+        console.log('📊 Pujas actuales:', this.pujas.map((p, index) => ({
+          index,
+          id: p.id,
+          monto: p.monto,
+          fecha: p.fechaHora,
+          cliente: p.cliente,
+          clienteUsuario: p.cliente?.usuario,
+          clienteUsuarioId: p.cliente?.usuario?.id
+        })));
+        
+        const ganadorId = this.encontrarGanador();
+        const esGanador = this.esGanador;
+        
+        console.log('🎯 Resultado final:', {
+          ganadorId,
+          esGanador,
+          usuarioActual: localStorage.getItem('usuario_id'),
+          clienteID: this.clienteID,
+          pujaActual: this.pujaActual,
+          subastaActiva: this.subasta?.activa,
+          timerActivo: this.timerState.timerActivo
+        });
+        
+        return { ganadorId, esGanador };
       }
     };
     console.log('%c[streamDebug] Métodos de testing disponibles en window.streamDebug', 'color: #1976d2; font-weight: bold;');
@@ -794,17 +837,20 @@ export class StreamComponent implements OnInit, OnDestroy {
               fechaHora: new Date(data.fechaHora),
               monto: data.monto,
               lote: this.lotes[this.indexLotes],
-              factura: null as any,
-              cliente: {
-                id: puja.cliente_id,
-                nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
-                email: this.clienteMail || ''
-              } as any
+              factura: null as any,              cliente: {
+                usuario: {
+                  id: puja.cliente_id!,
+                  nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
+                  email: this.clienteMail || '',
+                  imagen: '' // Campo imagen vacío por defecto
+                }
+              }
             };
             this.pujas.push(nuevaPuja);            console.log('✅ Puja agregada localmente:', {
               pujaId: nuevaPuja.id,
               monto: nuevaPuja.monto,
               clienteId: puja.cliente_id,
+              clienteUsuarioId: nuevaPuja.cliente.usuario.id,
               totalPujas: this.pujas.length
             });
 
@@ -1198,7 +1244,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         id: p.id,
         monto: p.monto, 
         fecha: p.fechaHora,
-        clienteUsuario: p.cliente?.usuario 
+        cliente: p.cliente,
+        clienteUsuario: p.cliente?.usuario
       })) || []
     });
 
@@ -1221,25 +1268,39 @@ export class StreamComponent implements OnInit, OnDestroy {
     console.log('🏆 Puja ganadora encontrada:', {
       monto: pujaGanadora.monto,
       fecha: pujaGanadora.fechaHora,
+      cliente: pujaGanadora.cliente,
       clienteUsuario: pujaGanadora.cliente?.usuario,
       pujaActualRegistrada: this.pujaActual,
       coincidencia: pujaGanadora.monto === this.pujaActual
     });
 
-    // El ganador es quien hizo la puja con el monto más alto
-    if (pujaGanadora.cliente?.usuario) {
-      const ganadorId = Number(pujaGanadora.cliente.usuario);
-      console.log('🏆 Ganador identificado por cliente.usuario de la puja ganadora:', ganadorId);
+    // MÉTODO PRINCIPAL: Usar cliente.usuario.id de la puja ganadora
+    if (pujaGanadora.cliente?.usuario?.id) {
+      const ganadorId = Number(pujaGanadora.cliente.usuario.id);
+      console.log('🏆 ✅ Ganador identificado por cliente.usuario.id de la puja ganadora:', ganadorId);
       return ganadorId;
     }
 
-    // Fallback: usar clienteID si no tenemos el cliente.usuario de la puja
-    if (this.clienteID && this.clienteID > 0 && pujaGanadora.monto === this.pujaActual) {
-      console.log('🏆 Fallback: Ganador identificado por clienteID global:', this.clienteID);
+    // FALLBACK SOLO para el usuario que acaba de pujar (pero SOLO si coincide con puja ganadora)
+    if (this.clienteID && 
+        this.clienteID > 0 && 
+        pujaGanadora.monto === this.pujaActual &&
+        localStorage.getItem('usuario_id') && 
+        Number(localStorage.getItem('usuario_id')) === this.clienteID) {
+      
+      console.log('🏆 ⚠️ Fallback: Ganador identificado por clienteID (usuario actual que pujó):', this.clienteID);
       return this.clienteID;
     }
 
-    console.log('❌ No se pudo determinar el ganador: no hay cliente.usuario en la puja ganadora');
+    console.log('❌ No se pudo determinar el ganador de forma segura');
+    console.log('🔍 Información del cliente en puja ganadora:', {
+      cliente: pujaGanadora.cliente,
+      tieneUsuario: !!pujaGanadora.cliente?.usuario,
+      usuarioId: pujaGanadora.cliente?.usuario?.id,
+      clienteIDLocal: this.clienteID,
+      usuarioActual: localStorage.getItem('usuario_id')
+    });
+    
     return null;
   }
   private esUsuarioGanador(ganadorId: number): boolean {
