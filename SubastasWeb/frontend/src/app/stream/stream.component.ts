@@ -30,7 +30,6 @@ interface PujaRequest {
 interface TimerState {
   timer: string;
   timerActivo: boolean;
-  timerSubscription?: Subscription;
   tiempoRestanteSegundos?: number;
 }
 
@@ -70,8 +69,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   };
   
   private subastaSubscription?: Subscription;
-  private timerInitialized: boolean = false;
-  private websocketSubscriptions: Subscription[] = [];
+  private timerInitialized: boolean = false;  private websocketSubscriptions: Subscription[] = [];
   boton: boolean = false;
 
   pujaActual: number = 0;
@@ -83,6 +81,9 @@ export class StreamComponent implements OnInit, OnDestroy {
   // Variables para control de inicio automático
   private intervalId: any;
   private subastaFechaVerificada: boolean = false;
+  
+  // Interval para actualizar la UI del timer en tiempo real
+  private timerDisplayInterval: any;
 
   // Variables para modal y pago
   modalVideo: boolean = false;
@@ -159,7 +160,6 @@ export class StreamComponent implements OnInit, OnDestroy {
   get puedeNavegerLotes(): boolean {
     return !!(this.subasta?.activa && this.timerState.timerActivo);
   }
-
   /**
    * Getter que indica si el usuario actual es el ganador de la subasta
    */
@@ -169,7 +169,18 @@ export class StreamComponent implements OnInit, OnDestroy {
     }
     
     const ganadorId = this.encontrarGanador();
-    return ganadorId !== null && this.esUsuarioGanador(ganadorId);
+    const usuarioActual = localStorage.getItem('usuario_id');
+    const esGanadorResult = ganadorId !== null && this.esUsuarioGanador(ganadorId);
+    
+    console.log('🎯 GETTER esGanador evaluación:', {
+      ganadorId,
+      usuarioActual,
+      esGanadorResult,
+      subastaActiva: this.subasta?.activa,
+      timerActivo: this.timerState.timerActivo
+    });
+    
+    return esGanadorResult;
   }
   constructor(
     private subastaService: SubastaService,
@@ -224,9 +235,9 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   ngOnDestroy(): void {
     this.detenerTimer();
+    this.stopTimerDisplayInterval(); // Limpiar el interval del timer display
     this.subastaSubscription?.unsubscribe();
     this.timerInitialized = false;
 
@@ -245,6 +256,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       );
     }
   }
+
 
   /**
    * Parsea la fecha de la subasta a un objeto Date
@@ -272,8 +284,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     return fecha;
   }
 
+
   /**
-   * Valida si la subasta debe estar activa según la hora actual y la duración
+   * Valida si la subasta debe estar activa según la hora actual y la duración.
+   * Actualiza automáticamente el estado de la subasta y el timer si es necesario.
    */
   private validarEstadoSubasta(): void {
     if (!this.subasta || !this.subasta.fecha || !this.subasta.duracionMinutos) return;
@@ -309,59 +323,68 @@ export class StreamComponent implements OnInit, OnDestroy {
         const tiempoTranscurridoMs = ahora.getTime() - fechaSubasta.getTime();
         const tiempoTranscurridoSegundos = Math.floor(tiempoTranscurridoMs / 1000);
         const duracionTotalSegundos = this.subasta.duracionMinutos * 60;
-        const tiempoRestante = Math.max(0, duracionTotalSegundos - tiempoTranscurridoSegundos);
-        
-        if (tiempoRestante > 0) {
+        const tiempoRestante = Math.max(0, duracionTotalSegundos - tiempoTranscurridoSegundos);        if (tiempoRestante > 0) {
           this.timerInitialized = true;
           this.timerState.tiempoRestanteSegundos = tiempoRestante;
           this.timerState.timer = this.formatearTiempo(tiempoRestante);
           this.timerState.timerActivo = true;
           
-          if (this.isRematador()) {
-            this.iniciarTimer(tiempoRestante);
-          }
+          // Inicializar timer WebSocket para todos los usuarios
+          this.inicializarTimerWebSocket(tiempoRestante);
+          
+          console.log('🎯 Subasta ACTIVA - Los usuarios YA PUEDEN PUJAR');
         } else {
           // La subasta ya debería haber terminado
+          console.log('⏰ Tiempo agotado - Finalizando subasta automáticamente');
           this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
           this.timerState.timerActivo = false;
+          this.finalizarSubastaPorTiempo();
         }
       }
-    } else {
-      // Después de la subasta
+    } else {      // Después de la subasta
       this.subasta.activa = false;
       this.boton = false;
       this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
       this.timerState.timerActivo = false;
-      console.log('🏁 Subasta finalizada');
+      
+      console.log('🏁 Subasta finalizada por tiempo programado');
+      this.finalizarSubastaPorTiempo();
     }
   }
   /**
-   * Exponer métodos de testing en window para debugging
-   */
-  private exposeTestingMethods(): void {
-    (window as any).streamDebug = {
+   * Expone métodos de debugging en window para facilitar las pruebas durante el desarrollo
+   */  private exposeTestingMethods(): void {    (window as any).streamDebug = {
       getAuctionInfo: () => this.getAuctionInfo(),
       getTimerStatus: () => this.getTimerStatus(),
-      forceRestartTimer: () => this.forceRestartTimer(),
       forceSyncWithBackend: () => this.forceSyncWithBackend(),
-      testAuctionEnd: () => this.testAuctionEnd(),
       checkBackendStatus: () => this.checkBackendStatus(),
-      getFullDebugInfo: () => this.getFullDebugInfo(),      validarEstado: () => this.validarEstadoSubasta(),
-      testWinnerPayment: () => this.testWinnerPayment(),
+      validarEstado: () => this.validarEstadoSubasta(),
       checkWinner: () => this.checkWinner(),
-      testChatCreation: () => this.testChatCreation(),
-      testNotifications: () => this.testNotifications(),
-      testCompletePaymentFlow: () => this.testCompletePaymentFlow(),
-      forceValidateAuctionState: () => this.forceValidateAuctionState(),
-      testAutoStart: () => this.testAutoStart(),
-      testTimerSync: () => this.testTimerSync(),
-      testWebSocketConnection: () => this.testWebSocketConnection()    };
+      debugValidarPuja: (monto?: number) => this.debugValidarPuja(monto),
+      debugTimer: () => this.debugTimer(),
+      forceStartTimer: () => this.iniciarSubastaAutomaticamente(),
+      // Nuevos métodos de debugging para ganador
+      esGanador: () => this.esGanador,
+      encontrarGanador: () => this.encontrarGanador(),
+      pagando: () => this.pagando,
+      pujas: () => this.pujas,
+      simularFinSubasta: () => {
+        console.log('🧪 SIMULANDO FIN DE SUBASTA...');
+        if (this.subasta) {
+          this.subasta.activa = false;
+        }
+        this.timerState.timerActivo = false;
+        this.timerState.tiempoRestanteSegundos = 0;
+        console.log('✅ Subasta desactivada, verificando ganador...');
+        console.log('🏆 esGanador:', this.esGanador);
+        console.log('💰 pagando:', this.pagando);
+        this.cdr.detectChanges();
+      }
+    };
     console.log('%c[streamDebug] Métodos de testing disponibles en window.streamDebug', 'color: #1976d2; font-weight: bold;');
-    console.log('%c[streamDebug] Nuevos métodos: testChatCreation, testNotifications, testCompletePaymentFlow', 'color: #4caf50; font-weight: bold;');
-    console.log('%c[streamDebug] Para debugging de timer: forceValidateAuctionState, testAutoStart', 'color: #ff9800; font-weight: bold;');
+    console.log('%cNuevos métodos: debugTimer(), forceStartTimer(), esGanador(), simularFinSubasta()', 'color: #ff9800; font-weight: bold;');
   }
-
-  // Métodos de testing y debugging
+  // Métodos de testing y debugging esenciales
   public getAuctionInfo() {
     return {
       subasta: this.subasta,
@@ -373,30 +396,17 @@ export class StreamComponent implements OnInit, OnDestroy {
       subastaActiva: this.subasta?.activa
     };
   }
-
   public getTimerStatus() {
     return {
       timerActivo: this.timerState.timerActivo,
-      tieneSubscripcion: !!this.timerState.timerSubscription,
       timer: this.timerState.timer,
       tiempoRestanteSegundos: this.timerState.tiempoRestanteSegundos,
       displayText: this.timerDisplayText,
       cssClass: this.timerCssClass,
       esRematador: this.isRematador(),
-      intervalId: this.intervalId
+      intervalId: this.intervalId,
+      modoWebSocket: true // Nuevo modo
     };
-  }
-
-  public forceRestartTimer() {
-    console.log('🧪 [TEST] Forzando reinicio del timer');
-    this.detenerTimer();
-    
-    setTimeout(() => {
-      if (this.subasta?.activa && this.subasta?.duracionMinutos) {
-        const tiempoRestante = this.timerState.tiempoRestanteSegundos || (this.subasta.duracionMinutos * 60);
-        this.iniciarTimer(tiempoRestante);
-      }
-    }, 100);
   }
 
   public forceSyncWithBackend() {
@@ -419,20 +429,6 @@ export class StreamComponent implements OnInit, OnDestroy {
         }
       });
     }
-  }
-
-  public testAuctionEnd() {
-    console.log('🧪 [TEST] Simulando finalización de subasta');
-    console.log('🧪 [TEST] Estado antes:', this.getTimerStatus());
-    
-    this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-    this.timerState.tiempoRestanteSegundos = 0;
-    this.timerState.timerActivo = false;
-    this.detenerTimer();
-    
-    this.manejarFinalizacionSubasta();
-    
-    console.log('🧪 [TEST] Estado después:', this.getTimerStatus());
   }
 
   public checkBackendStatus() {
@@ -464,63 +460,6 @@ export class StreamComponent implements OnInit, OnDestroy {
         }
       });
     }
-  }
-
-  public getFullDebugInfo() {
-    return {
-      subasta: {
-        id: this.subasta?.id,
-        activa: this.subasta?.activa,
-        fecha: this.subasta?.fecha,
-        fechaParseada: this.subasta?.fecha ? this.parsearFechaSubasta(this.subasta.fecha) : null,
-        duracionMinutos: this.subasta?.duracionMinutos
-      },
-      timer: this.getTimerStatus(),
-      usuario: {
-        esRematador: this.isRematador(),
-        userId: localStorage.getItem('usuario_id'),
-        casaRematId: localStorage.getItem('casaremate_id')
-      },
-      websocket: {
-        subscripciones: this.websocketSubscriptions.length,
-        chatCreado: this.chatCreado,
-        chatRoomId: this.chatRoomId
-      },
-      otros: {
-        intervalId: !!this.intervalId,
-        subastaFechaVerificada: this.subastaFechaVerificada,
-        timerInitialized: this.timerInitialized,
-        indexLotes: this.indexLotes,
-        pujaActual: this.pujaActual
-      }
-    };
-  }
-
-  public testWinnerPayment() {
-    console.log('🧪 [TEST] Simulando ganador y pago');
-    const userId = localStorage.getItem('usuario_id');
-    if (!userId) {
-      console.error('❌ Usuario no está logueado');
-      return;
-    }
-    
-    // Simular que el usuario actual hizo la puja más alta
-    this.clienteID = Number(userId);
-    this.pujaActual = 1000; // Simular puja alta
-    
-    // Simular finalización de subasta
-    this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-    this.timerState.timerActivo = false;
-    this.subasta!.activa = false;
-    
-    // Ejecutar lógica de finalización
-    this.manejarFinalizacionSubasta();
-    
-    console.log('🧪 [TEST] Estado después:', {
-      esGanador: this.esGanador,
-      pagando: this.pagando,
-      paypalMonto: this.paypalMonto
-    });
   }
 
   public checkWinner() {
@@ -629,31 +568,40 @@ export class StreamComponent implements OnInit, OnDestroy {
       });
     }
   }
-
   cargarPujas(loteIndex: number): void {
     if (loteIndex < 0 || loteIndex >= this.lotes.length) {
       console.warn('Índice de lote fuera de rango:', loteIndex);
       return;
     }
 
+    console.log('🔄 Cargando pujas para lote:', loteIndex);
+    
     this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
+    
+    console.log('📊 Pujas cargadas:', {
+      totalPujas: this.pujas.length,
+      pujas: this.pujas.map(p => ({ monto: p.monto, fecha: p.fechaHora }))
+    });
+    
     this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
     if (this.pujaActual === 0) {
       this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
     }
     this.pujaRapida = Number(this.pujaActual) + 1;
     this.pujaComun = null;
-  }
-
-  // Métodos de timer
-  iniciarTimer(tiempoInicialSegundos?: number) {
-    if (this.timerState.timerActivo) {
-      console.warn('⚠️ Timer ya está activo, ignorando nueva inicialización');
-      return;
-    }
-
-    this.detenerTimer();
-
+    
+    console.log('💰 Estado de pujas actualizado:', {
+      pujaActual: this.pujaActual,
+      pujaRapida: this.pujaRapida,
+      pujaMinima: this.lotes[loteIndex].pujaMinima
+    });
+  }// Métodos de timer
+  /**
+   * Inicializa el estado del timer basado en WebSocket.
+   * TODOS los usuarios (rematadores y visitantes) solo escuchan las actualizaciones del servidor.
+   * El servidor WebSocket maneja el timer maestro y envía actualizaciones a todos los clientes.
+   */
+  inicializarTimerWebSocket(tiempoInicialSegundos?: number) {
     if (!this.subasta?.duracionMinutos) {
       console.warn('No hay duración de subasta definida');
       return;
@@ -661,93 +609,22 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     let tiempoRestanteSegundos = tiempoInicialSegundos ?? (this.subasta.duracionMinutos * 60);
     this.timerState.tiempoRestanteSegundos = tiempoRestanteSegundos;
-
-    console.log('Iniciando timer con tiempo restante:', tiempoRestanteSegundos, 'segundos');
-
-    this.timerState.timerActivo = true;
     this.timerState.timer = this.formatearTiempo(tiempoRestanteSegundos);
-
-    const esRematador = this.isRematador();
-    console.log('🔍 Es rematador?', esRematador);    if (esRematador) {
-      // REMATADOR: Ejecuta el timer maestro
-      console.log('🔥 REMATADOR: Iniciando timer maestro');
-      let websocketUpdateCounter = 0;
-      
-      this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
-        takeWhile(() => this.timerState.timerActivo)
-      ).subscribe({
-        next: () => {
-          try {
-            if (this.timerState.tiempoRestanteSegundos! > 0) {
-              this.timerState.tiempoRestanteSegundos!--;
-              this.timerState.timer = this.formatearTiempo(this.timerState.tiempoRestanteSegundos!);
-              
-              // Enviar actualización al WebSocket cada 2 segundos para reducir la carga
-              websocketUpdateCounter++;
-              if (websocketUpdateCounter >= 2 || this.timerState.tiempoRestanteSegundos! <= 10) {
-                this.sendTimerUpdateToWebSocket(this.timerState.tiempoRestanteSegundos!);
-                websocketUpdateCounter = 0;
-              }
-            } else {
-              console.log('🔥 REMATADOR: Timer terminado, finalizando subasta');
-              this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-              this.timerState.tiempoRestanteSegundos = 0;
-              
-              this.sendTimerUpdateToWebSocket(0);
-              this.manejarFinalizacionSubasta();
-              this.detenerTimer();
-            }
-          } catch (error) {
-            console.error('🔥 REMATADOR: Error en timer:', error);
-            this.detenerTimer();
-          }
-        },
-        error: (error) => {
-          console.error('Error en suscripción del timer:', error);
-          this.detenerTimer();
-        }
-      });    } else {
-      // USUARIOS: Ejecutan su propio timer de visualización, sincronizado con WebSocket
-      console.log('👀 Usuario: Iniciando timer de visualización sincronizado');
-      this.timerState.timerSubscription = interval(TIMER_CONSTANTS.INTERVAL_MS).pipe(
-        takeWhile(() => this.timerState.timerActivo)
-      ).subscribe({
-        next: () => {
-          try {
-            if (this.timerState.tiempoRestanteSegundos! > 0) {
-              this.timerState.tiempoRestanteSegundos!--;
-              this.timerState.timer = this.formatearTiempo(this.timerState.tiempoRestanteSegundos!);
-            } else {
-              console.log('👀 Usuario: Timer de visualización terminado');
-              this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-              this.timerState.tiempoRestanteSegundos = 0;
-              this.timerState.timerActivo = false;
-              this.detenerTimer();
-              this.manejarFinalizacionSubasta();
-            }
-          } catch (error) {
-            console.error('👀 Usuario: Error en timer de visualización:', error);
-            this.detenerTimer();
-          }
-        },
-        error: (error) => {
-          console.error('Error en suscripción del timer de usuario:', error);
-          this.detenerTimer();
-        }
-      });
-    }
+    this.timerState.timerActivo = true;    console.log('🌐 Inicializando timer WebSocket con tiempo:', tiempoRestanteSegundos, 'segundos');
+    console.log('📡 El timer será controlado completamente por el servidor WebSocket');
   }
 
+  /**
+   * Detiene el timer local (ya no hay suscripciones locales - todo es WebSocket)
+   */
   detenerTimer(): void {
-    console.log('🛑 Deteniendo timer');
-    
+    console.log('🛑 Deteniendo timer (WebSocket)');
     this.timerState.timerActivo = false;
-    if (this.timerState.timerSubscription) {
-      this.timerState.timerSubscription.unsubscribe();
-      this.timerState.timerSubscription = undefined;
-    }
   }
 
+  /**
+   * Convierte segundos a formato HH:MM:SS para mostrar en la interfaz
+   */
   formatearTiempo(segundos: number): string {
     if (segundos < 0) {
       segundos = 0;
@@ -769,32 +646,60 @@ export class StreamComponent implements OnInit, OnDestroy {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
-  }
-
+    });  }
+  
   // Métodos de pujas
+  /**
+   * Valida si se puede realizar una puja.
+   * Verifica que la subasta esté activa Y que el timer esté corriendo.
+   */
   private validarPuja(monto: number | null): { valida: boolean; error?: string } {
-    if (!this.timerState.timerActivo){
+    console.log('🔍 VALIDANDO PUJA:', {
+      monto,
+      subastaActiva: this.subasta?.activa,
+      timerActivo: this.timerState.timerActivo,
+      pujaActual: this.pujaActual,
+      loteDisponible: !!this.lotes[this.indexLotes]
+    });
+
+    // VALIDACIÓN 1: Subasta debe estar activa
+    if (!this.subasta?.activa) {
+      console.log('❌ VALIDACIÓN FALLIDA: Subasta no está activa');
       return { valida: false, error: 'La subasta no está activa' };
     }
+    
+    // VALIDACIÓN 2: Timer debe estar corriendo
+    if (!this.timerState.timerActivo) {
+      console.log('❌ VALIDACIÓN FALLIDA: Timer no está activo');
+      return { valida: false, error: 'El tiempo de la subasta ha terminado' };
+    }
 
+    // VALIDACIÓN 3: Monto válido
     if (!monto || monto <= 0) {
+      console.log('❌ VALIDACIÓN FALLIDA: Monto inválido');
       return { valida: false, error: 'El monto debe ser mayor a 0' };
     }
 
+    // VALIDACIÓN 4: Lote disponible
     const loteActual = this.lotes[this.indexLotes];
     if (!loteActual) {
+      console.log('❌ VALIDACIÓN FALLIDA: No hay lote seleccionado');
       return { valida: false, error: 'No hay lote seleccionado' };
     }
 
+    // VALIDACIÓN 5: Puja mínima
     if (monto < loteActual.pujaMinima) {
-      return { valida: false, error: `El monto debe ser mayor a ${loteActual.pujaMinima}` };
+      console.log('❌ VALIDACIÓN FALLIDA: Monto menor a puja mínima');
+      return { valida: false, error: `El monto debe ser mayor a $${loteActual.pujaMinima}` };
     }
 
-    if (monto < this.pujaActual) {
-      return { valida: false, error: `El monto debe ser mayor a la puja actual de ${this.pujaActual}` };
+    // VALIDACIÓN 6: Superar puja actual
+    if (monto <= this.pujaActual) {
+      console.log('❌ VALIDACIÓN FALLIDA: Monto no supera puja actual');
+      return { valida: false, error: `El monto debe ser mayor a la puja actual de $${this.pujaActual}` };
     }
 
+    console.log('✅ VALIDACIÓN EXITOSA: Puja válida');
     return { valida: true };
   }
 
@@ -805,18 +710,19 @@ export class StreamComponent implements OnInit, OnDestroy {
       cliente_id: localStorage.getItem('usuario_id') !== null ? Number(localStorage.getItem('usuario_id')) : null, 
       lote_id: Number(this.lotes[this.indexLotes].id)
     };
-  }
-
-  crearPujaRapida(): void {
+  }  crearPujaRapida(): void {
     this.pujaRapida = this.pujaActual + 1;
 
     const validacion = this.validarPuja(this.pujaRapida);
     
     if (!validacion.valida) {
-      console.error('Error de validación:', validacion.error);
+      console.error('❌ Puja rápida rechazada:', validacion.error);
+      alert(`No se puede realizar la puja: ${validacion.error}`);
+      this.pujaRapida = null; // Limpiar el valor para evitar confusión
       return;
     }
 
+    console.log('🚀 Realizando puja rápida por:', this.pujaRapida);
     const puja = this.crearPujaBase(this.pujaRapida!);
     this.enviarPuja(puja);
   }
@@ -825,10 +731,13 @@ export class StreamComponent implements OnInit, OnDestroy {
     const validacion = this.validarPuja(this.pujaComun);
     
     if (!validacion.valida) {
-      console.error('Error de validación:', validacion.error);
+      console.error('❌ Puja personalizada rechazada:', validacion.error);
+      alert(`No se puede realizar la puja: ${validacion.error}`);
+      this.pujaComun = null; // Limpiar el valor para evitar confusión
       return;
     }
 
+    console.log('🎯 Realizando puja personalizada por:', this.pujaComun);
     const puja = this.crearPujaBase(this.pujaComun!);
     this.enviarPuja(puja);
   }
@@ -880,17 +789,24 @@ export class StreamComponent implements OnInit, OnDestroy {
 
             this.pujaActual = data.monto;
             this.pujaRapida = data.monto + 1;
-            this.pujaComun = null;
-
-            const nuevaPuja: pujaDto = {
+            this.pujaComun = null;            const nuevaPuja: pujaDto = {
               id: data.id,
               fechaHora: new Date(data.fechaHora),
               monto: data.monto,
               lote: this.lotes[this.indexLotes],
               factura: null as any,
-              cliente: null as any
+              cliente: {
+                id: puja.cliente_id,
+                nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
+                email: this.clienteMail || ''
+              } as any
             };
-            this.pujas.push(nuevaPuja);
+            this.pujas.push(nuevaPuja);            console.log('✅ Puja agregada localmente:', {
+              pujaId: nuevaPuja.id,
+              monto: nuevaPuja.monto,
+              clienteId: puja.cliente_id,
+              totalPujas: this.pujas.length
+            });
 
             this.sendWebSocketBid(puja);
 
@@ -927,13 +843,27 @@ export class StreamComponent implements OnInit, OnDestroy {
         error: (error) => console.error('Error al crear notificación de umbral:', error)
       });
     }
-  }
-
-  private actualizarDatosSinSobrescribir(): void {
+  }  private actualizarDatosSinSobrescribir(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    
+    console.log('🔄 Actualizando datos desde backend...');
     
     this.subastaService.getSubasta(id).subscribe({
       next: (data) => {
+        console.log('✅ Datos actualizados desde backend');
+        
+        // Preservar estados locales CRÍTICOS
+        const timerEstadoAnterior = { ...this.timerState };
+        const clienteIDAnterior = this.clienteID;
+        const subastaActivaAnterior = this.subasta?.activa;
+        const botonAnterior = this.boton;
+        
+        console.log('🔒 Preservando estados críticos:', {
+          timerActivo: timerEstadoAnterior.timerActivo,
+          subastaActiva: subastaActivaAnterior,
+          boton: botonAnterior
+        });
+        
         this.subasta = data;
         this.lotes = (this.subasta.lotes || []).map(lote => ({
           ...lote,
@@ -945,31 +875,74 @@ export class StreamComponent implements OnInit, OnDestroy {
           }
         }));
         
+        // Actualizar pujas del lote actual
         const loteIndex = this.indexLotes;
         if (loteIndex >= 0 && loteIndex < this.lotes.length) {
-          this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
+          const pujasBackend = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
+          
+          // Solo actualizar si hay más pujas en el backend
+          if (pujasBackend.length > this.pujas.length) {
+            console.log('📈 Nuevas pujas detectadas en backend:', {
+              anteriores: this.pujas.length,
+              nuevas: pujasBackend.length
+            });
+            this.pujas = pujasBackend;
+            
+            // Recalcular puja actual
+            this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
+            if (this.pujaActual === 0) {
+              this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
+            }
+            this.pujaRapida = Number(this.pujaActual) + 1;
+          }
         }
+        
+        // CRÍTICO: Restaurar estados importantes para mantener UI consistente
+        this.timerState = timerEstadoAnterior;
+        this.clienteID = clienteIDAnterior;
+        
+        // SOLO sobrescribir el estado de la subasta si el timer no está activo
+        // Esto evita que se muestre "Lista para iniciar" cuando la subasta está corriendo
+        if (this.timerState.timerActivo) {
+          console.log('⚠️ Timer activo - Preservando estado de subasta activa');
+          this.subasta.activa = true; // Forzar que permanezca activa
+          this.boton = true; // Mantener botones habilitados
+        } else {
+          // Si el timer no está activo, respetar el estado del backend
+          this.boton = this.subasta.activa;
+        }
+        
+        console.log('💰 Estado final actualizado:', {
+          pujaActual: this.pujaActual,
+          totalPujas: this.pujas.length,
+          timerActivo: this.timerState.timerActivo,
+          subastaActiva: this.subasta.activa,
+          boton: this.boton
+        });
       },
       error: (err) => {
-        console.error('Error al actualizar datos:', err);
+        console.error('❌ Error al actualizar datos:', err);
       }
     });
-  }
-
-  // Métodos WebSocket
+  }// Métodos WebSocket
   private setupWebSocketConnection(): void {
     if (!this.subasta?.id) return;
 
-    setTimeout(() => {
-      this.websocketService.joinAuction(
-        this.subasta!.id!,
-        this.clienteID || 999,
-        'TestUser'
-      );
-    }, 1000);
+    // Conectar inmediatamente sin delay
+    this.websocketService.joinAuction(
+      this.subasta!.id!,
+      this.clienteID || 999,
+      'TestUser'
+    );
+    
+    // Iniciar el timer display interval inmediatamente
+    this.startTimerDisplayInterval();
 
     const auctionJoinedSubscription = this.websocketService.onAuctionJoined().subscribe({
-      next: (data) => console.log('✅ Confirmación: Te uniste a la subasta', data.auctionId)
+      next: (data) => {
+        console.log('✅ Confirmación: Te uniste a la subasta', data.auctionId);
+        this.onWebSocketConnect();
+      }
     });
 
     const bidSubscription = this.websocketService.onBidReceived().subscribe({
@@ -992,16 +965,22 @@ export class StreamComponent implements OnInit, OnDestroy {
       loteUpdateSubscription
     );
   }
-
   private handleNewBidFromWebSocket(bidData: any): void {
-    if (bidData.loteId !== this.lotes[this.indexLotes]?.id) return;
+    console.log('💰 Puja recibida por WebSocket:', bidData);
+    
+    if (bidData.loteId !== this.lotes[this.indexLotes]?.id) {
+      console.log('⚠️ Puja ignorada: corresponde a otro lote');
+      return;
+    }
 
     if (bidData.bidAmount > this.pujaActual) {
+      console.log('📈 Actualizando puja actual:', this.pujaActual, '->', bidData.bidAmount);
+      
       this.pujaActual = bidData.bidAmount;
       this.pujaRapida = bidData.bidAmount + 1;
 
       const nuevaPuja: pujaDto = {
-        id: Date.now(),
+        id: bidData.pujaId || Date.now(), // Usar ID real si está disponible
         fechaHora: new Date(bidData.timestamp),
         monto: bidData.bidAmount,
         lote: this.lotes[this.indexLotes],
@@ -1010,10 +989,17 @@ export class StreamComponent implements OnInit, OnDestroy {
       };
 
       this.pujas.push(nuevaPuja);
+      console.log('✅ Puja agregada. Total de pujas:', this.pujas.length);
 
       if (this.lotes[this.indexLotes].umbral < bidData.bidAmount && !this.umbralSuperado) {
         this.umbralSuperado = true;
+        console.log('🚨 Umbral superado!');
       }
+      
+      // Forzar detección de cambios
+      this.cdr.detectChanges();
+    } else {
+      console.log('⚠️ Puja ignorada: monto no supera puja actual');
     }
   }
 
@@ -1023,45 +1009,34 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.cargarPujas(this.indexLotes);
       this.umbralSuperado = false;
     }
-  }  private handleTimerUpdateFromWebSocket(timerData: any): void {
+  }  /**
+   * Procesa las actualizaciones del timer recibidas vía WebSocket desde el servidor.
+   * TODOS los usuarios (rematadores y visitantes) procesan estas actualizaciones por igual.
+   */
+  private handleTimerUpdateFromWebSocket(timerData: any): void {
     console.log('🔍 Timer update recibido por WebSocket:', timerData);
 
     if (timerData.tiempoRestante !== undefined) {
       const nuevoTiempo = timerData.tiempoRestante;
       
-      // Solo procesar si no soy el rematador (el rematador maneja su propio timer)
-      if (!this.isRematador()) {
-        console.log('👀 Usuario: Sincronizando timer desde rematador:', nuevoTiempo);
-        
-        // Calcular diferencia para detectar desfases significativos
-        const diferencia = Math.abs((this.timerState.tiempoRestanteSegundos || 0) - nuevoTiempo);
-        
-        // Si hay una diferencia significativa (>3 segundos), sincronizar inmediatamente
-        if (diferencia > 3 || !this.timerState.timerActivo) {
-          console.log(`👀 Usuario: Sincronización forzada (diferencia: ${diferencia}s)`);
-          this.timerState.tiempoRestanteSegundos = nuevoTiempo;
-          this.timerState.timer = this.formatearTiempo(nuevoTiempo);
-          
-          if (nuevoTiempo > 0 && !this.timerState.timerActivo) {
-            this.timerState.timerActivo = true;
-          }
-        }
-
-        if (nuevoTiempo <= 0) {
-          this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-          this.timerState.tiempoRestanteSegundos = 0;
-          this.timerState.timerActivo = false;
-          this.detenerTimer();
-          
-          console.log('👀 Usuario: Timer terminado, manejando finalización');
-          this.manejarFinalizacionSubasta();
-        }
-
-        // Forzar detección de cambios para actualizar la UI
-        this.cdr.detectChanges();
+      console.log('🌐 Actualizando timer desde servidor WebSocket:', nuevoTiempo);
+      
+      // Actualizar estado local con los datos del servidor
+      this.timerState.tiempoRestanteSegundos = nuevoTiempo;
+      this.timerState.timer = this.formatearTiempo(nuevoTiempo);
+        if (nuevoTiempo > 0) {
+        this.timerState.timerActivo = true;
       } else {
-        console.log('🔥 Rematador: Ignorando actualización del WebSocket (uso mi propio timer)');
+        this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+        this.timerState.tiempoRestanteSegundos = 0;
+        this.timerState.timerActivo = false;
+        
+        console.log('🏁 Timer terminado según servidor WebSocket - SUBASTA FINALIZADA');
+        this.finalizarSubastaPorTiempo();
       }
+
+      // Forzar detección de cambios para actualizar la UI
+      this.cdr.detectChanges();
     }
   }
 
@@ -1090,15 +1065,12 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.indexLotes,
       loteData
     );
-  }
-
+  }  /**
+   * El servidor WebSocket maneja completamente el timer.
+   * Este método ya no es necesario en la nueva arquitectura.
+   */
   private sendTimerUpdateToWebSocket(tiempoRestanteSegundos: number): void {
-    if (!this.subasta?.id) return;
-
-    this.websocketService.sendTimerUpdate(
-      this.subasta.id,
-      tiempoRestanteSegundos
-    );
+    console.log('⚠️ sendTimerUpdateToWebSocket ya no se usa - el servidor maneja el timer');
   }
 
   // Métodos de usuario y roles
@@ -1118,50 +1090,78 @@ export class StreamComponent implements OnInit, OnDestroy {
     } else if (typeof this.subasta.rematador === 'number') {
       rematadorId = this.subasta.rematador;
     }    return rematadorId !== undefined && userId === rematadorId;
-  }
-
-  // Métodos de finalización y pago
-  private manejarFinalizacionSubasta(): void {
-    console.log('🏁 Finalizando subasta - Rol:', this.isRematador() ? 'REMATADOR' : 'USUARIO');
+  }  // Métodos de finalización y pago
+  /**
+   * Finaliza la subasta cuando el timer llega a 0:00.
+   * 1. Desactiva la subasta (no más pujas)
+   * 2. Determina el ganador
+   * 3. Muestra modal PayPal al ganador
+   * 4. Envía notificaciones (solo rematador)
+   * 5. Actualiza backend (solo rematador)
+   */
+  private finalizarSubastaPorTiempo(): void {
+    console.log('🏁 FINALIZANDO SUBASTA POR TIEMPO AGOTADO');
     
-    // TODOS los usuarios verifican si son ganadores al finalizar la subasta
-    const ganadorId = this.encontrarGanador();
-    console.log('🏆 Ganador encontrado:', ganadorId, '- Usuario actual:', localStorage.getItem('usuario_id'));
-    
-    // Si este usuario es el ganador, mostrar PayPal (solo después de que la subasta termine)
-    if (ganadorId && this.esUsuarioGanador(ganadorId) && !this.subasta?.activa && !this.timerState.timerActivo) {
-      console.log('🎉 ¡Eres el ganador! Mostrando modal de pago');
-      this.paypalMonto = this.pujaActual;
-      this.pagando = true;
-    } else if (ganadorId && this.esUsuarioGanador(ganadorId)) {
-      console.log('🏆 Eres el ganador, pero la subasta aún no ha terminado completamente');
-    } else {
-      console.log('👀 No eres el ganador o no hay ganador determinado');
+    // PASO 1: Desactivar subasta para que no se puedan hacer más pujas
+    if (this.subasta) {
+      this.subasta.activa = false;
+      this.boton = false;
     }
     
-    // Solo el rematador maneja notificaciones y actualización del backend
+    console.log('🚫 Subasta INACTIVA - YA NO SE PUEDEN HACER MÁS PUJAS');
+    
+    // PASO 2: Determinar ganador
+    const ganadorId = this.encontrarGanador();
+    console.log('🏆 Ganador determinado:', ganadorId, '- Usuario actual:', localStorage.getItem('usuario_id'));
+    
+    // PASO 3: Si el usuario actual es el ganador, mostrar PayPal
+    if (ganadorId && this.esUsuarioGanador(ganadorId)) {
+      console.log('🎉 ¡ERES EL GANADOR! Mostrando modal de pago PayPal');
+      this.paypalMonto = this.pujaActual;
+      this.pagando = true;
+      
+      // Mensaje de confirmación
+      setTimeout(() => {
+        alert(`¡Felicidades! Has ganado la subasta por $${this.pujaActual}. Procede con el pago.`);
+      }, 1000);
+    } else {
+      console.log('👀 No eres el ganador de esta subasta');
+      if (ganadorId) {
+        setTimeout(() => {
+          alert(`La subasta ha finalizado. El ganador pagó $${this.pujaActual}.`);
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          alert('La subasta ha finalizado sin ganador (no hubo pujas).');
+        }, 1000);
+      }
+    }
+    
+    // PASO 4 y 5: Solo el rematador maneja notificaciones y backend
     if (this.isRematador()) {
+      console.log('🔥 REMATADOR: Manejando finalización en backend');
+      
       if (ganadorId) {
         this.enviarNotificacionesFinalizacion(ganadorId);
       }
       
-      if (this.subasta && this.subasta.activa) {
-        console.log('🏁 REMATADOR: Actualizando estado de subasta en backend');
-        this.subasta.activa = false;
-        this.boton = false;
-        
+      if (this.subasta) {
         this.subastaService.updateSubasta(this.subasta).subscribe({
           next: () => console.log('✅ REMATADOR: Subasta marcada como finalizada en la base de datos'),
           error: (err) => console.error('❌ REMATADOR: Error al finalizar subasta en la base de datos:', err)
         });
       }
     } else {
-      console.log('👀 USUARIO: Finalizando subasta localmente (sin actualizar backend)');
-      if (this.subasta) {
-        this.subasta.activa = false;
-        this.boton = false;
-      }
+      console.log('👀 USUARIO: Finalización local completada');
     }
+  }
+
+  /**
+   * DEPRECATED: Usar finalizarSubastaPorTiempo() en su lugar
+   */
+  private manejarFinalizacionSubasta(): void {
+    console.warn('⚠️ manejarFinalizacionSubasta() está deprecated. Usando finalizarSubastaPorTiempo()');
+    this.finalizarSubastaPorTiempo();
   }
 
   private enviarNotificacionesFinalizacion(ganadorId: number): void {
@@ -1187,102 +1187,150 @@ export class StreamComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (notificacion) => console.log('Notificación creada:', notificacion),
       error: (error) => console.error('Error al crear notificación:', error)
+    });  }  private encontrarGanador(): number | null {
+    console.log('🔍 BUSCANDO GANADOR...');
+    console.log('🔍 Estado actual:', {
+      totalPujas: this.pujas?.length || 0,
+      pujaActual: this.pujaActual,
+      clienteID: this.clienteID,
+      usuarioActual: localStorage.getItem('usuario_id'),
+      pujas: this.pujas?.map(p => ({ 
+        id: p.id,
+        monto: p.monto, 
+        fecha: p.fechaHora,
+        clienteUsuario: p.cliente?.usuario 
+      })) || []
     });
-  }  private encontrarGanador(): number | null {
+
     if (!this.pujas || this.pujas.length === 0) {
-      console.log('🏆 No hay pujas, no hay ganador');
+      console.log('🏆 No hay pujas registradas, no hay ganador');
       return null;
     }
 
-    // Encontrar la puja con el monto más alto
+    // Encontrar la puja con el monto más alto y más reciente en caso de empate
     const pujaGanadora = this.pujas.reduce((maxPuja, pujaActual) => {
-      return pujaActual.monto > maxPuja.monto ? pujaActual : maxPuja;
+      if (pujaActual.monto > maxPuja.monto) {
+        return pujaActual;
+      } else if (pujaActual.monto === maxPuja.monto) {
+        // En caso de empate, tomar la más reciente
+        return new Date(pujaActual.fechaHora) > new Date(maxPuja.fechaHora) ? pujaActual : maxPuja;
+      }
+      return maxPuja;
     });
 
     console.log('🏆 Puja ganadora encontrada:', {
       monto: pujaGanadora.monto,
-      pujaActual: this.pujaActual,
-      clienteID: this.clienteID,
-      totalPujas: this.pujas.length
+      fecha: pujaGanadora.fechaHora,
+      clienteUsuario: pujaGanadora.cliente?.usuario,
+      pujaActualRegistrada: this.pujaActual,
+      coincidencia: pujaGanadora.monto === this.pujaActual
     });
 
-    // Verificar si la puja ganadora corresponde al monto actual Y el usuario actual hizo la última puja
-    if (pujaGanadora.monto === this.pujaActual) {
-      const usuarioActualId = localStorage.getItem('usuario_id');
-      
-      // Priorizar clienteID si está disponible y coincide con el usuario actual
-      if (this.clienteID && this.clienteID > 0 && usuarioActualId && Number(usuarioActualId) === this.clienteID) {
-        console.log('🏆 Ganador confirmado por clienteID:', this.clienteID);
-        return this.clienteID;
-      }
-      
-      // Fallback: verificar si el usuario actual es el mismo que tiene la sesión
-      if (usuarioActualId) {
-        const userId = Number(usuarioActualId);
-        console.log('🏆 Verificando ganador por localStorage:', userId);
-        return userId;
-      }
+    // El ganador es quien hizo la puja con el monto más alto
+    if (pujaGanadora.cliente?.usuario) {
+      const ganadorId = Number(pujaGanadora.cliente.usuario);
+      console.log('🏆 Ganador identificado por cliente.usuario de la puja ganadora:', ganadorId);
+      return ganadorId;
     }
 
-    console.log('🏆 No se pudo identificar al ganador o el usuario actual no es el ganador');
+    // Fallback: usar clienteID si no tenemos el cliente.usuario de la puja
+    if (this.clienteID && this.clienteID > 0 && pujaGanadora.monto === this.pujaActual) {
+      console.log('🏆 Fallback: Ganador identificado por clienteID global:', this.clienteID);
+      return this.clienteID;
+    }
+
+    console.log('❌ No se pudo determinar el ganador: no hay cliente.usuario en la puja ganadora');
     return null;
   }
-
   private esUsuarioGanador(ganadorId: number): boolean {
     const usuarioActual = localStorage.getItem('usuario_id');
-    return usuarioActual !== null && Number(usuarioActual) === ganadorId;
+    const result = usuarioActual !== null && Number(usuarioActual) === ganadorId;
+    
+    console.log('🎯 esUsuarioGanador verificación:', {
+      ganadorId,
+      usuarioActual,
+      usuarioActualNumber: usuarioActual ? Number(usuarioActual) : null,
+      esGanador: result
+    });
+    
+    return result;
   }
+
+  /**
+   * Maneja el pago exitoso del ganador.
+   * Después del pago, crea automáticamente una invitación de chat con la casa de remate.
+   */
   async onPaymentSuccess(paymentData: any): Promise<void> {
-    console.log('💰 Pago exitoso:', paymentData);
+    console.log('💰 PAGO EXITOSO:', paymentData);
     
     try {
+      // PASO 1: Cerrar modal de pago
       this.pagando = false;
       
+      // PASO 2: Obtener datos del ganador
       const ganadorId = Number(localStorage.getItem('usuario_id')) || this.clienteID;
       const ganadorNombre = localStorage.getItem('usuario_nombre') || `Usuario ${ganadorId}`;
       
-      if (ganadorId && this.subasta?.casaremate && this.subasta.id) {
-        console.log('🔄 Creando chat entre ganador y casa de remate:', {
-          ganadorId,
-          ganadorNombre,
-          casaRemateId: this.subasta.casaremate.usuario_id,
-          casaRemateNombre: this.subasta.casaremate.usuario?.nombre
-        });
-
-        const chatResult = await this.chatService.crearInvitacionChat(
-          ganadorId,
-          ganadorNombre,
-          this.subasta.casaremate.usuario_id || 0,
-          this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
-        );
-
-        console.log('✅ Resultado del chat:', chatResult);
-
-        if (chatResult.success) {
-          this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casaremate.usuario_id}`;
-          this.chatCreado = true;
-          
-          console.log('🎉 Chat creado exitosamente:', {
-            chatId: this.chatRoomId,
-            message: chatResult.message
-          });
-          
-          alert(`¡Pago exitoso! ${chatResult.message}\nEl chat se ha creado y ambos usuarios recibirán una notificación.`);
-        } else {
-          console.warn('⚠️ Chat no se pudo crear:', chatResult.message);
-          alert(`Pago exitoso, pero hubo un problema al crear el chat: ${chatResult.message}`);
-        }
-      } else {
-        console.warn('⚠️ No se puede crear chat: datos insuficientes');
+      if (!ganadorId || !this.subasta?.casaremate) {
+        console.error('❌ No se puede crear chat: faltan datos del ganador o casa de remate');
         alert('Pago exitoso! Por favor contacte a la casa de remate para coordinar la entrega.');
+        return;
+      }
+      
+      console.log('🔄 Creando invitación de chat entre ganador y casa de remate:', {
+        ganadorId,
+        ganadorNombre,
+        casaRemateId: this.subasta.casaremate.usuario_id,
+        casaRemateNombre: this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
+      });
+
+      // PASO 3: Crear invitación de chat (como en testChatCreation)
+      const chatResult = await this.chatService.crearInvitacionChat(
+        ganadorId,
+        ganadorNombre,
+        this.subasta.casaremate.usuario_id || 0,
+        this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
+      );
+
+      console.log('✅ Resultado de la invitación de chat:', chatResult);
+
+      // PASO 4: Manejar resultado del chat
+      if (chatResult.success) {
+        this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casaremate.usuario_id}`;
+        this.chatCreado = true;
+        
+        console.log('🎉 Invitación de chat creada exitosamente:', {
+          chatId: this.chatRoomId,
+          message: chatResult.message
+        });
+        
+        // Mostrar mensaje de éxito completo
+        alert(`¡Pago exitoso por $${this.paypalMonto}! 
+        
+${chatResult.message}
+
+La casa de remate recibirá una notificación y podrán chatear para coordinar la entrega del artículo.`);
+        
+      } else {
+        console.warn('⚠️ No se pudo crear la invitación de chat:', chatResult.message);
+        alert(`Pago exitoso por $${this.paypalMonto}!
+
+Hubo un problema al crear la invitación de chat: ${chatResult.message}
+
+Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
       }
       
     } catch (error) {
-      console.error('❌ Error post-pago:', error);
+      console.error('❌ Error al procesar post-pago:', error);
       const errorMessage = error && typeof error === 'object' && 'error' in error 
         ? (error as any).error?.message || (error as any).message 
         : 'Error desconocido';
-      alert(`Pago exitoso, pero hubo un error al crear el chat: ${errorMessage}`);
+        
+      alert(`Pago exitoso por $${this.paypalMonto}!
+
+Hubo un error al crear la invitación de chat: ${errorMessage}
+
+Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
     }
   }
 
@@ -1299,8 +1347,11 @@ export class StreamComponent implements OnInit, OnDestroy {
       alert('Chat no disponible. Contacte al soporte.');
     }
   }
-
   // Métodos de verificación automática
+  /**
+   * Verifica si la subasta debe iniciarse automáticamente según la fecha y hora configuradas.
+   * Configura verificaciones periódicas si la subasta está programada para el futuro.
+   */
   private verificarInicioAutomaticoSubasta(): void {
     console.log('🔍 INICIO DE VERIFICACIÓN AUTOMÁTICA');
     
@@ -1340,6 +1391,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.configurarVerificacionPeriodica(fechaSubasta);
   }
 
+  /**
+   * Maneja subastas que ya están activas al cargar el componente.
+   * Calcula el tiempo restante y reinicia el timer si es necesario.
+   */
   private manejarSubastaActiva(fechaSubasta: Date, ahora: Date): void {
     if (!this.timerInitialized) {
       this.timerInitialized = true;
@@ -1353,9 +1408,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         this.timerState.timer = this.formatearTiempo(tiempoRestante);
         this.timerState.tiempoRestanteSegundos = tiempoRestante;
         this.timerState.timerActivo = true;
-        
-        if (this.isRematador()) {
-          this.iniciarTimer(tiempoRestante);
+          if (this.isRematador()) {
+          this.inicializarTimerWebSocket(tiempoRestante);
         }
       } else {
         this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
@@ -1363,7 +1417,10 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     }
   }
-
+  /**
+   * Configura verificaciones periódicas para iniciar la subasta automáticamente
+   * cuando llegue la fecha y hora programadas.
+   */
   private configurarVerificacionPeriodica(fechaSubasta: Date): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
@@ -1372,19 +1429,30 @@ export class StreamComponent implements OnInit, OnDestroy {
     this.timerState.timer = "Esperando inicio";
     this.timerState.timerActivo = false;
     
+    console.log('⏰ Configurando verificación cada 5 segundos para inicio automático');
+    
     this.intervalId = setInterval(() => {
       const ahora = new Date();
       const diferenciaMs = fechaSubasta.getTime() - ahora.getTime();
       
+      console.log('🕐 Verificando inicio:', {
+        diferencia: Math.floor(diferenciaMs / 1000),
+        fechaSubasta: fechaSubasta.toLocaleString(),
+        ahora: ahora.toLocaleString()
+      });
+      
       if (diferenciaMs <= 0) {
-        console.log('🚀 La subasta ha comenzado, iniciando automáticamente');
+        console.log('🚀 ¡Hora de inicio alcanzada! Iniciando subasta automáticamente');
         this.iniciarSubastaAutomaticamente();
         clearInterval(this.intervalId);
       }
-    }, 60000);
-  }
+    }, 5000); // Verificar cada 5 segundos en lugar de 60
+  }  /**
+   * Inicia la subasta automáticamente cuando llega la fecha programada.
+   * Calcula el tiempo restante y activa el timer correspondiente.
+   */
   private iniciarSubastaAutomaticamente(): void {
-    console.log('🚀 Iniciando subasta automáticamente');
+    console.log('🚀 INICIANDO SUBASTA AUTOMÁTICAMENTE');
     
     if (this.subasta) {
       this.subasta.activa = true;
@@ -1396,212 +1464,152 @@ export class StreamComponent implements OnInit, OnDestroy {
       const tiempoRestanteMs = fechaSubasta!.getTime() + this.subasta.duracionMinutos! * 60000 - ahora.getTime();
       const tiempoRestanteSegundos = Math.max(0, Math.ceil(tiempoRestanteMs / 1000));
 
+      console.log('⏰ Calculando tiempo restante:', {
+        fechaSubasta: fechaSubasta!.toLocaleString(),
+        ahora: ahora.toLocaleString(),
+        duracionMinutos: this.subasta.duracionMinutos,
+        tiempoRestanteSegundos
+      });
+
       this.timerState.tiempoRestanteSegundos = tiempoRestanteSegundos;
       this.timerState.timer = this.formatearTiempo(tiempoRestanteSegundos);
       this.timerState.timerActivo = true;
-      
+
       if (tiempoRestanteSegundos > 0) {
-        this.iniciarTimer(tiempoRestanteSegundos);
+        // Inicializar timer inmediatamente
+        this.inicializarTimerWebSocket(tiempoRestanteSegundos);
+        
+        // Asegurar que el timer display esté funcionando
+        this.startTimerDisplayInterval();
+        
+        console.log('🎯 Subasta iniciada automáticamente - USUARIOS PUEDEN PUJAR');
+        console.log('🎯 Timer activo con', tiempoRestanteSegundos, 'segundos restantes');
       } else {
         // La subasta ya debería haber terminado
+        console.log('⏰ Tiempo agotado al iniciar - Finalizando inmediatamente');
         this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
         this.timerState.timerActivo = false;
-        this.manejarFinalizacionSubasta();
+        this.finalizarSubastaPorTiempo();
       }
-    }
-  }
-
-  public testChatCreation() {
-    console.log('🧪 [TEST] Simulando creación de chat post-pago');
-    
-    const ganadorId = Number(localStorage.getItem('usuario_id'));
-    const ganadorNombre = localStorage.getItem('usuario_nombre') || `Usuario ${ganadorId}`;
-    
-    if (!ganadorId || !this.subasta?.casaremate) {
-      console.error('❌ [TEST] No se puede probar chat: faltan datos');
-      return;
-    }
-
-    this.chatService.crearInvitacionChat(
-      ganadorId,
-      ganadorNombre,
-      this.subasta.casaremate.usuario_id || 0,
-      this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
-    ).then((resultado) => {
-      console.log('✅ [TEST] Chat creado:', resultado);
-      if (resultado.success) {
-        this.chatRoomId = resultado.chatId || '';
-        this.chatCreado = true;
-      }
-    }).catch((error) => {
-      console.error('❌ [TEST] Error al crear chat:', error);
-    });
-  }
-
-  public testNotifications() {
-    console.log('🧪 [TEST] Verificando notificaciones del usuario actual');
-    
-    const usuarioId = Number(localStorage.getItem('usuario_id'));
-    if (!usuarioId) {
-      console.error('❌ [TEST] Usuario no está logueado');
-      return;
-    }
-
-    this.notificacionService.obtenerNotificacionesPublico(usuarioId).subscribe({
-      next: (notificaciones) => {
-        console.log('📬 [TEST] Notificaciones obtenidas:', notificaciones);
-        
-        const notificacionesChat = notificaciones.filter(n => n.esMensajeChat);
-        console.log('💬 [TEST] Notificaciones de chat:', notificacionesChat);
-        
-        if (notificacionesChat.length > 0) {
-          console.log('🎯 [TEST] Tienes invitaciones de chat pendientes!');
-        }
-      },
-      error: (error) => {
-        console.error('❌ [TEST] Error al obtener notificaciones:', error);
-      }
-    });
-  }
-
-  public testCompletePaymentFlow() {
-    console.log('🧪 [TEST] Simulando flujo completo: ganador -> pago -> chat');
-    
-    // Paso 1: Simular que somos el ganador
-    const userId = localStorage.getItem('usuario_id');
-    if (!userId) {
-      console.error('❌ Usuario no está logueado');
-      return;
-    }
-    
-    this.clienteID = Number(userId);
-    this.pujaActual = 1500;
-    
-    // Paso 2: Simular finalización de subasta
-    this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
-    this.timerState.timerActivo = false;
-    if (this.subasta) this.subasta.activa = false;
-    
-    // Paso 3: Simular pago exitoso
-    this.onPaymentSuccess({ 
-      paymentId: 'test_payment_123',
-      amount: this.pujaActual 
-    });
-    
-    console.log('🧪 [TEST] Flujo completo ejecutado - verifica chat y notificaciones');
-  }
-
-  public forceValidateAuctionState() {
-    console.log('🧪 [TEST] Forzando validación del estado de la subasta');
-    console.log('🧪 [TEST] Estado antes:', {
-      activa: this.subasta?.activa,
-      timerActivo: this.timerState.timerActivo,
-      timer: this.timerState.timer,
-      timerInitialized: this.timerInitialized
-    });
-    
-    this.timerInitialized = false; // Reset para permitir reinicio
-    this.validarEstadoSubasta();
-    
-    console.log('🧪 [TEST] Estado después:', {
-      activa: this.subasta?.activa,
-      timerActivo: this.timerState.timerActivo,
-      timer: this.timerState.timer,
-      timerInitialized: this.timerInitialized
-    });
-  }
-
-  public testAutoStart() {
-    console.log('🧪 [TEST] Probando inicio automático de subasta');
-    
-    if (!this.subasta) {
-      console.error('❌ [TEST] No hay subasta cargada');
-      return;
-    }
-    
-    // Simular que la subasta debe iniciar ahora
-    const ahora = new Date();
-    const fechaInicio = new Date(ahora.getTime() - 5000); // 5 segundos atrás
-    const duracionMinutos = 10; // 10 minutos de duración
-    
-    console.log('🧪 [TEST] Configurando subasta para iniciar automáticamente');
-    console.log('🧪 [TEST] Fecha inicio simulada:', fechaInicio.toLocaleString());
-    console.log('🧪 [TEST] Duración:', duracionMinutos, 'minutos');
-      // Actualizar datos de la subasta
-    this.subasta.fecha = fechaInicio; // Usar Date directamente
-    this.subasta.duracionMinutos = duracionMinutos;
-    this.subasta.activa = false; // Inicialmente inactiva
-    this.timerInitialized = false;
-    
-    // Forzar validación
-    this.validarEstadoSubasta();
-    
-    console.log('🧪 [TEST] Resultado:', {
-      activa: this.subasta.activa,
-      timerActivo: this.timerState.timerActivo,
-      timer: this.timerState.timer
-    });
-  }
-
-  public testTimerSync() {
-    console.log('🧪 [TEST] Probando sincronización del timer');
-    
-    const infoTemporal = {
-      esRematador: this.isRematador(),
-      timerActivo: this.timerState.timerActivo,
-      tiempoRestante: this.timerState.tiempoRestanteSegundos,
-      timerDisplay: this.timerState.timer,
-      tieneSuscripcion: !!this.timerState.timerSubscription
-    };
-    
-    console.log('🔍 [TEST] Estado actual del timer:', infoTemporal);
-    
-    if (this.isRematador()) {
-      console.log('🔥 [TEST] Como rematador, enviando update manual de timer');
-      if (this.timerState.tiempoRestanteSegundos) {
-        this.sendTimerUpdateToWebSocket(this.timerState.tiempoRestanteSegundos);
-      }
-    } else {
-      console.log('👀 [TEST] Como usuario, simulando recepción de update');
-      const tiempoTest = this.timerState.tiempoRestanteSegundos || 300; // 5 minutos de prueba
-      this.handleTimerUpdateFromWebSocket({ tiempoRestante: tiempoTest - 10 });
-    }
-    
-    setTimeout(() => {
-      console.log('🔍 [TEST] Estado después de la prueba:', {
-        timerActivo: this.timerState.timerActivo,
-        tiempoRestante: this.timerState.tiempoRestanteSegundos,
-        timerDisplay: this.timerState.timer
-      });
-    }, 2000);
-  }
-
-  public testWebSocketConnection() {
-    console.log('🧪 [TEST] Probando conexión WebSocket');
-    
-    const connectionInfo = {
-      connected: this.websocketService.isConnected(),
-      socketId: this.websocketService.getSocketId(),
-      subscriptions: this.websocketSubscriptions.length
-    };
-    
-    console.log('🔍 [TEST] Estado de conexión:', connectionInfo);
-    
-    if (!this.websocketService.isConnected()) {
-      console.log('🔄 [TEST] Intentando reconectar...');
-      this.websocketService.reconnect();
-    } else {
-      console.log('✅ [TEST] WebSocket conectado correctamente');
       
-      // Test de envío de evento
-      if (this.subasta?.id) {
-        console.log('📡 [TEST] Enviando evento de prueba...');
-        this.websocketService.joinAuction(
-          this.subasta.id,
-          Number(localStorage.getItem('usuario_id')) || 999,
-          'TestUser'
-        );
-      }
+      // Forzar actualización de la interfaz
+      this.cdr.detectChanges();
     }
+  }
+
+  /**
+   * Se ejecuta al conectar al WebSocket
+   * Configura el timer display interval para actualizar la UI
+   */
+  onWebSocketConnect(): void {
+    console.log('WebSocket conectado correctamente');
+    this.startTimerDisplayInterval();
+  }
+
+  /**
+   * Se ejecuta al desconectar del WebSocket
+   */
+  onWebSocketDisconnect(): void {
+    console.log('WebSocket desconectado');
+    this.stopTimerDisplayInterval();
+  }  /**
+   * Inicia el interval para actualizar la UI del timer cada segundo
+   */
+  private startTimerDisplayInterval(): void {
+    this.stopTimerDisplayInterval(); // Limpiar interval previo
+    
+    console.log('🔄 Iniciando timer display interval');
+    
+    this.timerDisplayInterval = setInterval(() => {
+      // Actualizar UI si hay datos del timer
+      if (this.timerState && this.timerState.timerActivo) {
+        // Decrementar tiempo local para mostrar en tiempo real
+        if (this.timerState.tiempoRestanteSegundos && this.timerState.tiempoRestanteSegundos > 0) {
+          this.timerState.tiempoRestanteSegundos--;
+          this.timerState.timer = this.formatearTiempo(this.timerState.tiempoRestanteSegundos);
+          
+          // Si llega a 0, finalizar subasta
+          if (this.timerState.tiempoRestanteSegundos <= 0) {
+            this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
+            this.timerState.timerActivo = false;
+            this.finalizarSubastaPorTiempo();
+          }
+        }
+        
+        // Forzar detección de cambios en Angular
+        this.cdr.detectChanges();
+      }
+    }, 1000);
+    
+    console.log('✅ Timer display interval iniciado');
+  }
+  /**
+   * Detiene el interval del timer display
+   */
+  private stopTimerDisplayInterval(): void {
+    if (this.timerDisplayInterval) {
+      console.log('🛑 Deteniendo timer display interval');
+      clearInterval(this.timerDisplayInterval);
+      this.timerDisplayInterval = null;
+    }
+  }
+  // Método de debugging para validación de pujas
+  public debugValidarPuja(monto?: number): void {
+    const montoTest = monto || this.pujaRapida || (this.pujaActual + 1);
+    
+    console.log('🧪 [DEBUG] ESTADO DE VALIDACIÓN DE PUJAS:');
+    console.log('📊 Estado de la subasta:', {
+      id: this.subasta?.id,
+      activa: this.subasta?.activa,
+      nombre: this.subasta?.nombre
+    });
+    console.log('⏰ Estado del timer:', {
+      timer: this.timerState.timer,
+      timerActivo: this.timerState.timerActivo,
+      tiempoRestante: this.timerState.tiempoRestanteSegundos
+    });
+    console.log('💰 Estado de pujas:', {
+      pujaActual: this.pujaActual,
+      pujaRapida: this.pujaRapida,
+      pujaComun: this.pujaComun,
+      totalPujas: this.pujas.length,
+      montoTest: montoTest
+    });
+    console.log('📦 Estado del lote:', {
+      indexLotes: this.indexLotes,
+      loteActual: this.lotes[this.indexLotes],
+      pujaMinima: this.lotes[this.indexLotes]?.pujaMinima
+    });
+    
+    // Probar validación
+    const resultado = this.validarPuja(montoTest);
+    console.log('✅ Resultado de validación:', resultado);
+  }
+
+  // Método de debugging para el timer
+  public debugTimer(): void {
+    console.log('🧪 [DEBUG] ESTADO DEL TIMER:');
+    console.log('⏰ TimerState:', {
+      timer: this.timerState.timer,
+      timerActivo: this.timerState.timerActivo,
+      tiempoRestanteSegundos: this.timerState.tiempoRestanteSegundos
+    });
+    console.log('📅 Fechas:', {
+      fechaSubasta: this.subasta?.fecha,
+      fechaParseada: this.subasta?.fecha ? this.parsearFechaSubasta(this.subasta.fecha) : null,
+      ahora: new Date().toLocaleString(),
+      duracionMinutos: this.subasta?.duracionMinutos
+    });
+    console.log('🔄 Intervals:', {
+      timerDisplayInterval: !!this.timerDisplayInterval,
+      intervalId: !!this.intervalId,
+      timerInitialized: this.timerInitialized
+    });
+    console.log('🎮 Estado UI:', {
+      timerDisplayText: this.timerDisplayText,
+      timerCssClass: this.timerCssClass,
+      subastaActiva: this.subasta?.activa,
+      boton: this.boton
+    });
   }
 }
