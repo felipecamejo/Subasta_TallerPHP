@@ -62,54 +62,74 @@ public function enviarLinkReset(Request $request)
     return response()->json(['error' => __($status)], 500);
 }
 
-    /**
-     * @OA\Post(
-     *     path="/api/login",
-     *     summary="Inicio de sesión",
-     *     tags={"Autenticación"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="application/json",
-     *             @OA\Schema(
-     *                 required={"email", "password"},
-     *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com"),
-     *                 @OA\Property(property="password", type="string", format="password", example="12345678")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Login exitoso con token de acceso."),
-     *     @OA\Response(response=403, description="Email no verificado."),
-     *     @OA\Response(response=422, description="Credenciales inválidas.")
-     * )
-     */
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string'
-        ]);
+ /**
+ * @OA\Post(
+ *     path="/api/login",
+ *     summary="Inicio de sesión",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 required={"email", "password"},
+ *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com"),
+ *                 @OA\Property(property="password", type="string", format="password", example="12345678")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Login exitoso con token de acceso.",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="token", type="string", example="1|abcde12345..."),
+ *             @OA\Property(property="usuario_id", type="integer", example=12),
+ *             @OA\Property(property="rol", type="string", example="cliente"),
+ *             @OA\Property(
+ *                 property="usuario",
+ *                 type="object",
+ *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
+ *                 @OA\Property(property="email", type="string", example="juan@example.com"),
+ *                 @OA\Property(property="imagen", type="string", example="https://example.com/avatar.jpg")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(response=403, description="Email no verificado."),
+ *     @OA\Response(response=422, description="Credenciales inválidas.")
+ * )
+ */
+   public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string'
+    ]);
 
-        $usuario = Usuario::where('email', $request->email)->first();
+    $usuario = Usuario::where('email', $request->email)->first();
 
-        if (!$usuario || !Hash::check($request->password, $usuario->contrasenia)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
-            ]);
-        }
-
-        if (!$usuario->email_verified_at) {
-            return response()->json(['message' => 'Email no verificado'], 403);
-        }
-
-        $rol = $this->determinarRol($usuario);
-
-        return response()->json([
-            'token' => $usuario->createToken('token')->plainTextToken,
-            'usuario_id' => $usuario->id,
-            'rol' => $rol
+    if (!$usuario || !Hash::check($request->password, $usuario->contrasenia)) {
+        throw ValidationException::withMessages([
+            'email' => ['Las credenciales son incorrectas.'],
         ]);
     }
+
+    if (!$usuario->email_verified_at) {
+        return response()->json(['message' => 'Email no verificado'], 403);
+    }
+
+    $rol = $this->determinarRol($usuario);
+
+    return response()->json([
+        'token' => $usuario->createToken('token')->plainTextToken,
+        'usuario_id' => $usuario->id,
+        'rol' => $rol,
+        'usuario' => [
+            'nombre' => $usuario->nombre,
+            'email' => $usuario->email,
+            'imagen' => $usuario->imagen,
+        ]
+    ]);
+}
 
     /**
      * @OA\Post(

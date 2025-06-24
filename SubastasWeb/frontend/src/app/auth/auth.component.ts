@@ -1,6 +1,6 @@
 import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { NotificacionService } from '../../services/notificacion.service';
 
@@ -53,24 +53,24 @@ export class AuthComponent {
   onLogin(): void {
     this.http.post<any>(`${environment.apiUrl}/api/login`, this.loginData).subscribe({
       next: (res) => {
+        const usuarioId: number = Number(res.usuario_id ?? 0);
+
         this.authService.login({
           token: res.token,
-          usuario_id: res.usuario_id,
+          usuario_id: usuarioId,
           rol: res.rol || 'cliente',
           usuario: res.usuario
         });
 
-        //  Corrección del error con "??"
         this.userEmail = res.usuario?.email || this.loginData.email;
 
-        // Enviar notificación de bienvenida si no es admin
-        if (res.rol !== 'admin') {
+        if (res.rol !== 'admin' && !isNaN(usuarioId) && usuarioId > 0) {
           this.notificacionService.crearNotificacion(
             'Bienvenido',
             'Te damos la bienvenida al sistema',
-            res.usuario_id,
+            usuarioId,
             false,
-            null
+            0 //  Pasamos 0 en lugar de null para evitar error de tipo
           ).subscribe({
             next: () => console.log('Notificación enviada'),
             error: (err) => console.error('Error al enviar notificación', err)
@@ -90,6 +90,4 @@ export class AuthComponent {
       error: (err) => alert('Error en registro: ' + JSON.stringify(err.error)),
     });
   }
-
-  
 }
