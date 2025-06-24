@@ -13,6 +13,7 @@ import { PasswordService } from '../../services/PasswordService';
 export class ForgotPasswordComponent {
   form: FormGroup;
   mensaje = '';
+  error = '';
 
   constructor(private fb: FormBuilder, private passwordService: PasswordService) {
     this.form = this.fb.group({
@@ -23,6 +24,9 @@ export class ForgotPasswordComponent {
   enviar() {
     if (this.form.invalid) return;
 
+    this.mensaje = '';
+    this.error = '';
+
     const email = this.form.get('email')?.value;
 
     this.passwordService.enviarResetPassword(email).subscribe({
@@ -30,7 +34,11 @@ export class ForgotPasswordComponent {
         this.mensaje = res.message;
       },
       error: err => {
-        this.mensaje = err.error?.error || 'Error al enviar correo';
+        if (err.status === 422 && err.error?.errors?.email) {
+          this.error = err.error.errors.email[0];
+        } else {
+          this.error = 'No se pudo enviar el correo.';
+        }
       },
     });
   }

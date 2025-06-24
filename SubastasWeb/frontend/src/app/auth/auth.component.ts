@@ -60,7 +60,7 @@ export class AuthComponent {
           usuario: res.usuario
         });
 
-        // ✅ Corrección del error con "??"
+        //  Corrección del error con "??"
         this.userEmail = res.usuario?.email || this.loginData.email;
 
         // Enviar notificación de bienvenida si no es admin
@@ -91,18 +91,5 @@ export class AuthComponent {
     });
   }
 
-  logout(): void {
-    const token = this.authService.getToken();
-    if (!token) return;
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.post<any>(`${environment.apiUrl}/api/logout`, {}, { headers }).subscribe({
-      next: () => {
-        this.authService.logout();
-        this.userEmail = '';
-      },
-      error: () => alert('Error al cerrar sesión'),
-    });
-  }
+  
 }
