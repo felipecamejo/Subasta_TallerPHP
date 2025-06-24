@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
@@ -331,6 +332,25 @@ public function enviarLinkReset(Request $request)
     }
 
     return response()->json(['error' => __($status)], 500);
+}
+
+
+public function reenviarEmailVerificacion(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|exists:usuarios,email',
+    ]);
+
+    $usuario = Usuario::where('email', $request->email)->first();
+
+    if ($usuario->hasVerifiedEmail()) {
+        return response()->json(['message' => 'El correo ya está verificado.'], 400);
+    }
+
+    // Reenvía la notificación
+    $usuario->sendEmailVerificationNotification();
+
+    return response()->json(['message' => 'Correo de verificación reenviado.']);
 }
 
 }
