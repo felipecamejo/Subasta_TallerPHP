@@ -1,8 +1,7 @@
-import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { PasswordService } from '../../services/PasswordService';
 
 @Component({
   selector: 'app-forgot-password',
@@ -15,7 +14,7 @@ export class ForgotPasswordComponent {
   form: FormGroup;
   mensaje = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(private fb: FormBuilder, private passwordService: PasswordService) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
     });
@@ -24,7 +23,9 @@ export class ForgotPasswordComponent {
   enviar() {
     if (this.form.invalid) return;
 
-    this.http.post(`${environment.apiUrl}/api/forgot-password`, this.form.value).subscribe({
+    const email = this.form.get('email')?.value;
+
+    this.passwordService.enviarResetPassword(email).subscribe({
       next: (res: any) => {
         this.mensaje = res.message;
       },
