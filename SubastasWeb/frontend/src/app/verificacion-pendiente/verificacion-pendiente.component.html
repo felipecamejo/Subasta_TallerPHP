@@ -1,4 +1,4 @@
-<div class="verificacion-container">
+<div class="verificacion-container mt-4">
   <h2>Verificación pendiente</h2>
   <p>Tu cuenta aún no ha sido verificada. Revisá tu correo electrónico.</p>
 
@@ -10,11 +10,13 @@
     {{ error }}
   </div>
 
-  <button (click)="reenviarCorreo()" class="btn btn-primary" [disabled]="loading">
-    {{ loading ? 'Enviando...' : 'Reenviar correo de verificación' }}
-  </button>
+  <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+    <button class="btn btn-primary" (click)="reenviarCorreo()" [disabled]="loading">
+      {{ loading ? 'Enviando...' : 'Reenviar correo de verificación' }}
+    </button>
 
-  <button (click)="volverAlLogin()" class="btn btn-secondary mt-2">
-    Volver al inicio de sesión
-  </button>
+    <button class="btn btn-secondary" (click)="irAlLogin()">
+      Volver al inicio de sesión
+    </button>
+  </div>
 </div>

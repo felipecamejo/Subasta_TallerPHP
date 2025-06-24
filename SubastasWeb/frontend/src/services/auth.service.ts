@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from './../environments/environment';
-import { EmailResendRequest } from '../models/emailResendRequest';
 
 export interface AuthData {
   token: string;
@@ -17,11 +16,11 @@ export interface AuthData {
 })
 export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
-  public isAuthenticated$: Observable<boolean> = this.isAuthenticatedSubject.asObservable();
+  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   constructor(
-    private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private router: Router
   ) {}
 
   login(authData: AuthData): void {
@@ -37,6 +36,25 @@ export class AuthService {
     this.redirigirPorRol(authData.rol);
   }
 
+  redirigirPorRol(rol: string | undefined): void {
+    switch (rol) {
+      case 'cliente':
+        this.router.navigate(['/dashboard-cliente']);
+        break;
+      case 'rematador':
+        this.router.navigate(['/dashboard-rematador']);
+        break;
+      case 'casa_remate':
+        this.router.navigate(['/dashboard-casa-remate']);
+        break;
+      case 'admin':
+        this.router.navigate(['/admin']);
+        break;
+      default:
+        this.router.navigate(['/']);
+    }
+  }
+
   logout(): void {
     localStorage.removeItem('auth');
     localStorage.removeItem('token');
@@ -44,6 +62,14 @@ export class AuthService {
     localStorage.removeItem('usuario_id');
     this.isAuthenticatedSubject.next(false);
     this.router.navigate(['/login']);
+  }
+
+  loginTradicional(email: string, password: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/login`, { email, password });
+  }
+
+  reenviarVerificacionEmail(email: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/email/resend`, { email });
   }
 
   getToken(): string | null {
@@ -66,37 +92,6 @@ export class AuthService {
     return this.hasToken();
   }
 
-  redirigirPorRol(rol: string | undefined): void {
-    switch (rol) {
-      case 'cliente':
-        this.router.navigate(['/dashboard-cliente']);
-        break;
-      case 'rematador':
-        this.router.navigate(['/dashboard-rematador']);
-        break;
-      case 'casa_remate':
-        this.router.navigate(['/dashboard-casa-remate']);
-        break;
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      default:
-        console.warn('Rol desconocido o no definido:', rol);
-        this.router.navigate(['/']);
-    }
-  }
-
-  loginTradicional(email: string, password: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/login`, {
-      email,
-      password
-    });
-  }
-
-  reenviarVerificacionEmail(payload: EmailResendRequest): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/email/resend`, payload);
-  }
-
   private getAuthObject(): AuthData | null {
     try {
       const data = localStorage.getItem('auth');
@@ -108,6 +103,6 @@ export class AuthService {
 
   private hasToken(): boolean {
     const auth = this.getAuthObject();
-    return !!auth?.token;
+    return !!auth?.token || !!localStorage.getItem('token');
   }
 }

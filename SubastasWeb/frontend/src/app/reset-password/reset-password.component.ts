@@ -1,9 +1,16 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PasswordService } from '../../services/password.service'; // Servicio que ya tenés
-import { ResetPasswordPayload } from './../../services/password.service';
+import { CommonModule } from '@angular/common';
+import { PasswordService } from '../../services/PasswordService';
 
 @Component({
   selector: 'app-reset-password',
@@ -25,26 +32,23 @@ export class ResetPasswordComponent {
     const token = this.route.snapshot.queryParamMap.get('token') || '';
     const email = this.route.snapshot.queryParamMap.get('email') || '';
 
-    this.form = this.fb.group({
-      email: [email, [Validators.required, Validators.email]],
-      password: ['', [Validators.required]],
-      password_confirmation: ['', [Validators.required]],
-      token: [token, Validators.required],
-    }, { validators: this.passwordsCoinciden });
-  }
-
-  passwordsCoinciden(control: AbstractControl): { [key: string]: boolean } | null {
-    const password = control.get('password')?.value;
-    const confirm = control.get('password_confirmation')?.value;
-    return password === confirm ? null : { noCoinciden: true };
+    this.form = this.fb.group(
+      {
+        email: [email, [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
+        password_confirmation: ['', Validators.required],
+        token: [token, Validators.required],
+      },
+      { validators: this.passwordsCoincidenValidator }
+    );
   }
 
   enviar() {
     if (this.form.invalid) return;
 
-    const data: ResetPasswordPayload = this.form.value;
+    const data = this.form.value;
 
-    this.passwordService.resetPassword(data).subscribe({
+    this.passwordService.resetearContrasena(data).subscribe({
       next: () => {
         this.mensaje = 'Contraseña actualizada correctamente.';
         this.router.navigate(['/login']);
@@ -54,5 +58,21 @@ export class ResetPasswordComponent {
         this.mensaje = err.error?.message || 'Error al restablecer la contraseña';
       },
     });
+  }
+
+  // Validador de coincidencia de contraseñas
+  passwordsCoincidenValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+    const password = group.get('password')?.value;
+    const confirm = group.get('password_confirmation')?.value;
+    return password === confirm ? null : { passwordMismatch: true };
+  };
+
+  // Getters para el template
+  get password() {
+    return this.form.get('password');
+  }
+
+  get password_confirmation() {
+    return this.form.get('password_confirmation');
   }
 }
