@@ -11,7 +11,18 @@ export class PasswordService {
 
   constructor(private http: HttpClient) {}
 
+  // Enviar email con link para resetear contraseña
   enviarResetPassword(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  // Resetear contraseña con token, email y password
+  resetearContrasena(data: {
+    email: string;
+    password: string;
+    password_confirmation: string;
+    token: string;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, data);
   }
 }

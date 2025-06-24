@@ -104,4 +104,8 @@ export class AuthService {
     const auth = this.getAuthObject();
     return !!auth?.token || !!localStorage.getItem('token');
   }
+
+reenviarVerificacionEmail(email: string): Observable<any> {
+  return this.http.post(`${environment.apiUrl}/api/email/resend`, { email });
+}
 }

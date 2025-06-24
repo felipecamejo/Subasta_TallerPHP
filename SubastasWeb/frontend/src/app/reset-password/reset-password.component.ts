@@ -1,9 +1,8 @@
-import { environment } from '../../environments/environment';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { PasswordService } from '../../services/PasswordService';
 
 @Component({
   selector: 'app-reset-password',
@@ -19,35 +18,55 @@ export class ResetPasswordComponent {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private passwordService: PasswordService
   ) {
     const token = this.route.snapshot.queryParamMap.get('token') || '';
     const email = this.route.snapshot.queryParamMap.get('email') || '';
 
-    this.form = this.fb.group({
-      email: [email, [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      password_confirmation: ['', Validators.required],
-      token: [token, Validators.required],
+    this.form = this.fb.group(
+      {
+        email: [email, [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
+        password_confirmation: ['', Validators.required],
+        token: [token, Validators.required],
+      },
+      { validators: this.passwordsCoincidenValidator }
+    );
+  }
+
+  enviar() {
+    if (this.form.invalid) return;
+
+    const data = this.form.value;
+
+    console.log('Datos enviados al backend:', data);
+
+    this.passwordService.resetearContrasena(data).subscribe({
+      next: () => {
+        this.mensaje = 'Contraseña actualizada correctamente.';
+        this.router.navigate(['/login']);
+      },
+      error: err => {
+        console.error('Error desde backend:', err);
+        this.mensaje = err.error?.message || 'Error al restablecer la contraseña';
+      },
     });
   }
 
-enviar() {
-  if (this.form.invalid) return;
+  // Validator para verificar que password y password_confirmation coincidan
+  passwordsCoincidenValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+    const password = group.get('password')?.value;
+    const confirm = group.get('password_confirmation')?.value;
+    return password === confirm ? null : { passwordMismatch: true };
+  };
 
-  // Mostrá lo que se está enviando
-  console.log('Datos enviados al backend:', this.form.value);
+  // Para mostrar errores en la vista si querés
+  get password() {
+    return this.form.get('password');
+  }
 
-  this.http.post(`${environment.apiUrl}/api/reset-password`, this.form.value).subscribe({
-    next: () => {
-      this.mensaje = 'Contraseña actualizada correctamente.';
-      this.router.navigate(['/login']);
-    },
-    error: err => {
-      console.error('Error desde backend:', err);
-      this.mensaje = err.error?.message || 'Error al restablecer la contraseña';
-    },
-  });
-}
+  get password_confirmation() {
+    return this.form.get('password_confirmation');
+  }
 }

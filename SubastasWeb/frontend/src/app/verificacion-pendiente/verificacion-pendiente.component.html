@@ -2,11 +2,16 @@
   <h2>Verificación de correo pendiente</h2>
   <p>Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada.</p>
 
-  <button class="btn btn-primary" (click)="reenviarCorreo()" [disabled]="loading">
-    Reenviar correo de verificación
-  </button>
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <button class="btn btn-primary" (click)="reenviarCorreo()" [disabled]="loading">
+      Reenviar correo de verificación
+    </button>
+
+    <button class="btn btn-secondary" (click)="irAlLogin()">
+      Volver al login
+    </button>
+  </div>
 
   <div *ngIf="mensaje" class="alert alert-success mt-3">{{ mensaje }}</div>
   <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
 </div>
-<button class="btn btn-secondary mt-2" routerLink="/login">Volver al login</button>

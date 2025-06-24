@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../environments/environment';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-verificacion-pendiente',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule],
   templateUrl: './verificacion-pendiente.component.html',
   styleUrls: ['./verificacion-pendiente.component.scss']
 })
@@ -16,7 +16,10 @@ export class VerificacionPendienteComponent {
   loading = false;
   email = localStorage.getItem('email_para_verificar') || '';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   reenviarCorreo() {
     if (!this.email) {
@@ -25,8 +28,9 @@ export class VerificacionPendienteComponent {
     }
 
     this.loading = true;
-    this.http.post(`${environment.apiUrl}/api/email/resend`, { email: this.email }).subscribe({
-      next: (res: any) => {
+
+    this.authService.reenviarVerificacionEmail(this.email).subscribe({
+      next: () => {
         this.mensaje = 'Correo de verificación reenviado correctamente.';
         this.loading = false;
         localStorage.removeItem('email_para_verificar');
@@ -36,5 +40,9 @@ export class VerificacionPendienteComponent {
         this.loading = false;
       }
     });
+  }
+
+  irAlLogin() {
+    this.router.navigate(['/login']);
   }
 }
