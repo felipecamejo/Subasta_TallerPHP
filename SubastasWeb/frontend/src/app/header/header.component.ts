@@ -25,10 +25,6 @@ import { AuthService } from '../../services/auth.service';
 export class HeaderComponent implements OnInit {
   items: MenuItem[] = [
     { label: 'Home', routerLink: ['/buscadorRemates'] },
-    { label: 'Categories', routerLink: ['/categories'] },
-    { label: 'Authors', routerLink: ['/authors'] },
-    { label: 'Shop', routerLink: ['/shop'] },
-    { label: 'Contact', routerLink: ['/contact'] }
   ];
 
   usuarioId: number | null = null;
