@@ -16,16 +16,35 @@ use App\Models\CasaRemate;
 use Google_Client;
 use OpenApi\Annotations as OA;
 
-/**
- * @OA\Tag(
- *     name="Autenticación",
- *     description="Endpoints para autenticación y registro de usuarios"
- * )
- */
-class AuthController extends Controller
-{
+    /**
+     * @OA\Tag(
+     *     name="Autenticación",
+     *     description="Endpoints para autenticación y registro de usuarios"
+     * )
+     */
+    class AuthController extends Controller
+    {
 
-
+    /**
+     * @OA\Post(
+     *     path="/api/forgot-password",
+     *     summary="Enviar enlace para restablecer contraseña",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"email"},
+     *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Enlace de restablecimiento enviado."),
+     *     @OA\Response(response=422, description="Email no válido o no registrado."),
+     *     @OA\Response(response=500, description="Error al enviar el enlace.")
+     * )
+     */
 public function enviarLinkReset(Request $request)
 {
     $request->validate([
@@ -43,7 +62,27 @@ public function enviarLinkReset(Request $request)
     return response()->json(['error' => __($status)], 500);
 }
 
-
+    /**
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Inicio de sesión",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"email", "password"},
+     *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com"),
+     *                 @OA\Property(property="password", type="string", format="password", example="12345678")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login exitoso con token de acceso."),
+     *     @OA\Response(response=403, description="Email no verificado."),
+     *     @OA\Response(response=422, description="Credenciales inválidas.")
+     * )
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -72,12 +111,50 @@ public function enviarLinkReset(Request $request)
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Cerrar sesión",
+     *     tags={"Autenticación"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(response=200, description="Sesión cerrada con éxito.")
+     * )
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada con éxito.']);
     }
-
+    
+    /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Registro de cliente o rematador",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"nombre", "email", "telefono", "cedula", "latitud", "longitud", "rol", "contrasenia", "contrasenia_confirmation"},
+     *                 @OA\Property(property="nombre", type="string", example="Ana Gómez"),
+     *                 @OA\Property(property="email", type="string", example="ana@ejemplo.com"),
+     *                 @OA\Property(property="telefono", type="string", example="099123456"),
+     *                 @OA\Property(property="cedula", type="string", example="11223344"),
+     *                 @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
+     *                 @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
+     *                 @OA\Property(property="rol", type="string", enum={"cliente", "rematador"}, example="cliente"),
+     *                 @OA\Property(property="matricula", type="string", example="MAT456", description="Solo requerido si el rol es rematador"),
+     *                 @OA\Property(property="contrasenia", type="string", format="password", example="claveSegura123"),
+     *                 @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="claveSegura123")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
+     *     @OA\Response(response=422, description="Error de validación."),
+     *     @OA\Response(response=500, description="Error al registrar el usuario.")
+     * )
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -116,6 +193,34 @@ public function enviarLinkReset(Request $request)
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/register-google-user",
+     *     summary="Registro de cliente o rematador con cuenta de Google",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "rol"},
+     *                 @OA\Property(property="google_id", type="string", example="123456789012345678901"),
+     *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="juan@gmail.com"),
+     *                 @OA\Property(property="telefono", type="string", example="098765432"),
+     *                 @OA\Property(property="cedula", type="string", example="45678901"),
+     *                 @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
+     *                 @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
+     *                 @OA\Property(property="rol", type="string", enum={"cliente", "rematador"}, example="cliente"),
+     *                 @OA\Property(property="matricula", type="string", example="MAT123", description="Solo requerido si el rol es rematador")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Registro exitoso con Google."),
+     *     @OA\Response(response=422, description="Error de validación."),
+     *     @OA\Response(response=500, description="Error al registrar con Google.")
+     * )
+     */
     public function registerGoogleUser(Request $request)
     {
         $request->validate([
@@ -160,6 +265,33 @@ public function enviarLinkReset(Request $request)
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/register-google-casa-remate",
+     *     summary="Registro de casa de remate con cuenta de Google",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "idFiscal"},
+     *                 @OA\Property(property="google_id", type="string", example="123456789012345678901"),
+     *                 @OA\Property(property="nombre", type="string", example="Casa de Subastas Google"),
+     *                 @OA\Property(property="email", type="string", example="casa@subastas.com"),
+     *                 @OA\Property(property="telefono", type="string", example="099123456"),
+     *                 @OA\Property(property="cedula", type="string", example="12345678"),
+     *                 @OA\Property(property="latitud", type="number", format="float", example=-34.901112),
+     *                 @OA\Property(property="longitud", type="number", format="float", example=-56.164532),
+     *                 @OA\Property(property="idFiscal", type="string", example="RUT123456789")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Registro exitoso con Google."),
+     *     @OA\Response(response=422, description="Error de validación."),
+     *     @OA\Response(response=500, description="Error al registrar casa de remate.")
+     * )
+     */
     public function registerGoogleCasaRemate(Request $request)
     {
         $request->validate([
@@ -207,6 +339,34 @@ public function enviarLinkReset(Request $request)
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/register-casa-remate",
+     *     summary="Registro de casa de remate",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"nombre", "email", "telefono", "cedula", "latitud", "longitud", "idFiscal", "contrasenia", "contrasenia_confirmation"},
+     *                 @OA\Property(property="nombre", type="string", example="Casa de Subastas XYZ"),
+     *                 @OA\Property(property="email", type="string", example="casa@subastas.com"),
+     *                 @OA\Property(property="telefono", type="string", example="099123456"),
+     *                 @OA\Property(property="cedula", type="string", example="12345678"),
+     *                 @OA\Property(property="latitud", type="number", format="float", example=-34.901112),
+     *                 @OA\Property(property="longitud", type="number", format="float", example=-56.164532),
+     *                 @OA\Property(property="idFiscal", type="string", example="RUT123456789"),
+     *                 @OA\Property(property="contrasenia", type="string", format="password", example="password123"),
+     *                 @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="password123")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
+     *     @OA\Response(response=422, description="Error de validación."),
+     *     @OA\Response(response=500, description="Error al registrar casa de remate.")
+     * )
+     */
     public function registerCasaRemate(Request $request)
     {
         $request->validate([
@@ -250,6 +410,27 @@ public function enviarLinkReset(Request $request)
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/registro/google",
+     *     summary="Login con Google",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"id_token"},
+     *                 @OA\Property(property="id_token", type="string", example="GOOGLE_ID_TOKEN")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login exitoso con token de acceso"),
+     *     @OA\Response(response=401, description="Token inválido"),
+     *     @OA\Response(response=403, description="Email no verificado o rol no permitido"),
+     *     @OA\Response(response=404, description="Usuario no encontrado")
+     * )
+     */
     public function loginWithGoogle(Request $request)
     {
         $request->validate([
@@ -309,7 +490,29 @@ public function enviarLinkReset(Request $request)
         }
     }
 
-
+ /**
+     * @OA\Post(
+     *     path="/api/reset-password",
+     *     summary="Restablecer contraseña",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 required={"token", "email", "password", "password_confirmation"},
+     *                 @OA\Property(property="token", type="string", example="abcdef123456"),
+     *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com"),
+     *                 @OA\Property(property="password", type="string", format="password", example="nuevacontrasena"),
+     *                 @OA\Property(property="password_confirmation", type="string", format="password", example="nuevacontrasena")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Contraseña restablecida correctamente."),
+     *     @OA\Response(response=500, description="Error al restablecer la contraseña."),
+     *     @OA\Response(response=422, description="Validación fallida.")
+     * )
+     */
     public function resetearContrasena(Request $request)
 {
     $request->validate([
@@ -333,8 +536,25 @@ public function enviarLinkReset(Request $request)
 
     return response()->json(['error' => __($status)], 500);
 }
-
-
+  /**
+     * @OA\Post(
+     *     path="/api/email/resend",
+     *     summary="Reenviar correo de verificación",
+     *     tags={"Autenticación"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Correo reenviado"),
+     *     @OA\Response(response=400, description="Correo ya verificado"),
+     *     @OA\Response(response=422, description="Validación fallida")
+     * )
+     */
 public function reenviarEmailVerificacion(Request $request)
 {
     $request->validate([
