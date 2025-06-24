@@ -81,8 +81,8 @@ class SubastaController extends Controller
             'activa' => 'required|boolean',
             'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
-            'casa_remate_id'   => 'nullable|exists:casa_remates,id',
-            'rematador_id'    => 'nullable|exists:rematadores,id',
+            'casa_remate_id'   => 'nullable|exists:casa_remates,usuario_id',
+            'rematador_id'    => 'nullable|exists:rematadores,usuario_id',
             'latitud'         => 'nullable|numeric|between:-90,90',
             'longitud'        => 'nullable|numeric|between:-180,180',
             'videoId'         => 'nullable|string|max:255',
@@ -173,39 +173,58 @@ class SubastaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $subasta = Subasta::find($id);
+        try {
+            $subasta = Subasta::find($id);
 
-        if (!$subasta) {
-            return response()->json(['message' => 'Subasta no encontrada'], 404);
+            if (!$subasta) {
+                return response()->json(['message' => 'Subasta no encontrada'], 404);
+            }
+
+            $request->validate([
+                'nombre' => 'sometimes|required|string',
+                'activa' => 'sometimes|required|boolean',
+                'duracionMinutos' => 'sometimes|required|integer|min:1',
+                'fecha'           => 'nullable|date',
+                'casa_remate_id'   => 'nullable|exists:casa_remates,usuario_id',
+                'rematador_id'    => 'nullable|exists:rematadores,usuario_id',
+                'latitud'         => 'nullable|numeric|between:-90,90',
+                'longitud'        => 'nullable|numeric|between:-180,180',
+                'videoId'         => 'nullable|string|max:255',
+                'loteIndex'       => 'nullable|integer|min:0',
+            ]);
+
+            // Filtrar solo los campos que están presentes en la request
+            $dataToUpdate = array_filter($request->only([
+                'nombre',
+                'activa',
+                'duracionMinutos',
+                'fecha',
+                'casa_remate_id',
+                'rematador_id',
+                'latitud',
+                'longitud',
+                'videoId',
+                'loteIndex'
+            ]), function($value) {
+                return $value !== null;
+            });
+
+            $subasta->update($dataToUpdate); 
+
+            return response()->json($subasta->load(['casaRemate', 'rematador']));
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
-
-        $request->validate([
-            'nombre' => 'required|string',
-            'activa' => 'required|boolean',
-            'duracionMinutos' => 'required|integer|min:1',
-            'fecha'           => 'nullable|date',
-            'casa_remate_id'   => 'nullable|exists:casa_remates,id',
-            'rematador_id'    => 'nullable|exists:rematadores,id',
-            'latitud'         => 'nullable|numeric|between:-90,90',
-            'longitud'        => 'nullable|numeric|between:-180,180',
-            'videoId'         => 'nullable|string|max:255',
-            'loteIndex'       => 'required|integer|min:0',
-        ]);
-
-        $subasta->update($request->only([
-            'nombre',
-            'activa',
-            'duracionMinutos',
-            'fecha',
-            'casa_remate_id',
-            'rematador_id',
-            'latitud',
-            'longitud',
-            'videoId',
-            'loteIndex'
-        ])); 
-
-        return response()->json($subasta->load(['casaRemate', 'rematador',]));
     }
 
     /**

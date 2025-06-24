@@ -41,7 +41,7 @@ export class WebsocketService {
   public connectionStatus$ = this.connectionStatus.asObservable();
 
   constructor() {
-    this.socket = io('http://localhost:3001');
+    this.socket = io('http://localhost:3001'); // Puerto correcto según websocket-server
     this.setupConnectionEvents();
   }
   private setupConnectionEvents() {
@@ -167,8 +167,15 @@ export class WebsocketService {
     });
   }
 
-  sendTimerUpdate(auctionId: number, timerData: any) {
-    this.socket.emit('auction_timer_update', { auctionId, timerData });
+  sendTimerUpdate(auctionId: number, tiempoRestante: number) {
+    console.log('📡 WebSocket: Enviando auction_timer_update:', { auctionId, tiempoRestante });
+    this.socket.emit('auction_timer_update', { 
+      auctionId, 
+      timerData: {
+        tiempoRestante,
+        timestamp: new Date().toISOString()
+      }
+    });
   }
   onTimerUpdated(): Observable<any> {
     return new Observable(observer => {
