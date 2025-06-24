@@ -1,59 +1,28 @@
-.login-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #fafafa;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-input {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 4px;
-  box-sizing: border-box;
-}
-
-button {
-  width: 100%;
-  padding: 0.6rem;
-  background-color: #2c7be5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background-color: #aaa;
-}
-
-.error {
-  color: #e74c3c;
-  font-size: 0.85rem;
-}
-
-.error-msg {
-  color: #e74c3c;
+.enlaces-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1rem;
-  text-align: center;
-}
-
-.forgot-password-link {
-  text-align: right;
-  margin: 0.5rem 0 1rem;
 
   a {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #007bff;
     text-decoration: none;
+    transition: color 0.2s;
 
     &:hover {
+      color: #0056b3;
       text-decoration: underline;
     }
   }
+
+  .formulario {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2.5rem;
+  max-width: 420px;
+  margin: 3rem auto; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
 }
