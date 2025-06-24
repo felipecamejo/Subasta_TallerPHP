@@ -12,7 +12,10 @@
     </ul>
 
     <div class="right-section">
-      <i class="pi pi-user"></i>
+      <a *ngIf="isLoggedIn" [routerLink]="['/perfil', usuarioId]" class="profile-link">
+        <i class="pi pi-user"></i>
+      </a>
+      <i *ngIf="!isLoggedIn" class="pi pi-user"></i>
       <app-notificaciones></app-notificaciones>
       <div class="social-icons">
         <i class="pi pi-twitter"></i>

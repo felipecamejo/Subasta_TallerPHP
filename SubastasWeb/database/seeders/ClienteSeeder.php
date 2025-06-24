@@ -23,9 +23,15 @@ class ClienteSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        Cliente::create([
+        // Creamos el cliente
+        $cliente = Cliente::create([
             'usuario_id' => $clienteUsuario->id,
-            'calificacion' => 5,
+        ]);
+        
+        // Creamos la valoración asociada al cliente usando la relación polimórfica
+        $cliente->valoracion()->create([
+            'valoracion_total' => 20, // 20 puntos en total 
+            'cantidad_opiniones' => 4, // 4 opiniones recibidas (promedio será 5.0)
         ]);
     }
 }

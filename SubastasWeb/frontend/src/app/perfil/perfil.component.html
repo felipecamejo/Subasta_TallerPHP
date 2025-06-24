@@ -1,43 +1,50 @@
 <!-- perfil.component.html -->
 <div class="perfil-container">
-  <!-- Sección de Perfil -->
-  <section class="perfil-header">
-    <!-- Información básica -->
-    <div class="perfil-info" *ngIf="cliente?.usuario || rematador?.usuario">
-      <h2>{{ cliente?.usuario?.nombre || rematador?.usuario?.nombre }}</h2>
-      <p>Email: {{ cliente?.usuario?.email || rematador?.usuario?.email }}</p>
-      
-      <!-- Información específica de cliente -->
-      <div *ngIf="cliente">
-        <p>Calificación: {{ obtenerPromedioValoracionCliente() }} estrellas 
-           <span *ngIf="cliente.valoracion">({{ cliente.valoracion.cantidad_opiniones }} opiniones)</span>
-        </p>
+  <div class="card profile-card">
+    <!-- Sección de Perfil -->
+    <section class="perfil-header">
+      <!-- Imagen de perfil - siempre se muestra (imagen del usuario o avatar genérico) -->
+      <div class="perfil-imagen">
+        <img [src]="getImageUrl()" alt="Imagen de perfil" onerror="this.src='assets/img/default-avatar.png'">
       </div>
       
-      <!-- Información específica de rematador -->
-      <div *ngIf="rematador">
-        <p>Matrícula: {{ rematador.matricula }}</p>
+      <!-- Información básica -->
+      <div class="perfil-info" *ngIf="cliente?.usuario || rematador?.usuario">
+        <h2>{{ cliente?.usuario?.nombre || rematador?.usuario?.nombre }}</h2>
+        <div class="info-container">
+          <div class="info-item">
+            <i class="pi pi-envelope"></i>
+            <span>{{ cliente?.usuario?.email || rematador?.usuario?.email }}</span>
+          </div>
+          <!-- No mostramos teléfono ya que no está en el Pick<usuarioDto> -->
+          <div class="info-item">
+            <i class="pi pi-map-marker"></i>
+            <span>Ubicación registrada</span>
+          </div>
+          
+          <!-- Información específica de cliente - Valoración con estrellas -->
+          <div class="info-item" *ngIf="cliente?.valoracion">
+            <div class="rating-container">
+              <form [formGroup]="estrellas">
+                <p-rating formControlName="value" [readonly]="true"></p-rating>
+              </form>
+              <span class="rating-info">
+                <small *ngIf="cliente?.valoracion">{{ obtenerPromedioValoracionCliente() | number:'1.1-1' }} ({{ cliente?.valoracion?.cantidad_opiniones }} opiniones)</small>
+              </span>
+            </div>
+          </div>
+          
+          <!-- Información específica de rematador -->
+          <div class="info-item" *ngIf="rematador">
+            <i class="pi pi-id-card"></i>
+            <span>Matrícula: {{ rematador.matricula }}</span>
+          </div>
+          
+          <!-- Nota: Los rematadores no tienen valoración en el modelo actual -->
+        </div>
       </div>
-    </div>
-
-    <!-- Imagen de perfil -->
-    <div class="perfil-imagen" *ngIf="cliente?.usuario?.imagen || rematador?.usuario?.imagen">
-      <img [src]="cliente?.usuario?.imagen || rematador?.usuario?.imagen" 
-           alt="Imagen de perfil">
-    </div>
-  </section>
-
-  <!-- Artículos Favoritos -->
-  <section class="favoritos">
-    <h3>Artículos Favoritos</h3>
-    <div class="carousel">
-      <div class="item" *ngFor="let item of favoritos">
-        <img [src]="item.imagen" alt="Artículo" />
-        <p>{{ item.titulo }}</p>
-        <p>{{ item.descripcion }}</p>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <!-- Subastas del Rematador -->
   <section class="historial" *ngIf="rematador">
