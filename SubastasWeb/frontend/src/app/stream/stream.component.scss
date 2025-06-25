@@ -126,13 +126,31 @@ main {
     padding-bottom: 5px;
 	background: #FFFFFF;
 	color: #444444;
-	border-color: #EBEBEB;
-	border-width: 1px;
+	border-color: #888888;
+	border-width: 2px;
 	border-style: solid;
 	border-radius: 6px 6px 6px 6px;
 	font-weight: 500;
 	font-size: 2rem;
 	text-align: center;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: border-color 0.3s ease, box-shadow 0.3s ease;
+	
+	&:focus {
+		border-color: #007bff;
+		box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25);
+		outline: none;
+	}
+	
+	&:hover {
+		border-color: #555555;
+	}
+	
+	&[readonly] {
+		background-color: #f8f9fa;
+		border-color: #6c757d;
+		color: #495057;
+	}
 	
 	@media (max-width: 768px) {
 	    width: 150px;
@@ -145,6 +163,76 @@ main {
 	    font-size: 1.2rem;
 	    height: 35px;
 	    min-width: 80px;
+	}
+}
+
+.timer-input {
+	width: 16vw;
+	min-width: 180px;
+	height: 38px;
+	padding: 5px 8px;
+	background: #f8f9fa;
+	color: #495057;
+	border-color: #007bff;
+	border-width: 2px;
+	border-style: solid;
+	border-radius: 6px 6px 6px 6px;
+	font-weight: 600;
+	font-size: 1.4rem;
+	text-align: center;
+	box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	
+	&.sin-iniciar {
+		background: #fff3cd;
+		border-color: #ffc107;
+		color: #856404;
+		font-size: 1.2rem;
+	}
+	
+	&.activo {
+		background: #d4edda;
+		border-color: #28a745;
+		color: #155724;
+		font-size: 1.6rem;
+	}
+	
+	&.finalizada {
+		background: #f8d7da;
+		border-color: #dc3545;
+		color: #721c24;
+		font-size: 1.6rem;
+	}
+	
+	@media (max-width: 768px) {
+	    width: 200px;
+	    font-size: 1.1rem;
+	    min-width: 150px;
+	    
+	    &.sin-iniciar {
+	        font-size: 1rem;
+	    }
+	    
+	    &.activo, &.finalizada {
+	        font-size: 1.3rem;
+	    }
+	}
+	
+	@media (max-width: 480px) {
+	    width: 180px;
+	    font-size: 0.9rem;
+	    height: 35px;
+	    min-width: 120px;
+	    
+	    &.sin-iniciar {
+	        font-size: 0.8rem;
+	    }
+	    
+	    &.activo, &.finalizada {
+	        font-size: 1.1rem;
+	    }
 	}
 }
 
@@ -339,6 +427,395 @@ hr {
     button {
       width: 40px;
       height: 40px;
+    }
+  }
+}
+
+// Estilos para botones PrimeNG mejorados
+:host ::ng-deep .p-button {
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 6px;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+:host ::ng-deep .p-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.13);
+}
+
+:host ::ng-deep .p-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s cubic-bezier(0.4,0,0.2,1);
+}
+
+// Navegación de lotes con gap
+.botones-navegacion {
+  display: flex;
+  gap: 5rem;
+  margin-bottom: 1rem;
+}
+
+:host ::ng-deep .nav-btn {
+  flex: none;
+  min-width:auto;
+  width: auto;
+}
+
+// Botones de puja
+.botones-puja {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .puja-btn {
+  min-width: 120px;
+}
+
+:host ::ng-deep .puja-custom-btn {
+  min-width: 100px;
+}
+
+// Botón de iniciar subasta
+:host ::ng-deep .iniciar-btn {
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+:host ::ng-deep .iniciar-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+}
+
+// Botón de chat
+:host ::ng-deep .chat-toggle-button {
+  margin-top: 1rem;
+  width: 100%;
+}
+:host ::ng-deep .chat-toggle-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33,150,243,0.18);
+}
+
+// Animación sutil para botones deshabilitados
+:host ::ng-deep .p-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+// Mejora visual para inputs que acompañan botones
+.text-input {
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 6px;
+}
+.text-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+}
+
+// Estilos para el estado de la subasta
+.estado-subasta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    
+    @media (max-width: 768px) {
+        align-items: flex-start;
+    }
+    
+    .estado-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #007bff;
+        background: #e7f3ff;
+        padding: 4px 12px;
+        border-radius: 16px;
+        border: 1px solid #007bff;
+        
+        @media (max-width: 480px) {
+            font-size: 0.9rem;
+            padding: 3px 10px;
+        }
+    }
+    
+    .fecha-programada {
+        font-size: 0.85rem;
+        color: #666;
+        text-align: center;
+        
+        @media (max-width: 768px) {
+            text-align: left;
+        }
+        
+        @media (max-width: 480px) {
+            font-size: 0.8rem;
+        }
+    }
+}
+
+// Estilos para el modal de ganador y mensaje de éxito
+:host ::ng-deep .p-dialog {
+  .p-dialog-mask {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px);
+  }
+  
+  .p-dialog-content {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden;
+  }
+  
+  .p-dialog-header {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    color: white !important;
+    border-bottom: none !important;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1.5rem 2rem !important;
+    
+    .p-dialog-title {
+      font-size: 1.5rem !important;
+      font-weight: 700 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .p-dialog-header-icon {
+      color: white !important;
+      background: rgba(255, 255, 255, 0.2) !important;
+      border-radius: 50% !important;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+      }
+    }
+  }
+}
+
+// Estilos para la sección de pago dentro del modal
+.payment-section {
+  padding: 2rem;
+  text-align: center;
+  
+  h3 {
+    color: #28a745;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    
+    strong {
+      color: #28a745;
+      font-weight: 700;
+    }
+  }
+  
+  .payment-container {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+  }
+  
+  .payment-info {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #e7f3ff;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    
+    p {
+      margin: 0;
+      color: #0066cc;
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// Estilos para el mensaje de ganador (fuera del modal)
+.winner-notification {
+  margin: 1.5rem 0;
+  animation: slideInUp 0.6s ease-out;
+  
+  .alert {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    
+    &.alert-success {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb);
+      color: #155724;
+      border-left: 5px solid #28a745;
+      
+      i {
+        font-size: 2rem;
+        color: #ffc107;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+      
+      strong {
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+      
+      p {
+        margin: 0.5rem 0 0 0;
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+    }
+  }
+  
+  // Estilos específicos para el botón de pago en la notificación
+  .winner-actions {
+    margin-top: 1rem;
+    
+    .payment-button-winner {
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #28a745, #20c997) !important;
+      border: none !important;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+        background: linear-gradient(135deg, #218838, #1e7e34) !important;
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+      
+      .p-button-label {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      
+      .p-button-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+// Estilos para la sección de chat
+.chat-section {
+  margin: 1.5rem 0;
+  
+  .alert-info {
+    background: linear-gradient(135deg, #cce7ff, #b3d9ff);
+    color: #004085;
+    border-left: 5px solid #007bff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    
+    i {
+      margin-right: 0.5rem;
+      color: #28a745;
+    }
+  }
+  
+  .chat-toggle-button {
+    width: 100%;
+    
+    :host ::ng-deep .p-button {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border: none;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+      }
+    }
+  }
+}
+
+// Animación para el mensaje de ganador
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsividad para dispositivos móviles
+@media (max-width: 768px) {
+  :host ::ng-deep .p-dialog {
+    .p-dialog-content {
+      margin: 1rem !important;
+      max-height: 90vh !important;
+      overflow-y: auto;
+    }
+  }
+  
+  .payment-section {
+    padding: 1.5rem;
+    
+    h3 {
+      font-size: 1.3rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
+    
+    .payment-container {
+      margin: 1.5rem 0;
+      padding: 1rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-section {
+    padding: 1rem;
+    
+    h3 {
+      font-size: 1.2rem;
+    }
+    
+    p {
+      font-size: 0.95rem;
+    }
+  }
+  
+  .winner-notification {
+    margin: 1rem 0;
+    
+    .alert {
+      padding: 1rem;
+      
+      &.alert-success {
+        strong {
+          font-size: 1.1rem;
+        }
+        
+        i {
+          font-size: 1.5rem;
+        }
+      }
     }
   }
 }
