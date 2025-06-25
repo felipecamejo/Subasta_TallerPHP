@@ -108,4 +108,9 @@ export class AuthService {
 reenviarVerificacionEmail(email: string): Observable<any> {
   return this.http.post(`${environment.apiUrl}/api/email/resend`, { email });
 }
+
+obtenerDatosAutenticado(): Observable<any> {
+  return this.http.get(`${environment.apiUrl}/api/usuario-autenticado`);
+}
+
 }

@@ -16,6 +16,7 @@ import { VerificacionPendienteComponent } from './verificacion-pendiente/verific
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { RedirectorComponent } from './redirector/redirector.component';
+import { RoleGuard } from './guards/role.guard';
 
 // Dashboards
 import { DashboardClienteComponent } from './dashboards/dashboard-cliente/dashboard-cliente.component';
@@ -57,19 +58,15 @@ export const routes: Routes = [
   { path: 'admin/desaprobar-casas', loadComponent: () => import('./admin/desaprobar-casas/desaprobar-casas.component').then(m => m.DesaprobarCasasComponent) },
   { path: 'admin/usuarios', loadComponent: () => import('./admin/admin-usuarios/admin-usuarios.component').then(m => m.AdminUsuariosComponent), title: 'Administrar usuarios' },
 
-  { path: 'dashboard-cliente', component: DashboardClienteComponent },
-  { path: 'dashboard-rematador', component: DashboardRematadorComponent },
-  { path: 'admin', component: AdminDashboardComponent },
-  { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent },
-  {
-  path: 'testeo',
-  loadComponent: () => import('./testeo/testeo.component').then(m => m.TesteoComponent)
-},
-{
-  path: 'login-google',
-  loadComponent: () =>
-    import('./login-google/login-google.component').then(m => m.LoginGoogleComponent),
-},
+  { path: 'dashboard-cliente', component: DashboardClienteComponent, canActivate: [RoleGuard], data: { roles: ['cliente'] } },
+ 
+  { path: 'dashboard-rematador', component: DashboardRematadorComponent, canActivate: [RoleGuard], data: { roles: ['rematador'] } },
+
+  { path: 'admin', component: AdminDashboardComponent, canActivate: [RoleGuard], data: { roles: ['admin'] } },
+
+  { path: 'dashboard-casa-remate', component: CasaRemateDashboardComponent, canActivate: [RoleGuard], data: { roles: ['casa_remate'] } },
+  
+  { path: 'login-google',   loadComponent: () => import('./login-google/login-google.component').then(m => m.LoginGoogleComponent), },
 
   { path: '**', redirectTo: '' },
 ];

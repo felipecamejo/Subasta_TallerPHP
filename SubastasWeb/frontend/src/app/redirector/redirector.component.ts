@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service'; // ajustá si tu ruta es diferente
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-redirector',
@@ -16,24 +16,29 @@ export class RedirectorComponent implements OnInit {
       return;
     }
 
-    const rol = this.authService.getRol();
-
-    switch (rol) {
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      case 'cliente':
-        this.router.navigate(['/dashboard-cliente']);
-        break;
-      case 'rematador':
-        this.router.navigate(['/dashboard-rematador']);
-        break;
-      case 'casa_remate':
-        this.router.navigate(['/dashboard-casa-remate']);
-        break;
-      default:
-        this.router.navigate(['/login']);
-        break;
-    }
+    this.authService.obtenerDatosAutenticado().subscribe({
+      next: (usuario) => {
+        switch (usuario.rol) {
+          case 'admin':
+            this.router.navigate(['/admin']);
+            break;
+          case 'cliente':
+            this.router.navigate(['/dashboard-cliente']);
+            break;
+          case 'rematador':
+            this.router.navigate(['/dashboard-rematador']);
+            break;
+          case 'casa_remate':
+            this.router.navigate(['/dashboard-casa-remate']);
+            break;
+          default:
+            this.router.navigate(['/login']);
+        }
+      },
+      error: () => {
+        // Si el token es inválido, o expiró
+        this.authService.logout();
+      }
+    });
   }
 }
