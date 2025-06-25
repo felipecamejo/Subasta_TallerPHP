@@ -1,7 +1,7 @@
 <main class="w-full flex flex-wrap">
     <article class="article-1 col-12 md:col-6 flex">
         <iframe class="video-player-1" 
-            *ngIf="videoUrl && videoUrl !== null; else noVideo"
+            *ngIf="videoUrl; else noVideo"
             [src]="videoUrl"
             frameborder="0"
             allowfullscreen
@@ -12,9 +12,8 @@
         <ng-template #noVideo>
             <div class="no-video-placeholder">
                 <p>Stream no disponible</p>
-                <p>ID de video actual: {{ subasta?.videoId || 'No configurado' }}</p>
-                <input type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video" />
-                <p-button label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
+                <input *ngIf="isRematador()" type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video de YouTube" />
+                <p-button *ngIf="isRematador()" label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
             </div>
         </ng-template>
     </article>
@@ -62,7 +61,7 @@
         <div class="winner-notification" *ngIf="esGanador && !pagando">
             <div class="alert alert-success">
                 <i class="pi pi-trophy"></i>
-                <strong>¡Felicidades!</strong> Has ganado la subasta con una puja de <strong>${{pujaActual}}</strong>
+                <strong>¡Felicidades!</strong> Has ganado uno o mas lotes
                 <p>Completa el pago para finalizar tu compra.</p>
                 <div class="winner-actions" style="margin-top: 15px;">
                     <p-button 
@@ -79,6 +78,7 @@
             </div>
         </div>
 
+        <!-- Modal de pago actualizado -->
         <p-dialog 
             header="🏆 ¡Subasta Ganada! - Método de Pago" 
             [(visible)]="pagando" 
@@ -88,12 +88,27 @@
             [resizable]="false"
             [closeOnEscape]="false"
             [dismissableMask]="false"
-            [style]="{width: '90vw', maxWidth: '600px', minHeight: '400px'}"
+            [style]="{width: '90vw', maxWidth: '700px', minHeight: '500px'}"
             styleClass="payment-modal">
 
             <section class="payment-section">
-                <h3>🎉 ¡Felicidades! Has ganado la subasta</h3>
-                <p>Has ganado el <strong>Lote {{indexLotes + 1}}</strong> con una puja de <strong>${{paypalMonto}}</strong></p>
+                <h3>🎉 ¡Felicidades! Has ganado {{ lotesGanadosPorUsuario.length === 1 ? '1 lote' : lotesGanadosPorUsuario.length + ' lotes' }}</h3>
+                
+                <!-- Detalles de lotes ganados -->
+                <div class="lotes-ganados-detalle" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
+                    <h4 style="margin-top: 0; color: #28a745;">📋 Resumen de lotes ganados:</h4>
+                    <div *ngFor="let detalle of lotesGanadosDetalle; let i = index" style="margin-bottom: 10px; padding: 8px; background-color: white; border-radius: 4px;">
+                        <strong>Lote {{ detalle.ganador.numeroLote }}</strong>
+                        <div style="color: #28a745; font-weight: bold; margin-top: 4px;">
+                            Monto ganador: ${{ detalle.ganador.monto }}
+                        </div>
+                    </div>
+                    <hr style="margin: 15px 0;">
+                    <div style="font-size: 18px; font-weight: bold; color: #28a745; text-align: right;">
+                        <strong>Total a pagar: ${{ montoTotalGanador }}</strong>
+                    </div>
+                </div>
+                
                 <p>Por favor, procede con el pago para completar la transacción:</p>
                 <div class="payment-container">
                     <app-paypal 
@@ -104,7 +119,7 @@
                     </app-paypal> 
                 </div>
                 <div class="payment-info">
-                    <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega.</small></p>
+                    <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega de todos tus lotes.</small></p>
                 </div>
             </section>
         </p-dialog>
