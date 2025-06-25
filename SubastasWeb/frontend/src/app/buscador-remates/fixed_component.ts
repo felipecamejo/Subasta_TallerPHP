@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Inject, PLATFORM_ID, OnInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -13,7 +13,6 @@ import { TimezoneService } from '../../services/timezone.service';
 import { UserTimezonePipe } from '../shared/pipes/user-timezone.pipe';
 import { TimezoneSelectorComponent } from '../shared/timezone-selector/timezone-selector.component';
 import { TooltipModule } from 'primeng/tooltip';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-buscador-remates',
@@ -31,13 +30,14 @@ import { Subscription } from 'rxjs';
   templateUrl: './buscador-remates.component.html',
   styleUrl: './buscador-remates.component.scss'
 })
-export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestroy {
-  private subscriptions: Subscription[] = [];
-  private cargandoSubastas: boolean = false;
+export class BuscadorRematesComponent implements AfterViewInit {
 
   mostrandoMapa: boolean = false;
   showTimezoneSelector: boolean = false;
   currentTimezone: string = '';
+
+  // Variable para saber si el usuario ha establecido manualmente la zona horaria
+  private hasManuallySetTimezone: boolean = false;
 
   mostrarMapa() {
     this.mostrandoMapa = true;
@@ -229,26 +229,21 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
 
   ngOnInit() {
     // Suscribirse a los cambios de zona horaria
-    const timezoneSub = this.timezoneService.userTimezone$.subscribe(timezone => {
+    this.timezoneService.userTimezone$.subscribe(timezone => {
       this.currentTimezone = timezone;
-      // Solo actualizamos la UI, no recargamos datos
+      // Recargar datos cuando cambia la zona horaria
+      this.cargarSubastas();
     });
-    this.subscriptions.push(timezoneSub);
 
-    // Cargar datos solo una vez al inicializar
     this.cargarSubastas();
   }
   
   cargarSubastas() {
-    // Evitar múltiples cargas simultáneas
-    if (this.cargandoSubastas) return;
-    this.cargandoSubastas = true;
-    
-    const subastasSub = this.subastaService.getSubastas().subscribe({
+    this.subastaService.getSubastas().subscribe({
       next: (data) => {
         this.subastas = data;
         
-        // Convertir fechas a la zona horaria del usuario
+        // Establecer zona horaria basada en coordenadas
         this.convertirFechasSubastas();
         
         // Actualizar marcadores del mapa si ya está inicializado
@@ -257,18 +252,15 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
         }
         
         this.mapaLoading = false;
-        this.cargandoSubastas = false;
         console.log('Carga de subastas completada');
-      }
-      , error: (error) => {
+      },
+      error: (error) => {
         console.error('Error al cargar las subastas:', error);
         this.mapaLoading = false;
-        this.cargandoSubastas = false;
       }
     });
-    this.subscriptions.push(subastasSub);
     
-    const categoriasSub = this.categoriaService.getCategorias().subscribe({
+    this.categoriaService.getCategorias().subscribe({
       next: (data) => {
         
         this.categorias = data.map(categoria => ({
@@ -289,13 +281,12 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
         this.categorias.unshift(this.categoriaDefault);
         
         this.categoriasLoading = false;
-      }
-      , error: (error) => {
+      },
+      error: (error) => {
         console.error('Error al cargar las categorías:', error);
         this.categoriasLoading = false;
       }
     });
-    this.subscriptions.push(categoriasSub);
   }
 
   /**
@@ -304,21 +295,12 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   convertirFechasSubastas() {
     if (!this.subastas || this.subastas.length === 0) return;
     
-    // Solo establecer la zona horaria una vez durante la carga inicial
-    if (!this.zonaHorariaEstablecida) {
-      const primeraSubasta = this.subastas[0];
-      if (primeraSubasta.latitud && primeraSubasta.longitud && !this.hasManuallySetTimezone) {
-        this.timezoneService.setTimezoneFromLocation(primeraSubasta.latitud, primeraSubasta.longitud);
-        this.zonaHorariaEstablecida = true;
-      }
+    // Si tenemos coordenadas en la primera subasta, usarlas para determinar la zona horaria
+    const primeraSubasta = this.subastas[0];
+    if (primeraSubasta.latitud && primeraSubasta.longitud && !this.hasManuallySetTimezone) {
+      this.timezoneService.setTimezoneFromLocation(primeraSubasta.latitud, primeraSubasta.longitud);
     }
-    
-    // No necesitamos modificar las subastas, solo actualizar la zona horaria
   }
-  
-  // Variables para control de zona horaria
-  private hasManuallySetTimezone: boolean = false;
-  private zonaHorariaEstablecida: boolean = false;
   
   /**
    * Abre el selector de zona horaria
@@ -347,13 +329,9 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     const fechaFin = new Date(subasta.fecha);
     fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
     
-    // Convertir fechas a zona horaria del usuario
-    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
-    
-    if (ahora < inicio) {
+    if (ahora < fechaInicio) {
       return 'pendiente';
-    } else if (ahora > fin) {
+    } else if (ahora > fechaFin) {
       return 'finalizada';
     } else {
       return 'activa';
@@ -405,6 +383,60 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
       return `${prefijo} ${diffMins}m`;
     }
   }
+  
+  /**
+   * Formatea la fecha de una subasta para mostrarla en la tarjeta
+   * @param fecha Fecha de la subasta
+   * @returns Fecha formateada
+   */
+  formatearFechaSubasta(fecha: Date | string): string {
+    if (!fecha) return 'Fecha no disponible';
+    
+    // Convierte la fecha a la zona horaria del usuario
+    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
+    
+    // Formato: "24 Jun 2025, 15:30"
+    return this.timezoneService.formatDate(fechaLocal, 'datetime');
+  }
+  
+  /**
+   * Obtiene el estado CSS de una subasta para aplicar estilos
+   * @param subasta La subasta a evaluar
+   * @returns Clase CSS correspondiente al estado
+   */
+  getEstadoSubasta(subasta: subastaDto): string {
+    return this.obtenerEstadoSubasta(subasta);
+  }
+  
+  /**
+   * Obtiene el ícono correspondiente al estado de la subasta
+   * @param subasta La subasta a evaluar
+   * @returns Clase del ícono de PrimeNG
+   */
+  getIconoEstado(subasta: subastaDto): string {
+    const estado = this.obtenerEstadoSubasta(subasta);
+    
+    switch (estado) {
+      case 'pendiente':
+        return 'pi-clock';
+      case 'activa':
+        return 'pi-play';
+      case 'finalizada':
+        return 'pi-check';
+      default:
+        return 'pi-info-circle';
+    }
+  }
+  
+  /**
+   * Obtiene un mensaje descriptivo del tiempo restante
+   * @param subasta La subasta a evaluar
+   * @returns Mensaje de tiempo restante
+   */
+  getTiempoRestanteSubasta(subasta: subastaDto): string {
+    return this.obtenerTiempoRestante(subasta);
+  }
+  
   //-------------------------mapa-----------------------
 
   clientelatLng = { lat: -33.4489, lng: -70.6693 }; 
@@ -516,65 +548,5 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
       this.map.remove();
       this.map = undefined;
     }
-  }
-
-  /**
-   * Formatea la fecha de una subasta para mostrarla en la tarjeta
-   * @param fecha Fecha de la subasta
-   * @returns Fecha formateada
-   */
-  formatearFechaSubasta(fecha: Date | string): string {
-    if (!fecha) return 'Fecha no disponible';
-    
-    // Convierte la fecha a la zona horaria del usuario
-    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
-    
-    // Formato: "24 Jun 2025, 15:30"
-    return this.timezoneService.formatDate(fechaLocal, 'datetime');
-  }
-  
-  /**
-   * Obtiene el estado CSS de una subasta para aplicar estilos
-   * @param subasta La subasta a evaluar
-   * @returns Clase CSS correspondiente al estado
-   */
-  getEstadoSubasta(subasta: subastaDto): string {
-    const estado = this.obtenerEstadoSubasta(subasta);
-    return estado;
-  }
-  
-  /**
-   * Obtiene el ícono correspondiente al estado de la subasta
-   * @param subasta La subasta a evaluar
-   * @returns Clase del ícono de PrimeNG
-   */
-  getIconoEstado(subasta: subastaDto): string {
-    const estado = this.obtenerEstadoSubasta(subasta);
-    
-    switch (estado) {
-      case 'pendiente':
-        return 'pi-clock';
-      case 'activa':
-        return 'pi-play';
-      case 'finalizada':
-        return 'pi-check';
-      default:
-        return 'pi-info-circle';
-    }
-  }
-  
-  /**
-   * Obtiene un mensaje descriptivo del tiempo restante
-   * @param subasta La subasta a evaluar
-   * @returns Mensaje de tiempo restante
-   */
-  getTiempoRestanteSubasta(subasta: subastaDto): string {
-    const tiempo = this.obtenerTiempoRestante(subasta);
-    return tiempo;
-  }
-  
-  ngOnDestroy() {
-    // Cancelar todas las suscripciones para evitar fugas de memoria
-    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }
