@@ -71,7 +71,11 @@
       header="Configuración de zona horaria" 
       [(visible)]="showTimezoneSelector"
       [modal]="true"
-      [style]="{ width: '450px' }">
+      [style]="{ width: '500px', maxWidth: '95vw' }"
+      [baseZIndex]="1000"
+      [draggable]="false"
+      [resizable]="false"
+      styleClass="timezone-dialog">
       
       <app-timezone-selector></app-timezone-selector>
 

@@ -26,17 +26,24 @@ interface TimezoneOption {
   template: `
     <div class="timezone-selector">
       <h3>Configuración de Zona Horaria</h3>
-      <p>Zona horaria actual: <strong>{{ currentTimezone }}</strong></p>
+      <p>Tu zona horaria actual es: <strong>{{ currentTimezone }}</strong></p>
       
       <div class="timezone-dropdown">
+        <label for="timezoneSelector">Selecciona una nueva zona horaria:</label>
         <p-dropdown 
+          id="timezoneSelector"
           [options]="timezones" 
           [(ngModel)]="selectedTimezone" 
           optionLabel="label" 
-          placeholder="Selecciona tu zona horaria"
+          placeholder="Buscar una zona horaria..."
           [filter]="true"
           filterBy="label">
         </p-dropdown>
+      </div>
+      
+      <div class="timezone-info">
+        <p>La hora actual en esta zona horaria es: <strong>{{ currentTime }}</strong></p>
+        <p *ngIf="isTimezoneChanged()">Al guardar, todas las fechas y horas se mostrarán en esta zona horaria.</p>
       </div>
       
       <div class="timezone-actions">
@@ -44,20 +51,16 @@ interface TimezoneOption {
           label="Usar zona horaria del sistema" 
           icon="pi pi-sync" 
           (onClick)="useSystemTimezone()"
-          styleClass="p-button-secondary p-button-sm">
+          styleClass="p-button-secondary">
         </p-button>
         
         <p-button 
-          label="Guardar" 
+          label="Guardar cambios" 
           icon="pi pi-save" 
           (onClick)="saveTimezone()"
           [disabled]="!isTimezoneChanged()"
-          styleClass="p-button-sm">
+          severity="primary">
         </p-button>
-      </div>
-      
-      <div class="timezone-info">
-        <p>La hora actual en tu zona horaria es: <strong>{{ currentTime }}</strong></p>
       </div>
       
       <p-toast></p-toast>
@@ -65,26 +68,63 @@ interface TimezoneOption {
   `,
   styles: [`
     .timezone-selector {
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 8px;
+      padding: 1.5rem;
+      background: #ffffff;
+      border-radius: 6px;
+      margin-bottom: 0;
+      box-shadow: none;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    
+    h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.2rem;
       margin-bottom: 1rem;
     }
     
+    p {
+      margin: 0.5rem 0;
+      line-height: 1.5;
+    }
+    
     .timezone-dropdown {
-      margin: 1rem 0;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+    
+    .timezone-dropdown :deep(.p-dropdown) {
+      width: 100%;
     }
     
     .timezone-actions {
       display: flex;
-      gap: 1rem;
-      margin: 1rem 0;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      justify-content: space-between;
     }
     
     .timezone-info {
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       font-size: 0.9rem;
-      color: #666;
+      background-color: #f8f9fa;
+      padding: 0.75rem;
+      border-radius: 4px;
+      border-left: 3px solid #0d6efd;
+    }
+    
+    .timezone-info strong {
+      color: #0d6efd;
+    }
+    
+    @media (max-width: 480px) {
+      .timezone-actions {
+        flex-direction: column;
+      }
+      
+      .timezone-actions :deep(.p-button) {
+        width: 100%;
+      }
     }
   `]
 })
