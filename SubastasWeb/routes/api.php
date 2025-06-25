@@ -18,6 +18,7 @@ use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\TimezoneController;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -28,10 +29,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/register-casa-remate', [AuthController::class, 'registerCasaRemate']);
 Route::post('/mensaje', [MensajeController::class, 'enviar']);
-Route::post('/registro/google', [AuthController::class, 'loginWithGoogle']);
-Route::post('/register-google-user', [AuthController::class, 'registerGoogleUser']);
-Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
-Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
+
+// Rutas de zona horaria
+Route::get('/timezones', [TimezoneController::class, 'getTimezones']);
+Route::post('/timezone/convert', [TimezoneController::class, 'convertTime']);
+Route::get('/timezone/info', [TimezoneController::class, 'getTimezoneInfo']);
+Route::get('/subasta/timezone/{subasta_id}', [TimezoneController::class, 'formatSubastaTime']);
 
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);

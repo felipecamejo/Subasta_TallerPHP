@@ -64,6 +64,22 @@
         color: #2196f3;
       }
     }
+    
+    .profile-link {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i {
+        font-size: 1.2rem;
+        color: #495057;
+        
+        &:hover {
+          color: #2196f3;
+        }
+      }
+    }
 
     .social-icons {
       display: flex;

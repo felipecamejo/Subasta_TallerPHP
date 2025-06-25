@@ -46,23 +46,8 @@ export class LoginComponent {
           usuario: res.usuario
         });
 
-        // Redirigir según rol
-        switch (res.rol) {
-          case 'cliente':
-            this.router.navigate(['/dashboard-cliente']);
-            break;
-          case 'rematador':
-            this.router.navigate(['/dashboard-rematador']);
-            break;
-          case 'casa_remate':
-            this.router.navigate(['/dashboard-casa-remate']);
-            break;
-          case 'admin':
-            this.router.navigate(['/admin']);
-            break;
-          default:
-            this.router.navigate(['/']);
-        }
+        // Redirigir siempre al buscador de remates, independientemente del rol
+        this.router.navigate(['/buscadorRemates']);
       },
       error: (err) => {
         if (err.status === 403) {
