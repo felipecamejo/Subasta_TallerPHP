@@ -33,5 +33,22 @@ class ClienteSeeder extends Seeder
             'valoracion_total' => 20, // 20 puntos en total 
             'cantidad_opiniones' => 4, // 4 opiniones recibidas (promedio será 5.0)
         ]);
+
+        $clienteUsuario = Usuario::create([
+            'nombre' => 'Audrey Hepburn',
+            'cedula' => '333323233',
+            'email' => 'audreyhepburn@example.com',
+            'telefono' => '09932211',
+            'imagen' => null,
+            'contrasenia' => Hash::make('123456789'),
+            'latitud' => -30.9011,
+            'longitud' => -60.1645,
+            'email_verified_at' => now(),
+        ]);
+
+        Cliente::create([
+            'usuario_id' => $clienteUsuario->id,
+            'calificacion' => 3,
+        ]);
     }
 }

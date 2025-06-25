@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Puja;
 use App\Models\Lote;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
@@ -122,15 +123,33 @@ class PujaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate( [
-            'fechaHora' => 'required|date',
-            'monto' => 'required|numeric',
-            'cliente_id' => 'nullable|exists:clientes,usuario_id',
-            'lote_id' => 'required|exists:lotes,id',
-        ]);
-
+        // Log de datos recibidos
+        \Log::info('=== INICIO CREACION PUJA ===');
+        \Log::info('Datos recibidos:', $request->all());
 
         try {
+            $request->validate( [
+                'fechaHora' => 'required|date',
+                'monto' => 'required|numeric',
+                'cliente_id' => 'nullable|exists:usuarios,id',
+                'lote_id' => 'required|exists:lotes,id',
+            ]);
+            
+            \Log::info('Validación pasada exitosamente');
+
+            // Si se proporciona un cliente_id, asegurar que existe un registro de cliente
+            if ($request->cliente_id) {
+                \Log::info('Verificando/creando cliente para usuario_id: ' . $request->cliente_id);
+                $this->ensureClienteExists($request->cliente_id);
+                \Log::info('Cliente verificado/creado exitosamente');
+            }
+
+            \Log::info('Intentando crear puja con datos:', [
+                'fechaHora' => $request->fechaHora,
+                'monto' => $request->monto,
+                'cliente_id' => $request->cliente_id,
+                'lote_id' => $request->lote_id,
+            ]);
             $puja = Puja::create([
                 'fechaHora' => $request->fechaHora,
                 'monto' => $request->monto,
@@ -138,16 +157,38 @@ class PujaController extends Controller
                 'lote_id' => $request->lote_id,
             ]);
 
+            \Log::info('Puja creada con ID: ' . $puja->id);
+
             $puja->load(['cliente.usuario', 'cliente.valoracion', 'lote', 'factura']);
+            \Log::info('Relaciones cargadas exitosamente');
 
-            // Notificar al WebSocket sobre la nueva puja
-            $this->notifyWebSocket($puja);
+            // Notificar al WebSocket sobre la nueva puja (no fallar si esto falla)
+            try {
+                \Log::info('Intentando notificar WebSocket');
+                $this->notifyWebSocket($puja);
+                \Log::info('WebSocket notificado exitosamente');
+            } catch (\Exception $wsError) {
+                \Log::error('Error en WebSocket notification: ' . $wsError->getMessage());
+                // Continuar sin fallar la creación de la puja
+            }
 
+            \Log::info('=== PUJA CREADA EXITOSAMENTE ===');
             return response()->json($puja, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Error de validación:', $e->errors());
+            return response()->json([
+                'error' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Throwable $e) {
+            \Log::error('=== ERROR CREANDO PUJA ===');
+            \Log::error('Error creating puja: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
             return response()->json([
                 'error' => 'Error al crear la puja',
-                'message' => $e->getMessage()
+                'message' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor',
+                'details' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
     }
@@ -401,6 +442,36 @@ class PujaController extends Controller
         } catch (\Exception $e) {
             // Log error but don't fail the puja creation
             \Log::error('Error notificando WebSocket: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Asegurar que existe un registro de cliente para el usuario
+     */
+    private function ensureClienteExists($usuarioId)
+    {
+        try {
+            \Log::info('Buscando cliente con usuario_id: ' . $usuarioId);
+            $cliente = \App\Models\Cliente::where('usuario_id', $usuarioId)->first();
+            
+            if (!$cliente) {
+                \Log::info('Cliente no encontrado, creando nuevo registro');
+                // Crear el registro de cliente si no existe
+                $cliente = \App\Models\Cliente::create([
+                    'usuario_id' => $usuarioId,
+                    'calificacion' => null
+                ]);
+                
+                \Log::info('Cliente creado automáticamente para usuario_id: ' . $usuarioId . ' con ID: ' . $cliente->usuario_id);
+            } else {
+                \Log::info('Cliente encontrado: ' . $cliente->usuario_id);
+            }
+            
+            return $cliente;
+        } catch (\Exception $e) {
+            \Log::error('Error en ensureClienteExists: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
         }
     }
 

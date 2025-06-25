@@ -11,9 +11,6 @@ import { subastaDto } from '../../models/subastaDto';
 import { RatingModule } from 'primeng/rating';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
-import { PayPalComponent } from '../pay-pal/pay-pal.component';
-
-
 @Component({
   selector: 'app-perfil',
   standalone: true,
