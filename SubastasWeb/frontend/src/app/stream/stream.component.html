@@ -57,8 +57,8 @@
             </div>
         </div>
 
-        <!-- Mensaje de ganador (solo se muestra cuando la subasta termina) -->
-        <div class="winner-notification" *ngIf="esGanador && !pagando">
+        <!-- Mensaje de ganador con botón de pago (solo si no ha pagado) -->
+        <div class="winner-notification" *ngIf="mostrarBotonPago">
             <div class="alert alert-success">
                 <i class="pi pi-trophy"></i>
                 <strong>¡Felicidades!</strong> Has ganado uno o mas lotes
@@ -78,6 +78,16 @@
             </div>
         </div>
 
+        <!-- Mensaje de pago completado (solo si ya pagó) -->
+        <div class="payment-completed-notification" *ngIf="mostrarMensajePagado">
+            <div class="alert alert-success">
+                <i class="pi pi-check-circle"></i>
+                <strong>¡Pago Completado!</strong> Has completado el pago de tus lotes ganados.
+                <p>Total pagado: <strong>${{ montoTotalGanador }}</strong></p>
+                <p><small>El chat con la casa de remate está disponible para coordinar la entrega.</small></p>
+            </div>
+        </div>
+
         <!-- Modal de pago actualizado -->
         <p-dialog 
             header="🏆 ¡Subasta Ganada! - Método de Pago" 
@@ -88,10 +98,12 @@
             [resizable]="false"
             [closeOnEscape]="false"
             [dismissableMask]="false"
-            [style]="{width: '90vw', maxWidth: '700px', minHeight: '500px'}"
-            styleClass="payment-modal">
+            [style]="{width: '90vw', maxWidth: '700px', maxHeight: '90vh'}"
+            styleClass="payment-modal"
+            [contentStyle]="{'overflow': 'auto', 'max-height': '70vh', 'padding': '20px'}"
+            [baseZIndex]="10000">
 
-            <section class="payment-section">
+            <section class="payment-section" style="overflow-y: auto; max-height: 60vh;">
                 <h3>🎉 ¡Felicidades! Has ganado {{ lotesGanadosPorUsuario.length === 1 ? '1 lote' : lotesGanadosPorUsuario.length + ' lotes' }}</h3>
                 
                 <!-- Detalles de lotes ganados -->
@@ -109,17 +121,34 @@
                     </div>
                 </div>
                 
-                <p>Por favor, procede con el pago para completar la transacción:</p>
-                <div class="payment-container">
-                    <app-paypal 
-                        *ngIf="pagando && paypalComponentKey"
-                        [amount]="paypalMonto"
-                        (paymentSuccess)="onPaymentSuccess($event)"
-                        (paymentError)="onPaymentError($event)">
-                    </app-paypal> 
+                <!-- Mostrar PayPal solo si NO ha pagado -->
+                <div *ngIf="!pagado">
+                    <p>Por favor, procede con el pago para completar la transacción:</p>
+                    <div class="payment-container" style="min-height: 300px; overflow: visible;">
+                        <app-paypal 
+                            *ngIf="pagando && paypalComponentKey"
+                            [amount]="paypalMonto"
+                            (paymentSuccess)="onPaymentSuccess($event)"
+                            (paymentError)="onPaymentError($event)">
+                        </app-paypal> 
+                    </div>
+                    <div class="payment-info">
+                        <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega de todos tus lotes.</small></p>
+                    </div>
                 </div>
-                <div class="payment-info">
-                    <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega de todos tus lotes.</small></p>
+
+                <!-- Mostrar mensaje de pago completado si YA pagó -->
+                <div *ngIf="pagado" style="text-align: center; padding: 20px;">
+                    <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                        <i class="pi pi-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
+                        <h3 style="color: #28a745; margin: 15px 0;">¡Pago Completado Exitosamente! ✅</h3>
+                        <p style="font-size: 16px; margin: 10px 0;">
+                            Has pagado un total de <strong style="color: #28a745;">${{ montoTotalGanador }}</strong>
+                        </p>
+                        <p style="color: #6c757d; margin: 15px 0;">
+                            💬 El chat con la casa de remate está disponible para coordinar la entrega de tus artículos.
+                        </p>
+                    </div>
                 </div>
             </section>
         </p-dialog>
