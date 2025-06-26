@@ -24,6 +24,22 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\PasswordReset;
 
+Route::get('/debug-log', function () {
+    Log::info(' Probando log en Laravel desde /debug-log');
+
+    return response()->json(['mensaje' => 'Log generado. Revisa storage/logs/laravel.log']);
+});
+
+Route::middleware('auth:sanctum')->get('/debug-admin', function (Request $request) {
+    return response()->json([
+        'id' => $request->user()?->id,
+        'email' => $request->user()?->email,
+        'rol' => $request->user()?->rol,
+        'admin' => $request->user()?->admin ? true : false,
+        'token' => $request->bearerToken(),
+    ]);
+});
+
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -35,7 +51,6 @@ Route::post('/register-google-casa-remate', [AuthController::class, 'registerGoo
 Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
 Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
 Route::post('/email/resend', [AuthController::class, 'reenviarEmailVerificacion']);
-
 
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
@@ -68,13 +83,11 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    Route::get('/usuario-autenticado', [UsuarioController::class, 'autenticado']);
-
+    Route::get('/usuario-autenticado', [AuthController::class, 'usuarioAutenticado']);
+    
     Route::get('/check-auth', function () {
         return response()->json(['authenticated' => true]);
     });
-
-    
 
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);
@@ -98,12 +111,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
 
-    Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
-        Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
-        Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
-        Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
-        Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
-        Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
-        Route::get('/admin/usuarios-por-rol', [AdminController::class, 'usuariosPorRol']); 
+    Route::middleware(['auth:sanctum', 'isAdmin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+        Route::get('/casas-activas', [AdminController::class, 'casasActivas']);
+        Route::post('/aprobar-casa/{usuarioId}', [AdminController::class, 'aprobarCasa']);
+        Route::post('/desaprobar-casa/{usuarioId}', [AdminController::class, 'desaprobarCasa']);
+        Route::delete('/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+        Route::get('/usuarios', [AdminController::class, 'usuariosPorRol']);
     });
 });

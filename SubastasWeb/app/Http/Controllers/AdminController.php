@@ -9,6 +9,7 @@ use App\Models\Rematador;
 use App\Models\CasaRemate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use OpenApi\Annotations as OA;
 
 /**
@@ -67,14 +68,26 @@ class AdminController extends Controller
     * )
     */
 
-    public function casasPendientes(){
-
+   public function casasPendientes()
+{
     try {
+        // Verifica si el usuario está autenticado
+        $user = Auth::user();  // Obtiene el usuario autenticado
+
+        // Si el usuario no está autenticado, devuelve un error 401
+        if (!$user) {
+            return response()->json([
+                'error' => 'Token inválido',
+            ], 401);
+        }
+
+        // Si el token es válido, procede con la lógica original
         $pendientes = CasaRemate::where('activo', false)
             ->with('usuario')
             ->paginate(10); 
 
         return response()->json($pendientes);
+
     } catch (\Exception $e) {
         return response()->json([
             'error' => 'Error al obtener casas pendientes',
@@ -82,7 +95,6 @@ class AdminController extends Controller
         ], 500);
     }
 }
-
 
     /**
     * @OA\Get(

@@ -11,8 +11,9 @@ class IsAdmin
     {
         $usuario = $request->user();
 
-        if (!$usuario || $usuario->rol !== 'admin') {
-            abort(403, 'Acceso denegado. Solo administradores.');
+        // Verifica si existe la relación con el modelo Admin
+        if (!$usuario || !$usuario->admin()->exists()) {
+            return response()->json(['message' => 'Acceso denegado. Solo administradores.'], 403);
         }
 
         return $next($request);

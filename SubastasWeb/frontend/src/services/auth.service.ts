@@ -28,7 +28,7 @@ export class AuthService {
     localStorage.setItem('token', authData.token);
     localStorage.setItem('rol', authData.rol);
     localStorage.setItem('usuario_id', authData.usuario_id.toString());
-    this.isAuthenticatedSubject.next(true);
+    this.isAuthenticatedSubject.next(true); // Cambia el estado de autenticación
   }
 
   loginYRedirigir(authData: AuthData): void {
@@ -60,7 +60,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('rol');
     localStorage.removeItem('usuario_id');
-    this.isAuthenticatedSubject.next(false);
+    this.isAuthenticatedSubject.next(false); // Cambia el estado de autenticación
     this.router.navigate(['/login']);
   }
 
@@ -70,6 +70,7 @@ export class AuthService {
 
   getToken(): string | null {
     const auth = this.getAuthObject();
+    // Primero verifica si hay un token en el objeto 'auth' o en 'localStorage'
     return auth?.token || localStorage.getItem('token');
   }
 
@@ -102,15 +103,15 @@ export class AuthService {
 
   private hasToken(): boolean {
     const auth = this.getAuthObject();
+    // Verifica si el token está presente
     return !!auth?.token || !!localStorage.getItem('token');
   }
 
-reenviarVerificacionEmail(email: string): Observable<any> {
-  return this.http.post(`${environment.apiUrl}/api/email/resend`, { email });
-}
+  reenviarVerificacionEmail(email: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/email/resend`, { email });
+  }
 
-obtenerDatosAutenticado(): Observable<any> {
-  return this.http.get(`${environment.apiUrl}/api/usuario-autenticado`);
-}
-
+  obtenerDatosAutenticado(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/api/usuario-autenticado`);
+  }
 }

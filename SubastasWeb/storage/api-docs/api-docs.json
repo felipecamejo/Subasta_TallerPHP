@@ -396,6 +396,91 @@
                 ]
             }
         },
+        "/api/admin/usuarios": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Listar usuarios por rol (paginado)",
+                "operationId": "313ca5c896442b45a40979113c7cb2b7",
+                "parameters": [
+                    {
+                        "name": "rol",
+                        "in": "query",
+                        "description": "Rol de los usuarios a listar: cliente, rematador o casa_remate",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cliente",
+                                "rematador",
+                                "casa_remate"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de resultados por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de usuarios por rol",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer"
+                                        },
+                                        "last_page": {
+                                            "type": "integer"
+                                        },
+                                        "per_page": {
+                                            "type": "integer"
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Rol inválido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/articulos": {
             "get": {
                 "tags": [
@@ -581,12 +666,51 @@
                 }
             }
         },
+        "/api/forgot-password": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Enviar enlace para restablecer contraseña",
+                "operationId": "27192d4d04cb48a2f83216053554a56c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "usuario@ejemplo.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Enlace de restablecimiento enviado."
+                    },
+                    "422": {
+                        "description": "Email no válido o no registrado."
+                    },
+                    "500": {
+                        "description": "Error al enviar el enlace."
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Iniciar sesión",
+                "summary": "Inicio de sesión",
                 "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
                 "requestBody": {
                     "required": true,
@@ -600,11 +724,12 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "example": "test@example.com"
+                                        "example": "usuario@ejemplo.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "123456"
+                                        "format": "password",
+                                        "example": "12345678"
                                     }
                                 },
                                 "type": "object"
@@ -614,21 +739,38 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Token generado correctamente",
+                        "description": "Login exitoso con token de acceso.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "token": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "1|abcde12345..."
                                         },
                                         "usuario_id": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "example": 12
                                         },
                                         "rol": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "cliente"
                                         },
                                         "usuario": {
+                                            "properties": {
+                                                "nombre": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "juan@example.com"
+                                                },
+                                                "imagen": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/avatar.jpg"
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -637,8 +779,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Credenciales inválidas"
+                    "403": {
+                        "description": "Email no verificado."
+                    },
+                    "422": {
+                        "description": "Credenciales inválidas."
                     }
                 }
             }
@@ -648,32 +793,16 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Cerrar sesión del usuario autenticado",
+                "summary": "Cerrar sesión",
                 "operationId": "fe8f3429cd6979b3b4517e186505f9f9",
                 "responses": {
                     "200": {
-                        "description": "Sesión cerrada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Sesión cerrada correctamente"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado"
+                        "description": "Sesión cerrada con éxito."
                     }
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -683,7 +812,7 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Registrar un nuevo usuario",
+                "summary": "Registro de cliente o rematador",
                 "operationId": "8a56853624e025573120a09a4c75d468",
                 "requestBody": {
                     "required": true,
@@ -692,37 +821,31 @@
                             "schema": {
                                 "required": [
                                     "nombre",
-                                    "cedula",
                                     "email",
                                     "telefono",
+                                    "cedula",
+                                    "latitud",
+                                    "longitud",
+                                    "rol",
                                     "contrasenia",
-                                    "rol"
+                                    "contrasenia_confirmation"
                                 ],
                                 "properties": {
                                     "nombre": {
                                         "type": "string",
                                         "example": "Ana Gómez"
                                     },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "45678901"
-                                    },
                                     "email": {
                                         "type": "string",
-                                        "example": "ana@example.com"
+                                        "example": "ana@ejemplo.com"
                                     },
                                     "telefono": {
                                         "type": "string",
-                                        "example": "098765432"
+                                        "example": "099123456"
                                     },
-                                    "imagen": {
+                                    "cedula": {
                                         "type": "string",
-                                        "example": "https://example.com/avatar.jpg",
-                                        "nullable": true
-                                    },
-                                    "contrasenia": {
-                                        "type": "string",
-                                        "example": "clave123"
+                                        "example": "11223344"
                                     },
                                     "latitud": {
                                         "type": "number",
@@ -738,104 +861,24 @@
                                         "type": "string",
                                         "enum": [
                                             "cliente",
-                                            "rematador",
-                                            "casa_remate"
-                                        ]
+                                            "rematador"
+                                        ],
+                                        "example": "cliente"
                                     },
                                     "matricula": {
+                                        "description": "Solo requerido si el rol es rematador",
                                         "type": "string",
-                                        "example": "MAT456",
-                                        "nullable": true
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "FISC999",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Usuario registrado exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Usuario registrado exitosamente. Se envió un correo de verificación."
-                                        },
-                                        "usuario_id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación"
-                    }
-                }
-            }
-        },
-        "/api/register-casa-remate": {
-            "post": {
-                "tags": [
-                    "Autenticación"
-                ],
-                "summary": "Registrar una nueva casa de remate",
-                "operationId": "69aa36276e8cba46ef0c229592b7325d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "nombre",
-                                    "idFiscal",
-                                    "email",
-                                    "telefono",
-                                    "contrasenia",
-                                    "latitud",
-                                    "longitud"
-                                ],
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string",
-                                        "example": "Casa Los Robles"
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "CR123456"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "casa@remates.com"
-                                    },
-                                    "telefono": {
-                                        "type": "string",
-                                        "example": "092334455"
+                                        "example": "MAT456"
                                     },
                                     "contrasenia": {
                                         "type": "string",
-                                        "example": "supersegura123"
+                                        "format": "password",
+                                        "example": "claveSegura123"
                                     },
-                                    "latitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -34.9
-                                    },
-                                    "longitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -56.15
+                                    "contrasenia_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "claveSegura123"
                                     }
                                 },
                                 "type": "object"
@@ -845,114 +888,13 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Casa de remate registrada exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Casa de remate registrada exitosamente. Se envió un correo de verificación. Queda pendiente de aprobación del admin."
-                                        },
-                                        "usuario_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Registro exitoso. Verifica tu correo."
                     },
                     "422": {
-                        "description": "Error de validación"
-                    }
-                }
-            }
-        },
-        "/api/registro/google": {
-            "post": {
-                "tags": [
-                    "Autenticación"
-                ],
-                "summary": "Iniciar sesión o registrarse con Google",
-                "operationId": "ddb728cc149e42ee7132597b03ccc924",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "token",
-                                    "rol"
-                                ],
-                                "properties": {
-                                    "token": {
-                                        "type": "string",
-                                        "example": "GOOGLE_ID_TOKEN"
-                                    },
-                                    "rol": {
-                                        "type": "string",
-                                        "enum": [
-                                            "cliente",
-                                            "rematador",
-                                            "casa_remate"
-                                        ],
-                                        "example": "rematador"
-                                    },
-                                    "matricula": {
-                                        "type": "string",
-                                        "example": "MAT1234",
-                                        "nullable": true
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "CR9876",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Inicio de sesión o registro exitoso",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "access_token": {
-                                            "type": "string",
-                                            "example": "token123"
-                                        },
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
-                                        },
-                                        "usuario_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "rol": {
-                                            "type": "string",
-                                            "example": "rematador"
-                                        },
-                                        "usuario": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Error de validación."
                     },
-                    "403": {
-                        "description": "La casa de remate aún no fue aprobada por un administrador"
-                    },
-                    "422": {
-                        "description": "Error de validación"
+                    "500": {
+                        "description": "Error al registrar el usuario."
                     }
                 }
             }
@@ -962,7 +904,7 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Completar registro de usuario con Google",
+                "summary": "Registro de cliente o rematador con cuenta de Google",
                 "operationId": "4c5e1711bebfc9f444bc29141c1ed8a3",
                 "requestBody": {
                     "required": true,
@@ -970,74 +912,58 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "google_id",
                                     "nombre",
-                                    "cedula",
                                     "email",
                                     "telefono",
-                                    "contrasenia",
+                                    "cedula",
                                     "latitud",
                                     "longitud",
-                                    "rol",
-                                    "google_id"
+                                    "rol"
                                 ],
                                 "properties": {
+                                    "google_id": {
+                                        "type": "string",
+                                        "example": "123456789012345678901"
+                                    },
                                     "nombre": {
                                         "type": "string",
-                                        "example": "Lucía Fernández"
-                                    },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "56789012"
+                                        "example": "Juan Pérez"
                                     },
                                     "email": {
                                         "type": "string",
-                                        "example": "lucia@gmail.com"
+                                        "example": "juan@gmail.com"
                                     },
                                     "telefono": {
                                         "type": "string",
-                                        "example": "098112233"
+                                        "example": "098765432"
                                     },
-                                    "contrasenia": {
+                                    "cedula": {
                                         "type": "string",
-                                        "example": "claveGoogle2024"
+                                        "example": "45678901"
                                     },
                                     "latitud": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": -34.91
+                                        "example": -34.9011
                                     },
                                     "longitud": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": -56.16
+                                        "example": -56.1645
                                     },
                                     "rol": {
                                         "type": "string",
                                         "enum": [
                                             "cliente",
-                                            "rematador",
-                                            "casa_remate"
+                                            "rematador"
                                         ],
-                                        "example": "rematador"
-                                    },
-                                    "google_id": {
-                                        "type": "string",
-                                        "example": "1234567890abcdef"
+                                        "example": "cliente"
                                     },
                                     "matricula": {
+                                        "description": "Solo requerido si el rol es rematador",
                                         "type": "string",
-                                        "example": "MAT9876",
-                                        "nullable": true
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "FISC1234",
-                                        "nullable": true
-                                    },
-                                    "imagen": {
-                                        "type": "string",
-                                        "example": "https://example.com/foto.png",
-                                        "nullable": true
+                                        "example": "MAT123"
                                     }
                                 },
                                 "type": "object"
@@ -1047,58 +973,195 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Usuario registrado exitosamente con Google",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Usuario registrado con Google exitosamente."
-                                        },
-                                        "access_token": {
-                                            "type": "string",
-                                            "example": "google_token_123"
-                                        },
-                                        "usuario_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
-                                        "rol": {
-                                            "type": "string",
-                                            "example": "rematador"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Registro exitoso con Google."
                     },
                     "422": {
-                        "description": "Error de validación"
+                        "description": "Error de validación."
+                    },
+                    "500": {
+                        "description": "Error al registrar con Google."
                     }
                 }
             }
         },
-        "/api/forgot-password": {
+        "/api/register-google-casa-remate": {
             "post": {
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Enviar enlace de recuperación de contraseña",
-                "operationId": "27192d4d04cb48a2f83216053554a56c",
+                "summary": "Registro de casa de remate con cuenta de Google",
+                "operationId": "1529d6efaf7f3f50e638fe8c06a60921",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "email"
+                                    "google_id",
+                                    "nombre",
+                                    "email",
+                                    "telefono",
+                                    "cedula",
+                                    "latitud",
+                                    "longitud",
+                                    "idFiscal"
                                 ],
                                 "properties": {
+                                    "google_id": {
+                                        "type": "string",
+                                        "example": "123456789012345678901"
+                                    },
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Casa de Subastas Google"
+                                    },
                                     "email": {
                                         "type": "string",
-                                        "example": "usuario@example.com"
+                                        "example": "casa@subastas.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "099123456"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.901112
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.164532
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "RUT123456789"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registro exitoso con Google."
+                    },
+                    "422": {
+                        "description": "Error de validación."
+                    },
+                    "500": {
+                        "description": "Error al registrar casa de remate."
+                    }
+                }
+            }
+        },
+        "/api/register-casa-remate": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registro de casa de remate",
+                "operationId": "69aa36276e8cba46ef0c229592b7325d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "email",
+                                    "telefono",
+                                    "cedula",
+                                    "latitud",
+                                    "longitud",
+                                    "idFiscal",
+                                    "contrasenia",
+                                    "contrasenia_confirmation"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Casa de Subastas XYZ"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "casa@subastas.com"
+                                    },
+                                    "telefono": {
+                                        "type": "string",
+                                        "example": "099123456"
+                                    },
+                                    "cedula": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "latitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -34.901112
+                                    },
+                                    "longitud": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -56.164532
+                                    },
+                                    "idFiscal": {
+                                        "type": "string",
+                                        "example": "RUT123456789"
+                                    },
+                                    "contrasenia": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "contrasenia_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registro exitoso. Verifica tu correo."
+                    },
+                    "422": {
+                        "description": "Error de validación."
+                    },
+                    "500": {
+                        "description": "Error al registrar casa de remate."
+                    }
+                }
+            }
+        },
+        "/api/registro/google": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Login con Google",
+                "operationId": "ddb728cc149e42ee7132597b03ccc924",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_token"
+                                ],
+                                "properties": {
+                                    "id_token": {
+                                        "type": "string",
+                                        "example": "GOOGLE_ID_TOKEN"
                                     }
                                 },
                                 "type": "object"
@@ -1108,36 +1171,16 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Enlace de recuperación enviado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "We have emailed your password reset link!"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Login exitoso con token de acceso"
                     },
-                    "400": {
-                        "description": "No se pudo enviar el correo de recuperación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "No se pudo enviar el enlace"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "401": {
+                        "description": "Token inválido"
+                    },
+                    "403": {
+                        "description": "Email no verificado o rol no permitido"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
                     }
                 }
             }
@@ -1147,7 +1190,7 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Restablecer contraseña del usuario",
+                "summary": "Restablecer contraseña",
                 "operationId": "90632c5f7ebd82e9ce2e51301484a00d",
                 "requestBody": {
                     "required": true,
@@ -1157,24 +1200,27 @@
                                 "required": [
                                     "token",
                                     "email",
-                                    "password"
+                                    "password",
+                                    "password_confirmation"
                                 ],
                                 "properties": {
                                     "token": {
                                         "type": "string",
-                                        "example": "TOKEN123"
+                                        "example": "abcdef123456"
                                     },
                                     "email": {
                                         "type": "string",
-                                        "example": "usuario@example.com"
+                                        "example": "usuario@ejemplo.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "nuevaClaveSegura"
+                                        "format": "password",
+                                        "example": "nuevacontrasena"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
-                                        "example": "nuevaClaveSegura"
+                                        "format": "password",
+                                        "example": "nuevacontrasena"
                                     }
                                 },
                                 "type": "object"
@@ -1184,36 +1230,13 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Contraseña restablecida con éxito",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Your password has been reset!"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Contraseña restablecida correctamente."
                     },
-                    "400": {
-                        "description": "Error al restablecer contraseña",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Este token es inválido"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "500": {
+                        "description": "Error al restablecer la contraseña."
+                    },
+                    "422": {
+                        "description": "Validación fallida."
                     }
                 }
             }
@@ -1230,14 +1253,10 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "email"
-                                ],
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "format": "email",
-                                        "example": "usuario@example.com"
+                                        "example": "usuario@ejemplo.com"
                                     }
                                 },
                                 "type": "object"
@@ -1247,30 +1266,46 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Correo de verificación reenviado exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Correo de verificación reenviado."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Correo reenviado"
                     },
                     "400": {
-                        "description": "El correo ya fue verificado",
+                        "description": "Correo ya verificado"
+                    },
+                    "422": {
+                        "description": "Validación fallida"
+                    }
+                }
+            }
+        },
+        "/api/usuario-autenticado": {
+            "get": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Obtener datos del usuario autenticado",
+                "operationId": "eda51cde841b25cc498fd316f6302329",
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario autenticado",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "message": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nombre": {
                                             "type": "string",
-                                            "example": "El correo ya fue verificado."
+                                            "example": "Pablo De León"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "pablonauta@gmail.com"
+                                        },
+                                        "rol": {
+                                            "type": "string",
+                                            "example": "admin"
                                         }
                                     },
                                     "type": "object"
@@ -1278,23 +1313,15 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Usuario no encontrado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Usuario no encontrado."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "401": {
+                        "description": "No autenticado"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/casa-remates": {
@@ -3863,35 +3890,26 @@
                 }
             }
         },
-        "/api/usuario-autenticado": {
+        "/api/autenticado": {
             "get": {
                 "tags": [
                     "Usuario"
                 ],
-                "summary": "Obtener información del usuario autenticado",
-                "operationId": "2b45d8bdadf46ffa5365b85048dba474",
+                "summary": "Verificar si el usuario está autenticado",
+                "operationId": "57658ba938d8a45f119795cd4d4964c6",
                 "responses": {
                     "200": {
-                        "description": "Datos del usuario autenticado",
+                        "description": "Usuario autenticado",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 12
+                                        "autenticado": {
+                                            "type": "boolean",
+                                            "example": true
                                         },
-                                        "nombre": {
-                                            "type": "string",
-                                            "example": "Juan Pérez"
-                                        },
-                                        "email": {
-                                            "type": "string",
-                                            "example": "juan@example.com"
-                                        },
-                                        "rol": {
-                                            "type": "string",
-                                            "example": "cliente"
+                                        "usuario": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -3905,7 +3923,7 @@
                 },
                 "security": [
                     {
-                        "bearerAuth": []
+                        "sanctum": []
                     }
                 ]
             }
@@ -4240,6 +4258,10 @@
             "description": "API para gestionar artículos"
         },
         {
+            "name": "Autenticación",
+            "description": "Endpoints para autenticación y registro de usuarios"
+        },
+        {
             "name": "CasaRemates",
             "description": "API para gestionar casas de remate"
         },
@@ -4278,10 +4300,6 @@
         {
             "name": "Vendedores",
             "description": "API para gestionar vendedores"
-        },
-        {
-            "name": "Autenticación",
-            "description": "Autenticación"
         },
         {
             "name": "Facturas",
