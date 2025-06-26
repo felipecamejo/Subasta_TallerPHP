@@ -1,3 +1,4 @@
+import { environment } from './../environments/environment'; 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
@@ -59,10 +60,10 @@ export class RegistroGoogleComponent implements OnInit {
   }
 
   enviar() {
-    console.log('🚀 enviar() ejecutado');
+    console.log(' enviar() ejecutado');
 
     if (this.form.invalid) {
-      console.log('❌ Formulario inválido');
+      console.log(' Formulario inválido');
       Object.entries(this.form.controls).forEach(([key, control]) => {
         if (control.invalid) {
           console.warn(`Campo inválido: ${key}`, control.errors);
@@ -72,15 +73,15 @@ export class RegistroGoogleComponent implements OnInit {
     }
 
     const payload = this.form.getRawValue();
-    console.log('✅ Payload que se envía:', payload);
+    console.log(' Payload que se envía:', payload);
 
     const url = payload.rol === 'casa_remate'
-      ? 'http://localhost:8000/api/register-google-casa-remate'
-      : 'http://localhost:8000/api/register-google-user';
+  ? `${environment.apiUrl}/api/register-google-casa-remate`
+  : `${environment.apiUrl}/api/register-google-user`;
 
     this.http.post(url, payload).subscribe({
       next: (res: any) => {
-        console.log('✅ Registro exitoso', res);
+        console.log(' Registro exitoso', res);
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('usuario_id', res.usuario_id);
         localStorage.setItem('rol', res.rol);
@@ -90,7 +91,7 @@ export class RegistroGoogleComponent implements OnInit {
         else if (res.rol === 'casa_remate') this.router.navigate(['/dashboard-casa-remate']);
       },
       error: err => {
-        console.error('❌ Error al registrar con Google:', err);
+        console.error(' Error al registrar con Google:', err);
         alert('Error: ' + JSON.stringify(err.error.details || err.error));
       }
     });

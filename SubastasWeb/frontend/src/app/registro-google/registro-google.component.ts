@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import {
   FormGroup,
@@ -127,9 +128,8 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
 
     const rol = this.form.get('rol')?.value;
     const url = rol === 'casa_remate'
-      ? 'http://localhost:8000/api/register-google-casa-remate'
-      : 'http://localhost:8000/api/register-google-user';
-
+             ? `${environment.apiUrl}/api/register-google-casa-remate`
+             : `${environment.apiUrl}/api/register-google-user`;
     const payload = {
       ...this.form.value,
       ...(rol !== 'rematador' && { matricula: undefined }),
