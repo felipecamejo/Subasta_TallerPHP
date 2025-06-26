@@ -59,7 +59,7 @@ export class CasaRemateComponent {
   }
   
   getCasaRemate() {
-    this._service.getCasaRematesPorId(1).subscribe({
+    this._service.getCasaRematesPorId(2).subscribe({
       next: (data: any) => {
         this.model = data;
         // calculá el promedio luego de asignar los datos
