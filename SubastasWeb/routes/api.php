@@ -58,6 +58,7 @@ Route::post('/chat/{chatId}/finalizar-chat', [ChatController::class, 'finalizarC
 Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat']);
 
 Route::apiResource('subastas', SubastaController::class);
+Route::apiResource('casa-remates', CasaRemateController::class);
 
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -87,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
     Route::apiResource('vendedores', VendedorController::class);
-    Route::apiResource('casa-remates', CasaRemateController::class);
+    
 
     // Rutas de notificaciones
     Route::get('/notificaciones', [NotificacionController::class, 'index']);

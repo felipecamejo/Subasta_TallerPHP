@@ -528,30 +528,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "nombre",
-                                    "idFiscal",
-                                    "email",
-                                    "telefono"
+                                    "usuario_id",
+                                    "idFiscal"
                                 ],
                                 "properties": {
-                                    "nombre": {
-                                        "type": "string"
+                                    "usuario_id": {
+                                        "type": "integer"
                                     },
                                     "idFiscal": {
-                                        "type": "string"
-                                    },
-                                    "email": {
                                         "type": "string",
-                                        "format": "email"
-                                    },
-                                    "telefono": {
-                                        "type": "string"
-                                    },
-                                    "latitud": {
-                                        "type": "number"
-                                    },
-                                    "longitud": {
-                                        "type": "number"
+                                        "maxLength": 20
                                     }
                                 },
                                 "type": "object"
@@ -569,16 +555,16 @@
                 }
             }
         },
-        "/api/casa-remates/{id}": {
+        "/api/casa-remates/{usuario_id}": {
             "get": {
                 "tags": [
                     "CasaRemates"
                 ],
                 "summary": "Obtener una casa de remate por ID",
-                "operationId": "3689d7ffc718cbf8c0aee6fa939a15cf",
+                "operationId": "ab33a9d395cc88238e40f2514fb00609",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -600,10 +586,10 @@
                     "CasaRemates"
                 ],
                 "summary": "Actualizar una casa de remate",
-                "operationId": "b4325daa9bbc8ff8b8796044e775c30a",
+                "operationId": "d5a1a2c11557fb0fa4eb8d44a7c283eb",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -617,24 +603,9 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "nombre": {
-                                        "type": "string"
-                                    },
                                     "idFiscal": {
-                                        "type": "string"
-                                    },
-                                    "email": {
                                         "type": "string",
-                                        "format": "email"
-                                    },
-                                    "telefono": {
-                                        "type": "string"
-                                    },
-                                    "latitud": {
-                                        "type": "number"
-                                    },
-                                    "longitud": {
-                                        "type": "number"
+                                        "maxLength": 20
                                     }
                                 },
                                 "type": "object"
@@ -648,6 +619,9 @@
                     },
                     "404": {
                         "description": "Casa de remate no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
                     }
                 }
             },
@@ -656,10 +630,10 @@
                     "CasaRemates"
                 ],
                 "summary": "Eliminar una casa de remate por ID",
-                "operationId": "8b9010f5226c720e0ed6e8b2f67e8c88",
+                "operationId": "9f13e312194c7364ddcc9d387ffe94a6",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -677,16 +651,16 @@
                 }
             }
         },
-        "/api/casa-remates/{id}/asociar-rematadores": {
+        "/api/casa-remates/{usuario_id}/asociar-rematadores": {
             "post": {
                 "tags": [
                     "CasaRemates"
                 ],
                 "summary": "Asociar rematadores a una casa de remate",
-                "operationId": "3321857dd7575a252662b102c4f00afd",
+                "operationId": "f682598b87693062828a9a121300df5b",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -728,16 +702,16 @@
                 }
             }
         },
-        "/api/casa-remates/{id}/calificar": {
+        "/api/casa-remates/{usuario_id}/calificar": {
             "post": {
                 "tags": [
                     "CasaRemates"
                 ],
                 "summary": "Agregar una calificación a una casa de remate",
-                "operationId": "24f9a50d50e92f0e691993f417ffada4",
+                "operationId": "b2b166a84b8e6aea6119d08118644e2d",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "usuario_id",
                         "in": "path",
                         "description": "ID de la casa de remate",
                         "required": true,
@@ -781,7 +755,10 @@
                                             "type": "number",
                                             "format": "float"
                                         },
-                                        "total": {
+                                        "total_opiniones": {
+                                            "type": "integer"
+                                        },
+                                        "estrellas": {
                                             "type": "integer"
                                         }
                                     },
