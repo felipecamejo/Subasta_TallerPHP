@@ -32,7 +32,7 @@ class SubastaController extends Controller
     public function index() {
         try {
             $subastas = Subasta::with([
-                'casaRemate.valoracion', 
+                'casaRemate.usuario', 
                 'rematador', 
                 'lotes.pujas.cliente.usuario', 
                 'lotes.articulos.categoria',
@@ -126,7 +126,7 @@ class SubastaController extends Controller
     public function show($id){
         /** @var Subasta|null $subasta */
         $subasta = Subasta::with([
-            'casaRemate', 
+            'casaRemate.usuario', 
             'rematador', 
             'lotes.pujas.cliente.usuario', 
             'lotes.articulos.categoria',

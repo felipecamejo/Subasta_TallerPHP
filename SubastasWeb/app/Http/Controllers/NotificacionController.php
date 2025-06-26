@@ -6,6 +6,7 @@ use App\Models\Notificacion;
 use App\Models\Cliente;
 use App\Models\Rematador;
 use App\Models\Usuario;
+use App\Models\CasaRemate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use OpenApi\Annotations as OA;
@@ -57,8 +58,13 @@ class NotificacionController extends Controller
                 ->orderBy('fecha_hora', 'desc')
                 ->get()
                 ->map(fn($n) => $this->formatNotification($n, $rematador->usuario));
+        } elseif ($casa) {
+            $notificaciones = $casa->notificaciones()
+                ->orderBy('fecha_hora', 'desc')
+                ->get()
+                ->map(fn($n) => $this->formatNotification($n, $casa->usuario));
         } else {
-            // Admins o casas de remate no reciben notificaciones por ahora
+            // Admins no reciben notificaciones por ahora
             return response()->json([]);
         }
 
@@ -113,8 +119,9 @@ class NotificacionController extends Controller
             $usuario = Auth::user();
             $cliente = Cliente::where('usuario_id', $usuario->id)->first();
             $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+            $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
             
-            if (!$cliente && !$rematador) {
+            if (!$cliente && !$rematador && !$casaRemate) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
 
@@ -128,6 +135,11 @@ class NotificacionController extends Controller
                 $notificacion = $rematador->notificaciones()->find($id);
                 if ($notificacion) {
                     $rematador->notificaciones()->updateExistingPivot($id, ['leido' => true]);
+                }
+            } else if ($casaRemate) {
+                $notificacion = $casaRemate->notificaciones()->find($id);
+                if ($notificacion) {
+                    $casaRemate->notificaciones()->updateExistingPivot($id, ['leido' => true]);
                 }
             }
             
@@ -161,8 +173,9 @@ class NotificacionController extends Controller
             $usuario = Auth::user();
             $cliente = Cliente::where('usuario_id', $usuario->id)->first();
             $rematador = Rematador::where('usuario_id', $usuario->id)->first();
+            $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
             
-            if (!$cliente && !$rematador) {
+            if (!$cliente && !$rematador && !$casaRemate) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
 
@@ -174,6 +187,11 @@ class NotificacionController extends Controller
             } else if ($rematador) {
                 $rematador->notificaciones()->updateExistingPivot(
                     $rematador->notificaciones()->pluck('notificaciones.id'),
+                    ['leido' => true]
+                );
+            } else if ($casaRemate) {
+                $casaRemate->notificaciones()->updateExistingPivot(
+                    $casaRemate->notificaciones()->pluck('notificaciones.id'),
                     ['leido' => true]
                 );
             }
@@ -218,12 +236,16 @@ class NotificacionController extends Controller
             foreach ($usuarioIds as $usuarioId) {
                 $cliente = Cliente::where('usuario_id', $usuarioId)->first();
                 $rematador = Rematador::where('usuario_id', $usuarioId)->first();
+                $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuarioId)->first();
 
                 if ($cliente) {
-                    $notificacion->clientes()->attach($usuarioId, ['leido' => false]);
+                    $notificacion->clientes()->attach($cliente->usuario_id, ['leido' => false]);
                 }
                 if ($rematador) {
-                    $notificacion->rematadores()->attach($usuarioId, ['leido' => false]);
+                    $notificacion->rematadores()->attach($rematador->usuario_id, ['leido' => false]);
+                }
+                if ($casaRemate) {
+                    $notificacion->casaRemates()->attach($casaRemate->usuario_id, ['leido' => false]);
                 }
             }
 
@@ -457,6 +479,7 @@ class NotificacionController extends Controller
         try {
             $cliente = Cliente::where('usuario_id', $usuarioId)->first();
             $rematador = Rematador::where('usuario_id', $usuarioId)->first();
+            $casaRemate = CasaRemate::where('usuario_id', $usuarioId)->first();
             
             $notificaciones = [];
             
@@ -479,7 +502,7 @@ class NotificacionController extends Controller
                             ]
                         ];
                     });
-            } else if ($rematador) {
+            } elseif ($rematador) {
                 $notificaciones = $rematador->notificaciones()
                     ->orderBy('fecha_hora', 'desc')
                     ->get()
@@ -495,6 +518,25 @@ class NotificacionController extends Controller
                             'usuario' => [
                                 'id' => $rematador->usuario->id,
                                 'nombre' => $rematador->usuario->nombre
+                            ]
+                        ];
+                    });
+            } elseif ($casaRemate) {
+                $notificaciones = $casaRemate->notificaciones()
+                    ->orderBy('fecha_hora', 'desc')
+                    ->get()
+                    ->map(function ($notificacion) use ($casaRemate) {
+                        return [
+                            'id' => $notificacion->id,
+                            'titulo' => $notificacion->titulo,
+                            'mensaje' => $notificacion->mensaje,
+                            'fechaHora' => $notificacion->fecha_hora,
+                            'leido' => $notificacion->pivot->leido,
+                            'esMensajeChat' => $notificacion->es_mensaje_chat,
+                            'chatId' => $notificacion->chat_id,
+                            'usuario' => [
+                                'id' => $casaRemate->usuario->id,
+                                'nombre' => $casaRemate->usuario->nombre
                             ]
                         ];
                     });

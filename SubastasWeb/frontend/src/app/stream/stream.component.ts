@@ -766,7 +766,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   private enviarNotificacionUmbral(monto: number): void {
-    const casaRemateId = this.subasta?.casaremate?.usuario_id;
+    const casaRemateId = this.subasta?.casa_remate?.usuario_id;
     if (casaRemateId) {
       this.notificacionService.crearNotificacion(
         "Umbral Superado", 
@@ -1101,7 +1101,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
 
   private enviarNotificacionesFinalizacion(ganadorId: number): void {
-    const casaRemateId = this.subasta?.casaremate?.usuario_id;
+    const casaRemateId = this.subasta?.casa_remate?.usuario_id;
     const loteId = this.lotes[this.indexLotes]?.id;
     
     if (!casaRemateId || !loteId) {
@@ -1186,39 +1186,50 @@ export class StreamComponent implements OnInit, OnDestroy {
     console.log('💰 Pago exitoso: $' + this.paypalMonto);
     
     try {
+      console.log('🔍 DEBUG: Iniciando proceso post-pago...');
+      
       // PASO 1: Marcar como pagado y cerrar modal de pago
       this.pagado = true;
       this.pagando = false;
+      console.log('🔍 DEBUG: Marcado como pagado');
       
       // PASO 2: Obtener datos del ganador y casa de remate
       const usuarioActual = localStorage.getItem('usuario_id');
       const ganadorId = usuarioActual ? Number(usuarioActual) : (this.ganadores[this.indexLotes]?.clienteId || 0);
       const ganadorNombre = localStorage.getItem('usuario_nombre') || `Usuario ${ganadorId}`;
       
-      if (!ganadorId || !this.subasta?.casaremate) {
+      console.log('🔍 DEBUG: Datos del ganador:', { ganadorId, ganadorNombre });
+      console.log('🔍 DEBUG: Subasta casa_remate:', this.subasta?.casa_remate);
+      
+      if (!ganadorId || !this.subasta?.casa_remate) {
+        console.log('❌ DEBUG: Faltan datos necesarios para crear chat');
         alert('Pago exitoso! Por favor contacte a la casa de remate para coordinar la entrega.');
         return;
       }
 
+      console.log('🔍 DEBUG: Preparando llamada a crearInvitacionChat...');
+      
       // PASO 3: Crear invitación de chat con notificaciones automáticas (como en test-chat)
       const chatResult = await this.chatService.crearInvitacionChat(
         ganadorId,
         ganadorNombre,
-        this.subasta.casaremate.usuario_id || 0,
-        this.subasta.casaremate.usuario?.nombre || 'Casa de Remate'
+        this.subasta.casa_remate.usuario_id || 0,
+        this.subasta.casa_remate.usuario?.nombre || 'Casa de Remate'
       );
+
+      console.log('🔍 DEBUG: Respuesta de crearInvitacionChat:', chatResult);
 
       // PASO 4: Manejar resultado del chat
       console.log('💬 Chat creado después del pago:', chatResult);
       if (chatResult.success) {
-        this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casaremate.usuario_id}`;
+        this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casa_remate.usuario_id}`;
         this.chatCreado = true;
         
         console.log('💬 Invitación de chat creada exitosamente con notificaciones automáticas');
         
         // Verificar que las notificaciones se hayan enviado correctamente
         setTimeout(() => {
-          this.verificarNotificacionesChat(ganadorId, this.subasta!.casaremate.usuario_id || 0);
+          this.verificarNotificacionesChat(ganadorId, this.subasta!.casa_remate.usuario_id || 0);
         }, 1000); // Esperar 1 segundo para que el backend procese las notificaciones
         
         // Mostrar mensaje de éxito completo
