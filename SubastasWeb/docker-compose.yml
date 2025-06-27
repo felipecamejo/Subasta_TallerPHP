@@ -81,7 +81,7 @@ services:
     container_name: angular_frontend
     working_dir: /app
     volumes:
-      - ./front:/app
+      - ./frontend:/app
       - /app/node_modules
     ports:
       - "4200:4200"

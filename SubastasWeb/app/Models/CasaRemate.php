@@ -31,7 +31,7 @@
         }
 
         public function subastas() {
-            return $this->hasMany(Subasta::class);
+            return $this->hasMany(Subasta::class, 'casa_remate_id', 'usuario_id');
         }
 
         public function usuario(){

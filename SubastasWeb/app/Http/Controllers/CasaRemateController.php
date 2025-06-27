@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Validator;
  */
 class CasaRemateController extends Controller
 {
- 
     /**
      * @OA\Get(
      *     path="/api/casa-remates",
@@ -25,8 +24,8 @@ class CasaRemateController extends Controller
      */
     public function index()
     {
-        $casaRemate = CasaRemate::with(['rematadores', 'subastas', 'valoracion'])->get();
-        return response()->json($casaRemate);
+        $casas = CasaRemate::with(['rematadores', 'subastas', 'valoracion', 'usuario'])->get();
+        return response()->json($casas);
     }
 
     /**
@@ -37,13 +36,9 @@ class CasaRemateController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "idFiscal", "email", "telefono"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="idFiscal", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="latitud", type="number"),
-     *             @OA\Property(property="longitud", type="number"),
+     *             required={"usuario_id", "idFiscal"},
+     *             @OA\Property(property="usuario_id", type="integer"),
+     *             @OA\Property(property="idFiscal", type="string", maxLength=20)
      *         )
      *     ),
      *     @OA\Response(response=201, description="Casa de remate creada exitosamente"),
@@ -53,37 +48,26 @@ class CasaRemateController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nombre'   => 'required|string|max:255',
+            'usuario_id' => 'required|exists:usuarios,id|unique:casa_remates,usuario_id',
             'idFiscal' => 'required|string|max:20',
-            'email'    => 'required|email|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'latitud'  => 'nullable|numeric',
-            'longitud' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $casaRemate = CasaRemate::create($request->only([
-            'nombre',
-            'idFiscal',
-            'email',
-            'telefono',
-            'latitud',
-            'longitud',
-        ]));
+        $casa = CasaRemate::create($request->only(['usuario_id', 'idFiscal']));
 
-        return response()->json($casaRemate, 201);
+        return response()->json($casa, 201);
     }
 
     /**
      * @OA\Get(
-     *     path="/api/casa-remates/{id}",
+     *     path="/api/casa-remates/{usuario_id}",
      *     summary="Obtener una casa de remate por ID",
      *     tags={"CasaRemates"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
      *         required=true,
      *         @OA\Schema(type="integer")
@@ -92,24 +76,24 @@ class CasaRemateController extends Controller
      *     @OA\Response(response=404, description="Casa de remate no encontrada")
      * )
      */
-    public function show(string $id)
+    public function show(string $usuario_id)
     {
-        $casaRemate = CasaRemate::with(['rematadores', 'subastas', 'valoracion'])->find($id);
+        $casa = CasaRemate::with(['rematadores', 'subastas', 'valoracion', 'usuario'])->find($usuario_id);
 
-        if (!$casaRemate) {
+        if (!$casa) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
-        return response()->json($casaRemate);
+        return response()->json($casa);
     }
 
     /**
      * @OA\Put(
-     *     path="/api/casa-remates/{id}",
+     *     path="/api/casa-remates/{usuario_id}",
      *     summary="Actualizar una casa de remate",
      *     tags={"CasaRemates"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
      *         required=true,
      *         @OA\Schema(type="integer")
@@ -117,61 +101,45 @@ class CasaRemateController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="idFiscal", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="latitud", type="number"),
-     *             @OA\Property(property="longitud", type="number"),
+     *             @OA\Property(property="idFiscal", type="string", maxLength=20)
      *         )
      *     ),
      *     @OA\Response(response=200, description="Casa de remate actualizada"),
-     *     @OA\Response(response=404, description="Casa de remate no encontrada")
+     *     @OA\Response(response=404, description="Casa de remate no encontrada"),
+     *     @OA\Response(response=422, description="Error de validación")
      * )
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $usuario_id)
     {
-        $casaRemate = CasaRemate::find($id);
+        $casa = CasaRemate::find($usuario_id);
 
-        if (!$casaRemate) {
+        if (!$casa) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre'   => 'sometimes|string|max:255',
             'idFiscal' => 'sometimes|string|max:20',
-            'email'    => 'sometimes|email|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'latitud'  => 'nullable|numeric',
-            'longitud' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $casaRemate->update($request->only([
-            'nombre',
-            'idFiscal',
-            'email',
-            'telefono',
-            'latitud',
-            'longitud',
-        ]));
+        $casa->update($request->only(['idFiscal']));
 
         return response()->json([
             'mensaje' => 'Casa de remate actualizada exitosamente.',
-            'casaRemate' => $casaRemate
+            'casaRemate' => $casa
         ]);
     }
 
     /**
      * @OA\Delete(
-     *     path="/api/casa-remates/{id}",
+     *     path="/api/casa-remates/{usuario_id}",
      *     summary="Eliminar una casa de remate por ID",
      *     tags={"CasaRemates"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
      *         required=true,
      *         @OA\Schema(type="integer")
@@ -180,26 +148,26 @@ class CasaRemateController extends Controller
      *     @OA\Response(response=404, description="Casa de remate no encontrada")
      * )
      */
-    public function destroy(string $id)
+    public function destroy(string $usuario_id)
     {
-        $casaRemate = CasaRemate::find($id);
+        $casa = CasaRemate::find($usuario_id);
 
-        if (!$casaRemate) {
+        if (!$casa) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
-        $casaRemate->delete();
+        $casa->delete();
 
         return response()->json(['message' => 'Casa de remate eliminada']);
     }
 
     /**
      * @OA\Post(
-     *     path="/api/casa-remates/{id}/asociar-rematadores",
+     *     path="/api/casa-remates/{usuario_id}/asociar-rematadores",
      *     summary="Asociar rematadores a una casa de remate",
      *     tags={"CasaRemates"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
      *         required=true,
      *         @OA\Schema(type="integer")
@@ -216,11 +184,11 @@ class CasaRemateController extends Controller
      *     @OA\Response(response=422, description="Validación fallida")
      * )
      */
-    public function asociarRematadores(Request $request, string $id)
+    public function asociarRematadores(Request $request, string $usuario_id)
     {
-        $casaRemate = CasaRemate::find($id);
+        $casa = CasaRemate::find($usuario_id);
 
-        if (!$casaRemate) {
+        if (!$casa) {
             return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
@@ -233,21 +201,21 @@ class CasaRemateController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $casaRemate->rematadores()->sync($request->rematadores);
+        $casa->rematadores()->sync($request->rematadores);
 
         return response()->json([
             'message' => 'Rematadores asociados exitosamente',
-            'casa_remate' => $casaRemate->load('rematadores')
+            'casa_remate' => $casa->load('rematadores')
         ]);
     }
 
     /**
      * @OA\Post(
-     *     path="/api/casa-remates/{id}/calificar",
+     *     path="/api/casa-remates/{usuario_id}/calificar",
      *     summary="Agregar una calificación a una casa de remate",
      *     tags={"CasaRemates"},
      *     @OA\Parameter(
-     *         name="id",
+     *         name="usuario_id",
      *         in="path",
      *         required=true,
      *         description="ID de la casa de remate",
@@ -266,32 +234,40 @@ class CasaRemateController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="mensaje", type="string"),
      *             @OA\Property(property="promedio", type="number", format="float"),
-     *             @OA\Property(property="total", type="integer")
+     *             @OA\Property(property="total_opiniones", type="integer"),
+     *             @OA\Property(property="estrellas", type="integer")
      *         )
      *     ),
      *     @OA\Response(response=404, description="Casa de remate no encontrada"),
      *     @OA\Response(response=422, description="Error de validación")
      * )
      */
-    public function calificar(Request $request, $id)
+    public function calificar(Request $request, string $usuario_id)
     {
         $request->validate([
             'valor' => 'required|integer|min:1|max:5',
         ]);
 
-        $casa = CasaRemate::findOrFail($id);
-        $calificaciones = $casa->calificacion ?? [];
-        $calificaciones[] = $request->valor;
+        $casa = CasaRemate::with('valoracion')->find($usuario_id);
 
-        $casa->calificacion = $calificaciones;
-        $casa->save();
+        if (!$casa) {
+            return response()->json(['message' => 'Casa de remate no encontrada'], 404);
+        }
 
-        $promedio = round(array_sum($calificaciones) / count($calificaciones), 2);
+        // Obtener o crear la valoración
+        $valoracion = $casa->valoracion ?? $casa->valoracion()->create([
+            'valoracion_total' => 0,
+            'cantidad_opiniones' => 0,
+        ]);
+
+        $valoracion->agregarValoracion($request->valor);
 
         return response()->json([
             'mensaje' => 'Calificación agregada exitosamente.',
-            'promedio' => $promedio,
-            'total' => count($calificaciones),
+            'promedio' => $valoracion->promedio,
+            'total_opiniones' => $valoracion->cantidad_opiniones,
+            'estrellas' => $valoracion->estrellas,
         ]);
     }
+
 }
