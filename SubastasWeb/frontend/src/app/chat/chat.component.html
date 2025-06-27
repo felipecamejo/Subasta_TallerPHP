@@ -193,18 +193,6 @@
       </div>
       
       <div class="modal-footer">
-        <button class="btn-secondary" 
-                *ngIf="!necesitaValorarChatFinalizado"
-                (click)="finalizarChatSinValoracion()"
-                [disabled]="enviandoValoracion">
-          Solo Finalizar
-        </button>
-        <button class="btn-secondary" 
-                *ngIf="necesitaValorarChatFinalizado"
-                (click)="cerrarModalValoracion()"
-                [disabled]="enviandoValoracion">
-          Valorar Más Tarde
-        </button>
         <button class="btn-primary" 
                 (click)="finalizarChatConValoracion()"
                 [disabled]="valoracionSeleccionada === 0 || enviandoValoracion">

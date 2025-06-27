@@ -43,7 +43,8 @@ export class LoginComponent {
           usuario: res.usuario,
         });
 
-        this.authService.redirigirPorRol(res.rol);
+        // Redirigir siempre al buscador de remates, independientemente del rol
+        this.router.navigate(['/buscadorRemates']);
       },
       error: (err: HttpErrorResponse) => {
         if (err.status === 403) {

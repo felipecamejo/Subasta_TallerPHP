@@ -20,6 +20,7 @@ class LoteSeeder extends Seeder
         Lote::create([
             'id' => 1,
             'umbral' => 200,
+            'pago' => false,
             'valorBase' => 200,
             'pujaMinima' => 210,
             'subasta_id' => $subasta->id,
@@ -30,6 +31,7 @@ class LoteSeeder extends Seeder
         Lote::create([
             'id' => 2,
             'umbral' => 0,
+            'pago' => false,
             'valorBase' => 0,
             'pujaMinima' => 10,
             'subasta_id' => $subasta->id,

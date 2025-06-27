@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lotes', function (Blueprint $table) {
+        Schema::create('pagos', function (Blueprint $table) {
             $table->id();
-            
-            $table->float('valorBase');
-            $table->float('pujaMinima');
-            $table->foreignId('subasta_id')->nullable()->constrained()->onDelete('cascade');
-            $table->float('umbral')->default(0); 
-            $table->boolean('pago')->default(false);
-
+            $table->foreignId('factura_id')->constrained('facturas');
+            $table->string('transaction_id');
+            $table->decimal('amount', 10, 2);
+            $table->string('status');
+            $table->string('payment_method');
+            $table->text('payment_details')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lotes');
+        Schema::dropIfExists('pagos');
     }
 };

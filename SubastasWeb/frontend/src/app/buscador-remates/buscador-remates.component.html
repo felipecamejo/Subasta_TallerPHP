@@ -2,6 +2,13 @@
     <article class="w-full flex flex-wrap article-1">
         <span class="titulo">Subastas</span>
         <p-button class="boton" icon="pi pi-map-marker" severity="secondary" (click)="mostrarMapa()"/>
+        
+        <!-- Indicador de zona horaria -->
+        <div class="timezone-indicator" (click)="abrirSelectorZonaHoraria()" pTooltip="Haga clic para cambiar la zona horaria">
+            <i class="pi pi-clock"></i>
+            <span>{{ currentTimezone }}</span>
+        </div>
+        
         <p-select 
             [options]="categorias" 
             [(ngModel)]="selectedCategory" 
@@ -31,7 +38,19 @@
                  class="rectangle mb-4 cursor-pointer hover:shadow-lg transition-shadow" 
                  (click)="irASubasta(subasta)">
                 <img [src]="getImagenSubasta(subasta)" class="w-full" alt="Imagen de subasta">
-                <span>{{ getNombreSubasta(subasta) }}</span>
+                <span class="subasta-nombre">{{ getNombreSubasta(subasta) }}</span>
+                
+                <!-- Información de fecha y hora -->
+                <div class="subasta-fecha">
+                    <i class="pi pi-calendar fecha-icono"></i>
+                    <span class="fecha-texto">{{ formatearFechaSubasta(subasta.fecha) }}</span>
+                </div>
+                
+                <!-- Estado y tiempo restante -->
+                <div class="tiempo-restante" [ngClass]="getEstadoSubasta(subasta)">
+                    <i class="pi" [ngClass]="getIconoEstado(subasta)"></i>
+                    <span>{{ getTiempoRestanteSubasta(subasta) }}</span>
+                </div>
             </div>
         </article>
     </ng-container>
@@ -45,5 +64,20 @@
         (onShow)="onMapDialogShow()"
         (onHide)="onMapDialogHide()">
         <div id="mapaContainer" style="height: calc(80vh - 120px); width: 100%; border-radius: 8px;"></div>
+    </p-dialog>
+
+    <!-- Selector de zona horaria -->
+    <p-dialog 
+      header="Configuración de zona horaria" 
+      [(visible)]="showTimezoneSelector"
+      [modal]="true"
+      [style]="{ width: '500px', maxWidth: '95vw' }"
+      [baseZIndex]="1000"
+      [draggable]="false"
+      [resizable]="false"
+      styleClass="timezone-dialog">
+      
+      <app-timezone-selector></app-timezone-selector>
+
     </p-dialog>
 </main>

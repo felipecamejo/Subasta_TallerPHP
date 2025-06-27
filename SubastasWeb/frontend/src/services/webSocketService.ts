@@ -81,6 +81,7 @@ export class WebsocketService {
   leaveAuction(auctionId: number, userId: number, userName: string) {
     this.socket.emit('leave_auction', { auctionId, userId, userName });
   }
+  
   sendBid(auctionId: number, userId: number, userName: string, bidAmount: number, loteId: number) {
     console.log('💰 Enviando bid:', { auctionId, userId, userName, bidAmount, loteId });
     this.socket.emit('new_bid', {
@@ -190,6 +191,22 @@ export class WebsocketService {
         console.log('🔄 Estado de subasta sincronizado:', data);
         observer.next(data);
       });
+    });
+  }
+
+  /**
+   * Emitir un evento custom a todos los usuarios conectados al chat
+   */
+  emitirEventoCustom(evento: string, data: any) {
+    this.socket.emit(evento, data);
+  }
+
+  /**
+   * Escuchar un evento custom por nombre
+   */
+  onEventoCustom(evento: string): Observable<any> {
+    return new Observable(observer => {
+      this.socket.on(evento, (data: any) => observer.next(data));
     });
   }
 

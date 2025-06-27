@@ -486,6 +486,11 @@ class ChatController extends Controller
                 'activo' => true
             ]);
             \Log::info('Chat creado con ID: ' . $chat->id);
+            // Registrar ambos usuarios en chats_usuarios
+            \DB::table('chats_usuarios')->insertOrIgnore([
+                ['usuario_id' => $userId1, 'chat_id' => $chat->id, 'created_at' => now(), 'updated_at' => now()],
+                ['usuario_id' => $userId2, 'chat_id' => $chat->id, 'created_at' => now(), 'updated_at' => now()],
+            ]);
         } else {
             \Log::info('Chat existente encontrado con ID: ' . $chat->id);
         }
@@ -703,20 +708,16 @@ class ChatController extends Controller
                 $resultadoCalificacion = $this->procesarCalificacion(
                     $validated['usuario_valorable_id'],
                     $validated['calificacion'],
-                    $validated['tipo_valorable']
+                    $validated['tipo_valorable'],
+                    $chat->id
                 );
 
                 if ($resultadoCalificacion['success']) {
-                    // Guardar registro en chat_valoraciones para rastrear que este usuario ya valoró en este chat
-                    \DB::table('chat_valoraciones')->insert([
-                        'chat_id' => $chatId,
-                        'valorador_id' => $validated['usuario_id'],
-                        'valorado_id' => $validated['usuario_valorable_id'],
-                        'puntuacion' => $validated['calificacion'],
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                    
+                    // Guardar valoración en la tabla valoraciones y marcar como valorado en chats_usuarios
+                    \DB::table('chats_usuarios')
+                        ->where('usuario_id', $validated['usuario_id'])
+                        ->where('chat_id', $chat->id)
+                        ->update(['valorado' => true]);
                     $response['message'] = 'Chat finalizado y calificación agregada.';
                     $response['calificacion_agregada'] = true;
                     $response['promedio_valoracion'] = $resultadoCalificacion['promedio'];
@@ -745,60 +746,46 @@ class ChatController extends Controller
     /**
      * Procesar calificación para cliente o casa de remate
      */
-    private function procesarCalificacion($usuarioId, $calificacion, $tipo)
+    private function procesarCalificacion($usuarioId, $calificacion, $tipo, $chatId = null)
     {
         try {
-            if ($tipo === 'cliente') {
-                // Buscar cliente
-                $cliente = \App\Models\Cliente::find($usuarioId);
-                if (!$cliente) {
-                    return ['success' => false, 'message' => 'Cliente no encontrado'];
-                }
+            // Buscar valoración existente para este usuario y chat
+            $valoracion = \DB::table('valoraciones')
+                ->where('usuario_id', $usuarioId)
+                ->where('chat_id', $chatId)
+                ->first();
 
-                // Obtener o crear valoración para cliente
-                $valoracion = $cliente->valoracion;
-                if (!$valoracion) {
-                    $valoracion = $cliente->valoracion()->create([
-                        'valoracion_total' => $calificacion,
-                        'cantidad_opiniones' => 1
+            if ($valoracion) {
+                // Actualizar
+                \DB::table('valoraciones')
+                    ->where('usuario_id', $usuarioId)
+                    ->where('chat_id', $chatId)
+                    ->update([
+                        'total_puntaje' => $valoracion->total_puntaje + $calificacion,
+                        'cantidad_opiniones' => $valoracion->cantidad_opiniones + 1,
+                        'updated_at' => now()
                     ]);
-                } else {
-                    $valoracion->agregarValoracion($calificacion);
-                }
-
-                return [
-                    'success' => true,
-                    'promedio' => $valoracion->promedio,
-                    'total_opiniones' => $valoracion->cantidad_opiniones
-                ];
-
-            } elseif ($tipo === 'casa_remate') {
-                // Buscar casa de remate
-                $casaRemate = \App\Models\CasaRemate::find($usuarioId);
-                if (!$casaRemate) {
-                    return ['success' => false, 'message' => 'Casa de remate no encontrada'];
-                }
-
-                // Obtener o crear valoración para casa de remate
-                $valoracion = $casaRemate->valoracion;
-                if (!$valoracion) {
-                    $valoracion = $casaRemate->valoracion()->create([
-                        'valoracion_total' => $calificacion,
-                        'cantidad_opiniones' => 1
-                    ]);
-                } else {
-                    $valoracion->agregarValoracion($calificacion);
-                }
-
-                return [
-                    'success' => true,
-                    'promedio' => $valoracion->promedio,
-                    'total_opiniones' => $valoracion->cantidad_opiniones
-                ];
+                $nuevoTotal = $valoracion->total_puntaje + $calificacion;
+                $nuevaCantidad = $valoracion->cantidad_opiniones + 1;
+            } else {
+                // Crear nueva
+                \DB::table('valoraciones')->insert([
+                    'usuario_id' => $usuarioId,
+                    'chat_id' => $chatId,
+                    'total_puntaje' => $calificacion,
+                    'cantidad_opiniones' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $nuevoTotal = $calificacion;
+                $nuevaCantidad = 1;
             }
 
-            return ['success' => false, 'message' => 'Tipo de valorable no válido'];
-
+            return [
+                'success' => true,
+                'promedio' => round($nuevoTotal / $nuevaCantidad, 2),
+                'total_opiniones' => $nuevaCantidad
+            ];
         } catch (\Throwable $e) {
             \Log::error('Error al procesar calificación: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Error al procesar calificación'];
@@ -872,16 +859,16 @@ class ChatController extends Controller
             $chatFinalizado = !$chat->activo;
             
             // Verificar si ya valoró este usuario en este chat específico
-            $yaValoro = \DB::table('chat_valoraciones')
-                           ->where('chat_id', $chatId)
-                           ->where('valorador_id', $usuarioId)
-                           ->exists();
+            $yaValoro = \DB::table('chats_usuarios')
+                           ->where('chat_id', $chat->id)
+                           ->where('usuario_id', $usuarioId)
+                           ->value('valorado') == 1;
             
             // Verificar si el otro usuario ya valoró en este chat específico
-            $otroUsuarioValoro = \DB::table('chat_valoraciones')
-                                    ->where('chat_id', $chatId)
-                                    ->where('valorador_id', $otroUsuarioId)
-                                    ->exists();
+            $otroUsuarioValoro = \DB::table('chats_usuarios')
+                                    ->where('chat_id', $chat->id)
+                                    ->where('usuario_id', $otroUsuarioId)
+                                    ->value('valorado') == 1;
             
             // Obtener información del otro usuario
             $otroUsuario = Usuario::find($otroUsuarioId);

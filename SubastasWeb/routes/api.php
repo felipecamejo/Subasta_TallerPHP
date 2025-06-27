@@ -19,6 +19,8 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\TimezoneController;
+use App\Http\Controllers\PaypalController;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -53,6 +55,12 @@ Route::post('/forgot-password', [AuthController::class, 'enviarLinkReset']);
 Route::post('/reset-password', [AuthController::class, 'resetearContrasena']);
 Route::post('/email/resend', [AuthController::class, 'reenviarEmailVerificacion']);
 
+// Rutas de zona horaria
+Route::get('/timezones', [TimezoneController::class, 'getTimezones']);
+Route::post('/timezone/convert', [TimezoneController::class, 'convertTime']);
+Route::get('/timezone/info', [TimezoneController::class, 'getTimezoneInfo']);
+Route::get('/subasta/timezone/{subasta_id}', [TimezoneController::class, 'formatSubastaTime']);
+
 // Rutas públicas para pruebas de chat
 Route::post('/test-chat-invitacion', [NotificacionController::class, 'crearNotificacionChatPublico']);
 Route::get('/test-notificaciones/{usuarioId}', [NotificacionController::class, 'obtenerNotificacionesPublico']);
@@ -74,8 +82,6 @@ Route::post('/chat/{chatId}/valorar-casa', [ChatController::class, 'valorarUsuar
 Route::post('/chat/{chatId}/finalizar-chat', [ChatController::class, 'finalizarChat']);
 Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat']);
 
-Route::apiResource('subastas', SubastaController::class);
-
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -90,6 +96,15 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['authenticated' => true]);
     });
 
+    Route::post('/email/resend', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'El correo ya está verificado.'], 400);
+        }
+
+        return response()->json(['message' => 'Correo de verificación reenviado.']);
+    });
+
+    Route::apiResource('subastas', SubastaController::class);
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);
     Route::apiResource('categorias', CategoriaController::class);
@@ -122,4 +137,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
         Route::get('/usuarios', [AdminController::class, 'usuariosPorRol']);
     });
+    // Rutas de administración
+    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
+    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
+    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+    
+    // Rutas de PayPal
+    Route::post('/paypal/create-order', [PaypalController::class, 'createOrder']);
+    Route::post('/paypal/capture-payment', [PaypalController::class, 'capturePayment']);
+    Route::post('/paypal/webhook', [PaypalController::class, 'webhook']);
+    Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal.success');
+    Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal.cancel');
 });

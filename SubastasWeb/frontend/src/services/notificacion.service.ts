@@ -48,7 +48,7 @@ export class NotificacionService {
 
   actualizarNotificaciones(): void {
     const rol = this.authService.getRol();
-    if (rol === 'admin' || rol === 'casa_remate') {
+    if (rol === 'admin') {
       this.destruir();
       return;
     }
@@ -84,7 +84,7 @@ export class NotificacionService {
     );
   }
 
-  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: Number): Observable<notificacionDto> {
+  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: string): Observable<notificacionDto> {
     const notificacion = {
       titulo: titulo,
       mensaje: mensaje,
@@ -112,6 +112,15 @@ export class NotificacionService {
   }
 
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
+    const usuarioId = localStorage.getItem('usuario_id');
+    const rol = this.authService.getRol();
+    
+    // Para casas de remate, usar endpoint público
+    if (rol === 'casa_remate' && usuarioId) {
+      return this.obtenerNotificacionesPublico(Number(usuarioId));
+    }
+    
+    // Para otros roles, usar endpoint autenticado
     return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
         if (Array.isArray(notificaciones)) {
