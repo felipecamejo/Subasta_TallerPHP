@@ -191,6 +191,9 @@ class SubastaController extends Controller
                 'longitud'        => 'nullable|numeric|between:-180,180',
                 'videoId'         => 'nullable|string|max:255',
                 'loteIndex'       => 'nullable|integer|min:0',
+                'lotes'           => 'sometimes|array',
+                'lotes.*.id'      => 'sometimes|required|integer|exists:lotes,id',
+                'lotes.*.pago'    => 'sometimes|required|boolean',
             ]);
 
             // Filtrar solo los campos que están presentes en la request
@@ -211,7 +214,40 @@ class SubastaController extends Controller
 
             $subasta->update($dataToUpdate); 
 
-            return response()->json($subasta->load(['casaRemate', 'rematador']));
+            // Handle lotes update if provided
+            if ($request->has('lotes') && is_array($request->lotes)) {
+                foreach ($request->lotes as $loteData) {
+                    if (isset($loteData['id'])) {
+                        $lote = Lote::find($loteData['id']);
+                        if ($lote && $lote->subasta_id == $subasta->id) {
+                            // Update only the fields that are present in the request
+                            $loteUpdateData = array_filter([
+                                'pago' => $loteData['pago'] ?? null,
+                                'valorBase' => $loteData['valorBase'] ?? null,
+                                'pujaMinima' => $loteData['pujaMinima'] ?? null,
+                                'umbral' => $loteData['umbral'] ?? null,
+                            ], function($value) {
+                                return $value !== null;
+                            });
+                            
+                            if (!empty($loteUpdateData)) {
+                                $lote->update($loteUpdateData);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Load the complete subasta with its related data including updated lotes
+            $updatedSubasta = $subasta->load([
+                'casaRemate.usuario', 
+                'rematador', 
+                'lotes.pujas.cliente.usuario', 
+                'lotes.articulos.categoria',
+                'lotes.articulos.vendedor'
+            ]);
+
+            return response()->json($updatedSubasta);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([

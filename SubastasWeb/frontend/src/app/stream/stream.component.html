@@ -78,11 +78,11 @@
             </div>
         </div>
 
-        <!-- Mensaje de pago completado (solo si ya pagó) -->
+        <!-- Mensaje de pago completado (solo si ya pagó todos los lotes) -->
         <div class="payment-completed-notification" *ngIf="mostrarMensajePagado">
             <div class="alert alert-success">
                 <i class="pi pi-check-circle"></i>
-                <strong>¡Pago Completado!</strong> Has completado el pago de tus lotes ganados.
+                <strong>¡Pago Completado!</strong> Has completado el pago de todos tus lotes ganados.
                 <p>Total pagado: <strong>${{ montoTotalGanador }}</strong></p>
                 <p><small>El chat con la casa de remate está disponible para coordinar la entrega.</small></p>
             </div>
@@ -104,25 +104,25 @@
             [baseZIndex]="10000">
 
             <section class="payment-section" style="overflow-y: auto; max-height: 60vh;">
-                <h3>🎉 ¡Felicidades! Has ganado {{ lotesGanadosPorUsuario.length === 1 ? '1 lote' : lotesGanadosPorUsuario.length + ' lotes' }}</h3>
+                <h3>🎉 ¡Felicidades! Has ganado {{ lotesGanadosSinPagar.length === 1 ? '1 lote pendiente de pago' : lotesGanadosSinPagar.length + ' lotes pendientes de pago' }}</h3>
                 
-                <!-- Detalles de lotes ganados -->
+                <!-- Detalles de lotes ganados sin pagar -->
                 <div class="lotes-ganados-detalle" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
-                    <h4 style="margin-top: 0; color: #28a745;">📋 Resumen de lotes ganados:</h4>
-                    <div *ngFor="let detalle of lotesGanadosDetalle; let i = index" style="margin-bottom: 10px; padding: 8px; background-color: white; border-radius: 4px;">
-                        <strong>Lote {{ detalle.ganador.numeroLote }}</strong>
+                    <h4 style="margin-top: 0; color: #28a745;">📋 Resumen de lotes pendientes de pago:</h4>
+                    <div *ngFor="let ganador of lotesGanadosSinPagar; let i = index" style="margin-bottom: 10px; padding: 8px; background-color: white; border-radius: 4px;">
+                        <strong>Lote {{ ganador.numeroLote }}</strong>
                         <div style="color: #28a745; font-weight: bold; margin-top: 4px;">
-                            Monto ganador: ${{ detalle.ganador.monto }}
+                            Monto ganador: ${{ ganador.monto }}
                         </div>
                     </div>
                     <hr style="margin: 15px 0;">
                     <div style="font-size: 18px; font-weight: bold; color: #28a745; text-align: right;">
-                        <strong>Total a pagar: ${{ montoTotalGanador }}</strong>
+                        <strong>Total a pagar: ${{ montoTotalGanadorSinPagar }}</strong>
                     </div>
                 </div>
                 
-                <!-- Mostrar PayPal solo si NO ha pagado -->
-                <div *ngIf="!pagado">
+                <!-- Mostrar PayPal solo si hay lotes sin pagar -->
+                <div *ngIf="lotesGanadosSinPagar.length > 0">
                     <p>Por favor, procede con el pago para completar la transacción:</p>
                     <div class="payment-container" style="min-height: 300px; overflow: visible;">
                         <app-paypal 
@@ -137,13 +137,13 @@
                     </div>
                 </div>
 
-                <!-- Mostrar mensaje de pago completado si YA pagó -->
-                <div *ngIf="pagado" style="text-align: center; padding: 20px;">
+                <!-- Mostrar mensaje de pago completado si NO hay lotes sin pagar -->
+                <div *ngIf="lotesGanadosSinPagar.length === 0 && lotesGanadosPorUsuario.length > 0" style="text-align: center; padding: 20px;">
                     <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0;">
                         <i class="pi pi-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
                         <h3 style="color: #28a745; margin: 15px 0;">¡Pago Completado Exitosamente! ✅</h3>
                         <p style="font-size: 16px; margin: 10px 0;">
-                            Has pagado un total de <strong style="color: #28a745;">${{ montoTotalGanador }}</strong>
+                            Has pagado todos tus lotes ganados por un total de <strong style="color: #28a745;">${{ montoTotalGanador }}</strong>
                         </p>
                         <p style="color: #6c757d; margin: 15px 0;">
                             💬 El chat con la casa de remate está disponible para coordinar la entrega de tus artículos.

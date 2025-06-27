@@ -21,7 +21,7 @@ class SubastaSeeder extends Seeder
             'nombre' => 'alexis',
             'duracionMinutos' => 2,
             'activa' => false,
-            'fecha' => '2025-08-02 10:00:00',
+            'fecha' => '2025-06-27 00:50:00',
             'latitud' => -30.9011000,
             'longitud' => -50.1645000,
             'videoId' => 'PaFHwTjy1yE',

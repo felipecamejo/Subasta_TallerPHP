@@ -95,9 +95,10 @@ export class StreamComponent implements OnInit, OnDestroy {
   modalVideo: boolean = false;
   video: string = '';
   pagando: boolean = false;
-  pagado: boolean = false; // Variable para rastrear si ya se completó el pago
+  loteActualPagado: boolean = false; // Variable para rastrear si el lote actual ya se completó el pago
   paypalMonto: number = 0;
   paypalComponentKey: boolean = true; // Para forzar recreación del componente PayPal
+  loteIdPagando: number | null = null; // ID del lote que se está pagando actualmente
 
   // Getters
   get timer(): string {
@@ -184,16 +185,8 @@ export class StreamComponent implements OnInit, OnDestroy {
     
     const usuarioId = Number(usuarioActual);
     
-    // MÉTODO 1: Verificar en tiempo real durante la subasta activa
-    if (this.subasta?.activa && this.timerState.timerActivo) {
-      // Durante la subasta, verificar si es ganador del lote actual
-      const ganadorLoteActual = this.ganadores[this.indexLotes];
-      if (ganadorLoteActual && ganadorLoteActual.clienteId === usuarioId && ganadorLoteActual.monto > 0) {
-        return true;
-      }
-    }
-    
-    // MÉTODO 2: Al final de la subasta, verificar todos los lotes ganados
+    // Solo verificar ganadores cuando la subasta haya terminado 
+    // Un usuario no puede ser "ganador" mientras la subasta sigue activa
     if (!this.subasta?.activa || !this.timerState.timerActivo) {
       const lotesGanados = this.lotesGanadosPorUsuario.length;
       if (lotesGanados > 0) {
@@ -206,18 +199,25 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   /**
    * Getter que determina si debe mostrar el botón de "Proceder al Pago"
-   * Solo se muestra si es ganador Y no ha pagado todavía
+   * Solo se muestra si es ganador de lotes sin pagar Y no está pagando actualmente
    */
   get mostrarBotonPago(): boolean {
-    return this.esGanador && !this.pagado && !this.pagando;
+    const lotesGanadosSinPagar = this.lotesGanadosSinPagar;
+    return this.esGanador && lotesGanadosSinPagar.length > 0 && !this.pagando;
   }
 
   /**
    * Getter que determina si debe mostrar el mensaje de "Pago Completado"
-   * Solo se muestra si es ganador Y ya ha pagado
+   * Solo se muestra si es ganador Y todos los lotes ganados están pagados
    */
   get mostrarMensajePagado(): boolean {
-    return this.esGanador && this.pagado && !this.pagando;
+    const lotesGanados = this.lotesGanadosPorUsuario;
+    const lotesPagados = lotesGanados.filter(ganador => {
+      const lote = this.lotes.find(l => l.id === ganador.numeroLote);
+      return lote?.pago === true;
+    });
+    
+    return this.esGanador && lotesGanados.length > 0 && lotesPagados.length === lotesGanados.length && !this.pagando;
   }
 
   /**
@@ -234,22 +234,31 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calcula el monto total de todos los lotes ganados por el usuario
+   * Getter que devuelve todos los lotes ganados por el usuario que NO han sido pagados
    */
-  get montoTotalGanador(): number {
-    return this.lotesGanadosPorUsuario.reduce((total, ganador) => {
+  get lotesGanadosSinPagar(): ganadorDto[] {
+    return this.lotesGanadosPorUsuario.filter(ganador => {
+      const lote = this.lotes.find(l => l.id === ganador.numeroLote);
+      return lote?.pago === false; // Solo lotes no pagados
+    });
+  }
+
+  /**
+   * Calcula el monto total de todos los lotes ganados por el usuario que NO han sido pagados
+   */
+  get montoTotalGanadorSinPagar(): number {
+    return this.lotesGanadosSinPagar.reduce((total, ganador) => {
       return total + Number(ganador.monto);
     }, 0);
   }
 
   /**
-   * Obtiene información detallada de los lotes ganados
+   * Calcula el monto total de todos los lotes ganados por el usuario (pagados y sin pagar)
    */
-  get lotesGanadosDetalle(): Array<{lote: loteDto, ganador: ganadorDto}> {
-    return this.lotesGanadosPorUsuario.map(ganador => {
-      const lote = this.lotes.find(l => l.id === ganador.numeroLote) || this.lotes[ganador.numeroLote - 1];
-      return { lote, ganador };
-    });
+  get montoTotalGanador(): number {
+    return this.lotesGanadosPorUsuario.reduce((total, ganador) => {
+      return total + Number(ganador.monto);
+    }, 0);
   }
 
   constructor(
@@ -284,8 +293,9 @@ export class StreamComponent implements OnInit, OnDestroy {
             id: this.subasta!.id,
             fecha: this.subasta!.fecha,
             duracionMinutos: this.subasta!.duracionMinutos,
-            nombre: this.subasta!.nombre
-          }
+            nombre: this.subasta!.nombre,
+          },
+          pago: lote.pago
         }));
 
         // Inicializar array de ganadores con el tamaño correcto
@@ -698,8 +708,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         };
 
         this.subastaService.enviarMail(email).subscribe({
-          next: (response) => console.log('📧 Email de puja enviado exitosamente'),
-          error: (error) => console.error('Error al enviar email:', error)
+          next: (response) => console.log('📧 MAIL ENVIADO: Email de puja enviado exitosamente a', this.clienteMail),
+          error: (error) => console.error('❌ ERROR AL ENVIAR MAIL:', error)
         });
 
        
@@ -709,18 +719,21 @@ export class StreamComponent implements OnInit, OnDestroy {
             clienteId: puja.cliente_id || 0,
             monto: Number(puja.monto)
           };
-          console.log(`🏆 Nuevo ganador en lote ${this.indexLotes}: Cliente ${puja.cliente_id} con $${puja.monto}`);
+          console.log(`🏆 NUEVO GANADOR: Lote ${this.indexLotes} (ID: ${this.lotes[this.indexLotes].id}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
         } else {
+          const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
+          const montoAnterior = this.ganadores[this.indexLotes].monto;
           
           this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
-          this.ganadores[this.indexLotes].monto = Number(puja.monto); // IMPORTANTE: Actualizar el monto también
-         
+          this.ganadores[this.indexLotes].monto = Number(puja.monto);
+          
+          console.log(`🔄 CAMBIO DE GANADOR: Lote ${this.indexLotes} (ID: ${this.lotes[this.indexLotes].id}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
         }
 
         this.pujaService.crearPuja(puja).subscribe({
           next: (data) => {
-            console.log('💰 Puja realizada exitosamente: $' + data.monto);
-
+            console.log(`💰 NUEVA PUJA CREADA: Lote ${this.lotes[this.indexLotes].id} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
+            
             this.pujaActual = data.monto;
             this.pujaRapida = data.monto + 1;
             this.pujaComun = null;
@@ -775,8 +788,8 @@ export class StreamComponent implements OnInit, OnDestroy {
         false, 
         0
       ).subscribe({
-        next: (notificacion) => console.log('🔔 Notificación de umbral superado enviada'),
-        error: (error) => console.error('Error al crear notificación de umbral:', error)
+        next: (notificacion) => console.log(`🔔 NOTIFICACIÓN ENVIADA: Umbral superado - Lote ${this.lotes[this.indexLotes].id} - Casa de remate ${casaRemateId} - Monto: $${monto}`),
+        error: (error) => console.error('❌ ERROR AL CREAR NOTIFICACIÓN DE UMBRAL:', error)
       });
     }
   }  // Variables para control de navegación del rematador
@@ -903,7 +916,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     const auctionJoinedSubscription = this.websocketService.onAuctionJoined().subscribe({
       next: (data) => {
-        console.log('🌐 WebSocket conectado exitosamente a la subasta');
+        console.log(`🌐 WEBSOCKET CONECTADO: Subasta ${this.subasta?.id} - Usuario ${localStorage.getItem('usuario_id')} conectado exitosamente`);
         this.onWebSocketConnect();
       }
     });
@@ -1057,9 +1070,10 @@ export class StreamComponent implements OnInit, OnDestroy {
     // PASO 3: Determinar ganador del lote actual
     const ganadorId = this.encontrarGanador();
     
-    // PASO 4: Si el usuario actual es ganador de algún lote, mostrar PayPal con el total
-    if (this.lotesGanadosPorUsuario.length > 0) {
-      this.paypalMonto = this.montoTotalGanador; // Usar el monto total
+    // PASO 4: Si el usuario actual es ganador de lotes sin pagar, mostrar PayPal con el total sin pagar
+    const lotesSinPagar = this.lotesGanadosSinPagar;
+    if (lotesSinPagar.length > 0) {
+      this.paypalMonto = this.montoTotalGanadorSinPagar; // Usar el monto total sin pagar
       
       // Asegurar que el componente PayPal se inicialice correctamente
       this.paypalComponentKey = true;
@@ -1067,10 +1081,10 @@ export class StreamComponent implements OnInit, OnDestroy {
       
       // Mensaje de confirmación con detalles
       setTimeout(() => {
-        const cantidadLotes = this.lotesGanadosPorUsuario.length;
+        const cantidadLotes = lotesSinPagar.length;
         const mensaje = cantidadLotes === 1 
-          ? `¡Felicidades! Has ganado 1 lote por $${this.montoTotalGanador}. Procede con el pago.`
-          : `¡Felicidades! Has ganado ${cantidadLotes} lotes por un total de $${this.montoTotalGanador}. Procede con el pago.`;
+          ? `¡Felicidades! Has ganado 1 lote por $${this.montoTotalGanadorSinPagar}. Procede con el pago.`
+          : `¡Felicidades! Has ganado ${cantidadLotes} lotes por un total de $${this.montoTotalGanadorSinPagar}. Procede con el pago.`;
         alert(mensaje);
       }, 1000);
     } else if (ganadorId) {
@@ -1180,36 +1194,80 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   /**
    * Maneja el pago exitoso del ganador.
+   * Marca los lotes sin pagar como pagados y persiste en la base de datos.
    * Después del pago, crea automáticamente una invitación de chat con la casa de remate.
    */
   async onPaymentSuccess(paymentData: any): Promise<void> {
-    console.log('💰 Pago exitoso: $' + this.paypalMonto);
+    console.log(`💳 PAGO EXITOSO: Usuario ${localStorage.getItem('usuario_id')} - Monto: $${this.paypalMonto} - Lotes pagados: ${this.lotesGanadosSinPagar.length}`);
     
     try {
-      console.log('🔍 DEBUG: Iniciando proceso post-pago...');
+      // PASO 1: Marcar lotes como pagados y cerrar modal de pago
+      const lotesSinPagar = this.lotesGanadosSinPagar;
+      console.log(`💰 PROCESANDO PAGO: Marcando ${lotesSinPagar.length} lotes como pagados:`, lotesSinPagar.map(l => `Lote ${l.numeroLote}: $${l.monto}`));
       
-      // PASO 1: Marcar como pagado y cerrar modal de pago
-      this.pagado = true;
+      // Marcar cada lote ganado como pagado en ambos arrays
+      lotesSinPagar.forEach(ganador => {
+        // Actualizar en this.lotes
+        const lote = this.lotes.find(l => l.id === ganador.numeroLote);
+        if (lote) {
+          lote.pago = true;
+          console.log(`✅ LOTE PAGADO: Lote ${lote.id} marcado como pagado en this.lotes`);
+        }
+        
+        // Actualizar en this.subasta.lotes
+        if (this.subasta?.lotes) {
+          const loteSubasta = this.subasta.lotes.find(l => l.id === ganador.numeroLote);
+          if (loteSubasta) {
+            loteSubasta.pago = true;
+            console.log(`✅ LOTE PAGADO: Lote ${loteSubasta.id} marcado como pagado en this.subasta.lotes`);
+          }
+        }
+      });
+      
       this.pagando = false;
-      console.log('🔍 DEBUG: Marcado como pagado');
+      
+      // PASO 1.5: Persistir cambios en la base de datos
+      if (this.subasta) {
+        this.subastaService.updateSubasta(this.subasta).subscribe({
+          next: (subastaActualizada) => {
+            console.log(`💾 PERSISTENCIA EXITOSA: Estado de pago actualizado en BD para ${lotesSinPagar.length} lotes`);
+            // Actualizar la subasta local con los datos del servidor
+            this.subasta = subastaActualizada;
+            
+            // También actualizar this.lotes para mantener sincronización
+            if (subastaActualizada.lotes) {
+              this.lotes = subastaActualizada.lotes.map(lote => ({
+                ...lote,
+                subasta: {
+                  id: this.subasta!.id,
+                  fecha: this.subasta!.fecha,
+                  duracionMinutos: this.subasta!.duracionMinutos,
+                  nombre: this.subasta!.nombre,
+                },
+                pago: lote.pago
+              }));
+            }
+          },
+          error: (error) => {
+            console.error('❌ ERROR EN PERSISTENCIA: Error al actualizar estado de pago en la base de datos:', error);
+            // Aunque falle la persistencia, continuar con el proceso
+          }
+        });
+      }
       
       // PASO 2: Obtener datos del ganador y casa de remate
       const usuarioActual = localStorage.getItem('usuario_id');
       const ganadorId = usuarioActual ? Number(usuarioActual) : (this.ganadores[this.indexLotes]?.clienteId || 0);
       const ganadorNombre = localStorage.getItem('usuario_nombre') || `Usuario ${ganadorId}`;
       
-      console.log('🔍 DEBUG: Datos del ganador:', { ganadorId, ganadorNombre });
-      console.log('🔍 DEBUG: Subasta casa_remate:', this.subasta?.casa_remate);
-      
       if (!ganadorId || !this.subasta?.casa_remate) {
-        console.log('❌ DEBUG: Faltan datos necesarios para crear chat');
         alert('Pago exitoso! Por favor contacte a la casa de remate para coordinar la entrega.');
         return;
       }
-
-      console.log('🔍 DEBUG: Preparando llamada a crearInvitacionChat...');
       
       // PASO 3: Crear invitación de chat con notificaciones automáticas (como en test-chat)
+      console.log(`💬 CREANDO CHAT: Ganador ${ganadorId} (${ganadorNombre}) con Casa de Remate ${this.subasta.casa_remate.usuario_id}`);
+      
       const chatResult = await this.chatService.crearInvitacionChat(
         ganadorId,
         ganadorNombre,
@@ -1217,48 +1275,26 @@ export class StreamComponent implements OnInit, OnDestroy {
         this.subasta.casa_remate.usuario?.nombre || 'Casa de Remate'
       );
 
-      console.log('🔍 DEBUG: Respuesta de crearInvitacionChat:', chatResult);
-
       // PASO 4: Manejar resultado del chat
-      console.log('💬 Chat creado después del pago:', chatResult);
       if (chatResult.success) {
+        console.log(`✅ CHAT CREADO: Chat exitoso entre ganador ${ganadorId} y casa de remate ${this.subasta.casa_remate.usuario_id}`);
         this.chatRoomId = chatResult.chatId || `chat_${ganadorId}_${this.subasta.casa_remate.usuario_id}`;
         this.chatCreado = true;
         
-        console.log('💬 Invitación de chat creada exitosamente con notificaciones automáticas');
-        
-        // Verificar que las notificaciones se hayan enviado correctamente
-        setTimeout(() => {
-          this.verificarNotificacionesChat(ganadorId, this.subasta!.casa_remate.usuario_id || 0);
-        }, 1000); // Esperar 1 segundo para que el backend procese las notificaciones
-        
         // Mostrar mensaje de éxito completo
-        alert(`¡Pago exitoso por $${this.paypalMonto}! 
-        
-${chatResult.message}
-
-Ambos usuarios recibirán notificaciones para chatear y coordinar la entrega del artículo.`);
+        alert(`¡Pago exitoso por $${this.paypalMonto}! ${chatResult.message} Ambos usuarios recibirán notificaciones para chatear y coordinar la entrega del artículo.`);
         
       } else {
-        console.error('❌ Error al crear invitación de chat:', chatResult.message);
-        alert(`Pago exitoso por $${this.paypalMonto}!
-
-Hubo un problema al crear la invitación de chat: ${chatResult.message}
-
-Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
+        console.error('❌ ERROR EN CHAT: Error al crear invitación de chat:', chatResult.message);
+        alert(`Pago exitoso por $${this.paypalMonto}! Hubo un problema al crear la invitación de chat: ${chatResult.message} Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
       }
       
     } catch (error) {
-      console.error('❌ Error al crear invitación de chat después del pago:', error);
+      console.error('❌ ERROR CRÍTICO EN PAGO: Error al crear invitación de chat después del pago:', error);
       const errorMessage = error && typeof error === 'object' && 'error' in error 
         ? (error as any).error?.message || (error as any).message 
         : 'Error desconocido';
-        
-      alert(`Pago exitoso por $${this.paypalMonto}! 
-
-Hubo un error al crear la invitación de chat: ${errorMessage}
-
-Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
+        alert(`Pago exitoso por $${this.paypalMonto}! Hubo un error al crear la invitación de chat: ${errorMessage} Por favor contacte directamente a la casa de remate para coordinar la entrega.`);
     }
   }
 
@@ -1277,23 +1313,23 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
   }
 
   /**
-   * Reabre el modal de pago cuando el usuario ya ganó lotes
+   * Reabre el modal de pago cuando el usuario ya ganó lotes sin pagar
    */
   reabrirModalPago(): void {
-    // No permitir reabrir el modal si ya se completó el pago
-    if (this.pagado) {
-      alert('El pago ya fue completado exitosamente.');
+    const lotesSinPagar = this.lotesGanadosSinPagar;
+    
+    // No permitir reabrir el modal si no hay lotes sin pagar
+    if (lotesSinPagar.length === 0) {
+      alert('Todos los lotes ganados ya han sido pagados.');
       return;
     }
 
-    if (this.lotesGanadosPorUsuario.length > 0) {
-      this.paypalMonto = this.montoTotalGanador; // Usar monto total
+    if (lotesSinPagar.length > 0) {
+      this.paypalMonto = this.montoTotalGanadorSinPagar; // Usar monto total sin pagar
       this.paypalComponentKey = !this.paypalComponentKey; // Toggle para recrear componente
       this.pagando = true;
-      console.log('💰 Modal de pago reabierto con monto total:', this.paypalMonto);
     } else {
-      console.warn('⚠️ Usuario no tiene lotes ganados para mostrar modal de pago');
-      alert('No tienes lotes ganados para proceder al pago.');
+      alert('No tienes lotes pendientes de pago.');
     }
   }
 
@@ -1303,15 +1339,12 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
    * Configura verificaciones periódicas si la subasta está programada para el futuro.
    */
   private verificarInicioAutomaticoSubasta(): void {
-    
     if (!this.subasta || !this.subasta.fecha || !this.subasta.duracionMinutos) {
-      console.warn('❌ No se puede verificar inicio automático: datos de subasta incompletos');
       return;
     }
 
     const fechaSubasta = this.parsearFechaSubasta(this.subasta.fecha);
     if (!fechaSubasta) {
-      console.error('❌ No se pudo parsear la fecha de la subasta:', this.subasta.fecha);
       return;
     }
     
@@ -1324,7 +1357,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
     }
 
     if (fechaSubasta <= ahora) {
-      console.log('🚀 La hora de la subasta ha llegado, iniciando automáticamente');
       this.iniciarSubastaAutomaticamente();
       return;
     }
@@ -1388,7 +1420,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
    * Calcula el tiempo restante y activa el timer correspondiente.
    */
   private iniciarSubastaAutomaticamente(): void {
-    
     if (this.subasta) {
       this.subasta.activa = true;
       this.boton = true;
@@ -1422,7 +1453,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
    * Configura el timer display interval para actualizar la UI
    */
   onWebSocketConnect(): void {
-    console.log('WebSocket conectado correctamente');
     this.startTimerDisplayInterval();
   }
 
@@ -1430,7 +1460,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
    * Se ejecuta al desconectar del WebSocket
    */
   onWebSocketDisconnect(): void {
-    console.log('WebSocket desconectado');
     this.stopTimerDisplayInterval();
   }
 
@@ -1452,7 +1481,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
         this.cdr.detectChanges();
       }
     }, 1000);
-    
   }
 
   /**
@@ -1474,7 +1502,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
       clienteId: 0,
       monto: 0
     }));
-    
   }
 
   /**
@@ -1483,7 +1510,6 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
    * refleje correctamente quién ganó cada lote.
    */
   private sincronizarGanadoresCompleto(): void {
-    
     this.lotes.forEach((lote, index) => {
       const pujasLote = (lote.pujas as pujaDto[]) || [];
       
@@ -1511,15 +1537,11 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
             clienteId: ganadorId,
             monto: Number(pujaGanadora.monto)
           };
-          console.log(`🏆 Nuevo ganador en lote ${index} (ID: ${lote.id}): Cliente ${ganadorId} con $${pujaGanadora.monto}`);
         } else {
           this.ganadores[index].clienteId = ganadorId;
           this.ganadores[index].monto = Number(pujaGanadora.monto);
           this.ganadores[index].numeroLote = lote.id || (index + 1);
-
         }
-        
-        console.log(`🏆 Lote ${index} (ID: ${lote.id}) - Ganador: ${ganadorId}, Monto: $${pujaGanadora.monto}`);
       } else {
         // No hay pujas en este lote
         if (!this.ganadores[index]) {
@@ -1528,55 +1550,10 @@ Por favor contacte directamente a la casa de remate para coordinar la entrega.`)
             clienteId: 0,
             monto: 0
           };
-          console.log(`📭 Lote ${index} (ID: ${lote.id}) - Sin pujas, inicializado sin ganador`);
         } else {
           this.ganadores[index].clienteId = 0;
           this.ganadores[index].monto = 0; 
         }
-        
-        console.log(`📭 Lote ${index} (ID: ${lote.id}) - Sin pujas`);
-      }
-    });
-  }
-
-  /**
-   * Verifica que las notificaciones de chat se hayan enviado correctamente
-   * después de crear la invitación de chat post-pago
-   */
-  private verificarNotificacionesChat(usuario1Id: number, usuario2Id: number): void {
-    console.log('🔔 Verificando notificaciones de chat para usuarios:', usuario1Id, usuario2Id);
-    
-    // Verificar notificaciones del ganador (usuario actual)
-    this.notificacionService.obtenerNotificacionesPublico(usuario1Id).subscribe({
-      next: (notificaciones: notificacionUsuarioDto[]) => {
-        const notificacionesChat = notificaciones.filter(n => n.esMensajeChat);
-        console.log(`🔔 Notificaciones de chat para usuario ${usuario1Id}:`, notificacionesChat.length);
-        
-        if (notificacionesChat.length > 0) {
-          console.log('✅ Notificación de chat enviada exitosamente al ganador');
-        } else {
-          console.warn('⚠️ No se encontraron notificaciones de chat para el ganador');
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error al verificar notificaciones del ganador:', error);
-      }
-    });
-
-    // Verificar notificaciones de la casa de remate
-    this.notificacionService.obtenerNotificacionesPublico(usuario2Id).subscribe({
-      next: (notificaciones: notificacionUsuarioDto[]) => {
-        const notificacionesChat = notificaciones.filter(n => n.esMensajeChat);
-        console.log(`🔔 Notificaciones de chat para casa de remate ${usuario2Id}:`, notificacionesChat.length);
-        
-        if (notificacionesChat.length > 0) {
-          console.log('✅ Notificación de chat enviada exitosamente a la casa de remate');
-        } else {
-          console.warn('⚠️ No se encontraron notificaciones de chat para la casa de remate');
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error al verificar notificaciones de la casa de remate:', error);
       }
     });
   }

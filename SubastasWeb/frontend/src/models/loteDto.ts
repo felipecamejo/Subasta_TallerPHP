@@ -7,6 +7,7 @@ export interface loteDto {
     valorBase: number;
     pujaMinima: number;
     umbral: number;
+    pago: boolean;
     subasta: Pick<subastaDto, 'id' | 'fecha' | 'duracionMinutos'| 'nombre'>;
     pujas: Pick<pujaDto, 'id' | 'fechaHora' | 'monto' >[];
     articulos: Pick<articuloDto, 'id' | 'nombre' | 'imagen'| 'categoria' | 'estado'>[];
