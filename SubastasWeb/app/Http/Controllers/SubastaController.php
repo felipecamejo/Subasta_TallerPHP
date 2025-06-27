@@ -137,6 +137,15 @@ class SubastaController extends Controller
             return response()->json(['message' => 'Subasta no encontrada'], 404);
         }
 
+        // Ordenar los lotes por id ascendente antes de devolver la subasta
+        if ($subasta->relationLoaded('lotes') && $subasta->lotes) {
+            // Convertir a array, ordenar y volver a Collection para evitar problemas de claves
+            $lotesOrdenados = $subasta->lotes->sortBy(function($lote) {
+                return (int) $lote->id;
+            })->values();
+            $subasta->setRelation('lotes', $lotesOrdenados);
+        }
+
         return response()->json($subasta);
     }
 

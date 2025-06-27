@@ -694,25 +694,30 @@ export class StreamComponent implements OnInit, OnDestroy {
       puja.cliente_id = Number(usuarioId);
     }
 
+    // 2. Enviar email de confirmación al usuario que realiza la puja
     this.subastaService.getClienteMail(puja.cliente_id).subscribe({
       next: (mail) => {
         if (!mail) {
           return;
         }
-        this.clienteMail = mail;
-        
+
+        const exGanador = mail;
+
         const email: mailDto = {
-          email: this.clienteMail,
+          email: mail,
           asunto: `Puja realizada en la subasta ${this.subasta?.nombre || 'desconocida'}`,
           mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${this.lotes[this.indexLotes].id} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
         };
 
-        this.subastaService.enviarMail(email).subscribe({
-          next: (response) => console.log('📧 MAIL ENVIADO: Email de puja enviado exitosamente a', this.clienteMail),
-          error: (error) => console.error('❌ ERROR AL ENVIAR MAIL:', error)
-        });
+        if (this.esUsuarioGanadorActualLote()) {
+          this.subastaService.enviarMail(email).subscribe({
+            next: (response) => console.log('📧 MAIL ENVIADO: Email de confirmación enviado exitosamente a', this.clienteMail),
+            error: (error) => console.error('❌ ERROR AL ENVIAR MAIL DE CONFIRMACIÓN:', error)
+          });
+        }
 
-       
+        
+        // Actualizar el array de ganadores
         if (!this.ganadores[this.indexLotes]) {
           this.ganadores[this.indexLotes] = {
             numeroLote: this.lotes[this.indexLotes].id || (this.indexLotes + 1),
@@ -723,21 +728,17 @@ export class StreamComponent implements OnInit, OnDestroy {
         } else {
           const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
           const montoAnterior = this.ganadores[this.indexLotes].monto;
-          
           this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
           this.ganadores[this.indexLotes].monto = Number(puja.monto);
-          
           console.log(`🔄 CAMBIO DE GANADOR: Lote ${this.indexLotes} (ID: ${this.lotes[this.indexLotes].id}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
         }
 
         this.pujaService.crearPuja(puja).subscribe({
           next: (data) => {
             console.log(`💰 NUEVA PUJA CREADA: Lote ${this.lotes[this.indexLotes].id} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
-            
             this.pujaActual = data.monto;
             this.pujaRapida = data.monto + 1;
             this.pujaComun = null;
-            
             const nuevaPuja: pujaDto = {
               id: data.id,
               fechaHora: new Date(data.fechaHora),
@@ -749,7 +750,7 @@ export class StreamComponent implements OnInit, OnDestroy {
                   id: puja.cliente_id!,
                   nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
                   email: this.clienteMail || '',
-                  imagen: '' // Campo imagen vacío por defecto
+                  imagen: ''
                 }
               }
             };
@@ -757,15 +758,28 @@ export class StreamComponent implements OnInit, OnDestroy {
 
             this.sendWebSocketBid(puja);
 
-            if (this.lotes[this.indexLotes].umbral < data.monto && !this.umbralSuperado) {
-              this.umbralSuperado = true;
-              this.enviarNotificacionUmbral(data.monto);
-            }
+            // 3. Notificar al ex ganador si existe y es distinto al usuario actual
+            if (exGanador) {
+              
+              const exEmail: mailDto = {
+                email: exGanador,
+                asunto: `Puja superada - ${this.subasta?.nombre}`,
+                mensaje: `Tu puja en el lote ${this.lotes[this.indexLotes].id} de la subasta ${this.subasta?.nombre} ha sido superada.`
+              };
 
-            // Retrasar la actualización de datos para evitar interferir con navegación del rematador
+              console.log('🔔 NOTIFICACIÓN AL EX GANADOR:', exGanador);
+
+              if (this.esUsuarioGanadorActualLote()) {
+                this.subastaService.enviarMail(exEmail).subscribe({
+                  next: () => console.log('📧 MAIL ENVIADO: Notificación de puja superada enviada a', exGanador),
+                  error: (error) => console.error('❌ ERROR AL ENVIAR MAIL AL EX GANADOR:', error)
+                });
+              }
+            }
+            
             setTimeout(() => {
               this.actualizarDatosSinSobrescribir();
-            }, 500); // Retraso de 500ms
+            }, 500);
           },
           error: (err) => {
             alert('Error al procesar la puja. Por favor, intente nuevamente.');
@@ -786,7 +800,7 @@ export class StreamComponent implements OnInit, OnDestroy {
         `El lote ID: ${this.lotes[this.indexLotes].id} ha superado su umbral de $${this.lotes[this.indexLotes].umbral}. Nueva puja: $${monto}`, 
         casaRemateId, 
         false, 
-        0
+        ""
       ).subscribe({
         next: (notificacion) => console.log(`🔔 NOTIFICACIÓN ENVIADA: Umbral superado - Lote ${this.lotes[this.indexLotes].id} - Casa de remate ${casaRemateId} - Monto: $${monto}`),
         error: (error) => console.error('❌ ERROR AL CREAR NOTIFICACIÓN DE UMBRAL:', error)
@@ -963,11 +977,23 @@ export class StreamComponent implements OnInit, OnDestroy {
 
       if (this.lotes[this.indexLotes].umbral < bidData.bidAmount && !this.umbralSuperado) {
         this.umbralSuperado = true;
+        console.log("🔔 UMBRAL SUPERADO");
+        if (this.esUsuarioGanadorActualLote()) {
+          this.enviarNotificacionUmbral(bidData.bidAmount);
+        }
       }
-      
       // Forzar detección de cambios
       this.cdr.detectChanges();
     }
+  }
+
+  private esUsuarioGanadorActualLote(): boolean {
+    // Busca el ganador del lote actual en el array ganadores
+    const ganadorLote = this.ganadores[this.indexLotes];
+    const usuarioActual = localStorage.getItem('usuario_id');
+    if (!ganadorLote || !ganadorLote.clienteId || ganadorLote.clienteId === 0) return true;
+    if (!usuarioActual) return false;
+    return Number(usuarioActual) === Number(ganadorLote.clienteId);
   }
 
   private handleLoteUpdateFromWebSocket(loteData: any): void {
@@ -1009,7 +1035,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
     this.websocketService.sendBid(
       this.subasta.id,
-      Number(localStorage.getItem('usuario_id')) || 999,
+      puja.cliente_id || 0,
       'Usuario',
       puja.monto,
       puja.lote_id
@@ -1530,7 +1556,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           ganadorId = Number(pujaGanadora.cliente.usuario.id);
         }
         
-        // Actualizar el array ganadores
+        // Actualizar el array de ganadores
         if (!this.ganadores[index]) {
           this.ganadores[index] = {
             numeroLote: lote.id || (index + 1),

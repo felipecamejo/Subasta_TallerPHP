@@ -84,7 +84,7 @@ export class NotificacionService {
     );
   }
 
-  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: Number): Observable<notificacionDto> {
+  crearNotificacion(titulo: string, mensaje: string, idUsuarioDestino: number, chat: boolean, chatId: string): Observable<notificacionDto> {
     const notificacion = {
       titulo: titulo,
       mensaje: mensaje,
