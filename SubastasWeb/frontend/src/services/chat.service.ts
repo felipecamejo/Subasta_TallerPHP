@@ -98,19 +98,21 @@ export class ChatService {
   ) {
     // Suscribirse a los mensajes de WebSocket
     this.websocketService.onNewMessage().subscribe(messageData => {
-      console.log('ChatService: Mensaje recibido de WebSocket:', messageData);
+      console.log('🔥 ChatService: Mensaje recibido de WebSocket:', messageData);
+      console.log('🔍 ChatService: chatId actual:', this.chatId);
+      console.log('🔍 ChatService: chatId del mensaje:', messageData.chatId);
+      console.log('🔍 ChatService: ¿Coinciden?', messageData.chatId === this.chatId);
+      
       if (messageData.chatId === this.chatId) {
-        const newMessage: ChatMessage = {
-          id: Date.now().toString(),
-          text: messageData.message,
-          senderId: messageData.fromUserId.toString(),
-          senderName: messageData.fromUserName,
-          timestamp: messageData.timestamp
-        };
+        console.log('✅ ChatService: Mensaje es para este chat, RECARGANDO MENSAJES...');
         
-        const currentMessages = this.messagesSubject.getValue();
-        console.log('Agregando mensaje de WebSocket al observable');
-        this.messagesSubject.next([...currentMessages, newMessage]);
+        // En lugar de agregar el mensaje manualmente, recargar todos los mensajes
+        // Esto asegura que tengamos la lista más actualizada desde la base de datos
+        this.recargarMensajes();
+        
+      } else {
+        console.log('❌ ChatService: Mensaje NO es para este chat, ignorando');
+        console.log('❌ ChatService: Esperado:', this.chatId, 'Recibido:', messageData.chatId);
       }
     });
   }
@@ -333,34 +335,12 @@ export class ChatService {
       console.log('Response.success:', response.success);
 
       if (response.success) {
-        console.log('=== CREANDO NUEVO MENSAJE PARA OBSERVABLE ===');
-        // Agregar el mensaje inmediatamente al observable local
-        const newMessage: ChatMessage = {
-          id: response.mensaje?.id?.toString() || Date.now().toString(),
-          text: message,
-          senderId: fromUserId.toString(),
-          senderName: fromUserName,
-          timestamp: new Date()
-        };
+        console.log('✅ MENSAJE GUARDADO EN BASE DE DATOS ✅');
         
-        console.log('Nuevo mensaje creado:', newMessage);
+        // NUEVA ESTRATEGIA: No agregar inmediatamente al observable
+        // En su lugar, enviar por WebSocket y dejar que la recarga automática maneje la actualización
         
-        const currentMessages = this.messagesSubject.getValue();
-        console.log('Mensajes actuales antes de agregar:', currentMessages.length);
-        console.log('Mensajes actuales:', currentMessages);
-        
-        const updatedMessages = [...currentMessages, newMessage];
-        console.log('Mensajes actualizados:', updatedMessages);
-        console.log('Total después de agregar:', updatedMessages.length);
-        
-        this.messagesSubject.next(updatedMessages);
-        console.log('Observable actualizado con next()');
-        
-        // Verificar que el observable se actualizó
-        const verifyMessages = this.messagesSubject.getValue();
-        console.log('Verificación: mensajes en observable después de next():', verifyMessages.length);
-        
-        // Luego enviar por WebSocket para notificación en tiempo real
+        console.log('📡 Enviando mensaje por WebSocket para notificación...');
         this.websocketService.sendMessage(
           this.chatId,
           fromUserId,
@@ -369,7 +349,14 @@ export class ChatService {
           fromUserName
         );
         
-        console.log('Mensaje agregado al observable local y enviado por WebSocket');
+        console.log('✅ Mensaje enviado por WebSocket, esperando recarga automática...');
+        
+        // Opcional: Recargar inmediatamente para mejor UX del usuario que envía
+        setTimeout(() => {
+          console.log('🔄 Recargando mensajes después de envío propio...');
+          this.recargarMensajes();
+        }, 100);
+        
       } else {
         throw new Error(response.message || 'Error al enviar mensaje');
       }
@@ -642,6 +629,107 @@ export class ChatService {
         necesitaValoracion: false,
         yaValoro: false
       };
+    }
+  }
+
+  /**
+   * Recargar mensajes desde la base de datos
+   * Se ejecuta cuando llega un nuevo mensaje por WebSocket
+   */
+  async recargarMensajes(): Promise<void> {
+    console.log('🔄 RECARGANDO MENSAJES desde la base de datos...');
+    
+    if (!this.chatId || !this.currentUserId) {
+      console.log('❌ No se puede recargar: faltan chatId o currentUserId');
+      return;
+    }
+
+    try {
+      const params = new HttpParams()
+        .set('usuario_id', this.currentUserId.toString())
+        .set('limit', '50');
+
+      const url = `${this.urlService.baseUrl}/chat/${this.chatId}/mensajes`;
+      console.log('🌐 Recargando mensajes desde:', url);
+      
+      const response = await firstValueFrom(
+        this.http.get<any>(url, { params })
+      );
+
+      console.log('📨 Respuesta de recarga:', response);
+
+      if (response.success && response.mensajes && Array.isArray(response.mensajes)) {
+        const mensajesActualizados: ChatMessage[] = response.mensajes
+          .reverse() // Invertir para orden cronológico
+          .map((msg: any) => ({
+            id: msg.id.toString(),
+            text: msg.contenido,
+            senderId: msg.usuario.id.toString(),
+            senderName: msg.usuario.nombre,
+            timestamp: this.parseTimestamp(msg.enviado_at),
+            leido: msg.leido,
+            tipo: msg.tipo
+          }));
+
+        console.log('✅ Mensajes recargados exitosamente:', mensajesActualizados.length);
+        
+        // Actualizar el observable con los mensajes frescos de la BD
+        this.messagesSubject.next(mensajesActualizados);
+        
+      } else {
+        console.log('⚠️ Respuesta de recarga no válida:', response);
+      }
+    } catch (error) {
+      console.error('❌ Error al recargar mensajes:', error);
+    }
+  }
+
+  /**
+   * Verificar estado del WebSocket y debugging
+   */
+  verificarEstadoWebSocket(): void {
+    console.log('=== DIAGNÓSTICO DE WEBSOCKET ===');
+    console.log('WebSocket conectado:', this.websocketService.isConnected());
+    console.log('WebSocket ID:', this.websocketService.getSocketId());
+    console.log('Chat ID actual:', this.chatId);
+    console.log('Usuario ID actual:', this.currentUserId);
+    console.log('Usuario nombre actual:', this.currentUserName);
+    console.log('Mensajes en observable:', this.messagesSubject.getValue().length);
+    console.log('================================');
+  }
+
+  /**
+   * Forzar reconexión WebSocket si es necesario
+   */
+  forzarReconexionWebSocket(): void {
+    console.log('🔄 Forzando reconexión WebSocket...');
+    
+    if (!this.websocketService.isConnected()) {
+      console.log('❌ WebSocket no conectado, intentando reconectar...');
+      this.websocketService.reconnect();
+      
+      // Esperar y volver a unirse al chat
+      setTimeout(() => {
+        if (this.chatId && this.currentUserId && this.currentUserName) {
+          console.log('🔗 Re-uniéndose al chat después de reconexión...');
+          this.websocketService.joinChat(
+            this.chatId,
+            this.currentUserId,
+            this.currentUserName
+          );
+        }
+      }, 2000);
+    } else {
+      console.log('✅ WebSocket ya está conectado');
+      // Solo re-unirse al chat por si acaso
+      if (this.chatId && this.currentUserId && this.currentUserName) {
+        console.log('🔗 Re-uniéndose al chat...');
+        this.websocketService.joinChat(
+          this.chatId,
+          this.currentUserId,
+          this.currentUserName
+        );
+      }
     }
   }
 }

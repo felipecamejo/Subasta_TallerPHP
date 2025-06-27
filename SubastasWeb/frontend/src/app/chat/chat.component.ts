@@ -97,8 +97,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     });
     this.subscriptions.push(routeSubscription);
 
-    // Configurar suscripción a mensajes WebSocket
-    this.configurarWebSocketSubscriptions();
+    // Los mensajes WebSocket se manejan automáticamente por el ChatService
 
     // Configurar el debounce para el estado de escritura
     const typingSubscription = this.typingSubject.pipe(
@@ -149,16 +148,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   }
 
   /**
-   * Configurar suscripciones a WebSocket
+   * Los mensajes WebSocket se procesan automáticamente por el ChatService.
+   * No necesitamos una suscripción adicional aquí.
    */
-  private configurarWebSocketSubscriptions(): void {
-    const messageSubscription = this.websocketService.onNewMessage().subscribe(message => {
-      if (message.chatId === this.chatId) {
-        // Mensaje recibido por WebSocket
-      }
-    });
-    this.subscriptions.push(messageSubscription);
-  }
 
   /**
    * Configurar suscripción a mensajes del ChatService
@@ -950,5 +942,40 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     
     this.valoracionSeleccionada = 0;
     this.mostrarModalValoracion = true;
+  }
+
+  /**
+   * Método temporal para debugging - verificar estado del WebSocket
+   */
+  debugWebSocket(): void {
+    console.log('=== DEBUG WEBSOCKET DESDE COMPONENTE ===');
+    this.chatService.verificarEstadoWebSocket();
+    
+    // También verificar estado de conexión del servicio WebSocket
+    console.log('WebSocket conectado (desde componente):', this.websocketService.isConnected());
+    console.log('ChatId actual del componente:', this.chatId);
+    console.log('CurrentUserId del componente:', this.currentUserId);
+    console.log('Mensajes en el componente:', this.messages.length);
+    
+    // Forzar reconexión si es necesario
+    if (!this.websocketService.isConnected()) {
+      console.log('⚠️ WebSocket no conectado, forzando reconexión...');
+      this.chatService.forzarReconexionWebSocket();
+    }
+  }
+
+  /**
+   * Método temporal para debugging - recargar mensajes manualmente
+   */
+  async recargarMensajesManual(): Promise<void> {
+    console.log('🔄 Recargando mensajes manualmente desde componente...');
+    
+    try {
+      // Usar el método público del ChatService
+      await this.chatService.recargarMensajes();
+      console.log('✅ Mensajes recargados exitosamente');
+    } catch (error) {
+      console.error('❌ Error al recargar mensajes:', error);
+    }
   }
 }

@@ -42,5 +42,11 @@
             return $this->hasOne(Rematador::class, 'usuario_id');
         }
 
+        public function notificaciones() {
+            return $this->belongsToMany(Notificacion::class, 'notificaciones_casaremates', 'casa_remate_id', 'notificacion_id')
+                ->withPivot('leido')
+                ->withTimestamps();
+        }
+
     }
 ?>

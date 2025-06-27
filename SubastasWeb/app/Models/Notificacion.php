@@ -5,6 +5,7 @@
     use Illuminate\Database\Eloquent\Model;
     use App\Models\Cliente;
     use App\Models\Rematador;
+    use App\Models\CasaRemate;
 
     class Notificacion extends Model{
 
@@ -33,6 +34,12 @@
 
         public function rematadores() {
             return $this->belongsToMany(Rematador::class, 'notificacion_rematadores', 'notificacion_id', 'rematador_id')
+                ->withPivot('leido')
+                ->withTimestamps();
+        }
+
+        public function casaRemates() {
+            return $this->belongsToMany(CasaRemate::class, 'notificaciones_casaremates', 'notificacion_id', 'casa_remate_id')
                 ->withPivot('leido')
                 ->withTimestamps();
         }

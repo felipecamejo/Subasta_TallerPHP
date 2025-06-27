@@ -79,6 +79,7 @@ class LoteController extends Controller{
             'pujaMinima' => $request->pujaMinima,
             'subasta_id' => $request->subasta_id,
             'umbral' => $request->umbral ?? 0, 
+            'pago' => false, 
         ]);
         
         $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->find($lote->id);
