@@ -20,9 +20,21 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   probarAdmin(): void {
-    this.http.get(`${environment.apiUrl}/api/debug-admin`).subscribe({
-      next: (res) => console.log('DEBUG ADMIN OK', res),
-      error: (err) => console.error('DEBUG ADMIN ERROR', err)
+    const url = `${environment.apiUrl}/api/debug-admin`;
+    console.log('[DEBUG ADMIN] Iniciando petición a:', url);
+
+    this.http.get(url).subscribe({
+      next: (res) => {
+        console.log('[DEBUG ADMIN ✅ OK]', res);
+      },
+      error: (err) => {
+        console.error('[DEBUG ADMIN ❌ ERROR]');
+        console.error('Status:', err.status);
+        console.error('StatusText:', err.statusText);
+        console.error('Error:', err.error);
+        console.error('Headers:', err.headers);
+        console.error('Full error object:', err);
+      }
     });
   }
 }

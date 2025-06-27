@@ -31,6 +31,7 @@ Route::get('/debug-log', function () {
 });
 
 Route::middleware('auth:sanctum')->get('/debug-admin', function (Request $request) {
+   
     return response()->json([
         'id' => $request->user()?->id,
         'email' => $request->user()?->email,
