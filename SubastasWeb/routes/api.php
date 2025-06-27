@@ -19,6 +19,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TimezoneController;
+use App\Http\Controllers\PaypalController;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -106,4 +107,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
     Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
     Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+    
+    // Rutas de PayPal
+    Route::post('/paypal/create-order', [PaypalController::class, 'createOrder']);
+    Route::post('/paypal/capture-payment', [PaypalController::class, 'capturePayment']);
+    Route::post('/paypal/webhook', [PaypalController::class, 'webhook']);
+    Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal.success');
+    Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal.cancel');
 });

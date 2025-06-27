@@ -347,13 +347,16 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     const fechaFin = new Date(subasta.fecha);
     fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
     
-    // Convertir fechas a zona horaria del usuario
+    // Opción 1: Convertir fechas de subasta a zona horaria del usuario
     const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
     const fin = this.timezoneService.convertToUserTimezone(fechaFin);
     
-    if (ahora < inicio) {
+    // También convertir "ahora" a la misma zona horaria para comparar correctamente
+    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
+    
+    if (ahoraEnZonaUsuario < inicio) {
       return 'pendiente';
-    } else if (ahora > fin) {
+    } else if (ahoraEnZonaUsuario > fin) {
       return 'finalizada';
     } else {
       return 'activa';
@@ -375,13 +378,16 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
     const fin = this.timezoneService.convertToUserTimezone(fechaFin);
     
-    if (ahora < inicio) {
+    // También convertir "ahora" a la misma zona horaria para comparar correctamente
+    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
+    
+    if (ahoraEnZonaUsuario < inicio) {
       // Calcular tiempo hasta el inicio
-      const diffMs = inicio.getTime() - ahora.getTime();
+      const diffMs = inicio.getTime() - ahoraEnZonaUsuario.getTime();
       return this.formatearTiempoRestante(diffMs, 'Comienza en');
-    } else if (ahora < fin) {
+    } else if (ahoraEnZonaUsuario < fin) {
       // Calcular tiempo hasta el fin
-      const diffMs = fin.getTime() - ahora.getTime();
+      const diffMs = fin.getTime() - ahoraEnZonaUsuario.getTime();
       return this.formatearTiempoRestante(diffMs, 'Finaliza en');
     } else {
       // Ya finalizó

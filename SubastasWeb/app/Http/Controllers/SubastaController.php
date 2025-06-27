@@ -81,6 +81,7 @@ class SubastaController extends Controller
             'activa' => 'required|boolean',
             'duracionMinutos' => 'required|integer|min:1',
             'fecha'           => 'required|date',
+            'timezone'        => 'nullable|string', // Zona horaria opcional
             'casa_remate_id'   => 'nullable|exists:casa_remates,usuario_id',
             'rematador_id'    => 'nullable|exists:rematadores,usuario_id',
             'latitud'         => 'nullable|numeric|between:-90,90',
@@ -88,17 +89,29 @@ class SubastaController extends Controller
             'videoId'         => 'nullable|string|max:255',
         ]);
 
-        $subasta = Subasta::create($request->only([
-            'nombre',
-            'activa',
-            'duracionMinutos',
-            'fecha',
-            'casa_remate_id',
-            'rematador_id',
-            'latitud',
-            'longitud',
-            'videoId'
-        ]));
+        // Convertir fecha de zona horaria del usuario a UTC
+        $fecha = $request->fecha;
+        if ($request->has('timezone')) {
+            try {
+                $fechaLocal = \Carbon\Carbon::parse($fecha, $request->timezone);
+                $fecha = $fechaLocal->utc()->format('Y-m-d H:i:s');
+            } catch (\Exception $e) {
+                // Si hay error, usar la fecha original
+                \Log::warning('Error al convertir zona horaria: ' . $e->getMessage());
+            }
+        }
+
+        $subasta = Subasta::create([
+            'nombre' => $request->nombre,
+            'activa' => $request->activa,
+            'duracionMinutos' => $request->duracionMinutos,
+            'fecha' => $fecha, // Fecha convertida a UTC
+            'casa_remate_id' => $request->casa_remate_id,
+            'rematador_id' => $request->rematador_id,
+            'latitud' => $request->latitud,
+            'longitud' => $request->longitud,
+            'videoId' => $request->videoId
+        ]);
 
         if ($request->has('direccion')) {
             $subasta->direccion()->create($request->input('direccion'));
