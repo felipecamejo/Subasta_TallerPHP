@@ -8,8 +8,11 @@ use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+
 class SocialAuthController extends Controller
 {
+    
+
     /**
      * @OA\Get(
      *     path="/api/auth/redirect/google",
@@ -32,6 +35,7 @@ class SocialAuthController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
+        $frontend = env('FRONTEND_URL');
         $rol = $request->query('rol');
 
         if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
@@ -61,10 +65,11 @@ class SocialAuthController extends Controller
      */
     public function handleGoogleCallback(Request $request)
     {
+        $frontend = env('FRONTEND_URL');
         $rol = $request->input('state'); 
 
         if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
-            return redirect('http://localhost:4200/login?error=rol-invalido');
+            return redirect("$frontend/login?error=rol-invalido");
         }
 
         $googleUser = Socialite::driver('google')->stateless()->user();
@@ -80,7 +85,7 @@ class SocialAuthController extends Controller
                 'google_id' => $googleUser->getId(),
             ]);
 
-            return redirect("http://localhost:4200/registro-google?$query");
+            return redirect("$frontend/registro-google?$query");
         }
 
         $token = $usuario->createToken('token-google')->plainTextToken;
@@ -95,7 +100,7 @@ class SocialAuthController extends Controller
             $rolDetectado = 'casa_remate';
         }
 
-        return redirect("http://localhost:4200/login-google?" . http_build_query([
+        return redirect("$frontend/login-google?" . http_build_query([
             'token' => $token,
             'usuario_id' => $usuario->id,
             'rol' => $rolDetectado

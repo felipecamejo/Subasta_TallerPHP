@@ -13,4 +13,6 @@ export class GoogleLoginComponent {
     const url = `${environment.apiUrl}/auth/redirect/google?rol=cliente`; // por defecto cliente
     window.location.href = url;
   }
+
+  
 }
