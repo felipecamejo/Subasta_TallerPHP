@@ -30,7 +30,7 @@ export class AdminUsuariosComponent implements OnInit {
     this.cargando = true;
     this.error = '';
 
-    this.http.get<any>(`${environment.apiUrl}/api/admin/usuarios-por-rol?rol=${this.rolSeleccionado}&page=${page}`)
+    this.http.get<any>(`${environment.apiUrl}/api/admin/usuarios?rol=${this.rolSeleccionado}&page=${page}`)
       .subscribe({
         next: (respuesta) => {
           this.usuarios = respuesta.data;

@@ -1,3 +1,5 @@
+import * as L from 'leaflet';
+
 import { environment } from '../../environments/environment';
 import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit } from '@angular/core';
 import {
@@ -84,40 +86,40 @@ export class RegisterComponent implements OnInit, AfterViewInit {
     idFiscalControl?.updateValueAndValidity();
   }
 
-  async ngAfterViewInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const L = await import('leaflet');
+ ngAfterViewInit() {
+  if (isPlatformBrowser(this.platformId)) {
+    // @ts-ignore
+    const L = require('leaflet');
 
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
-          iconUrl: 'assets/leaflet/marker-icon.png',
-          shadowUrl: 'assets/leaflet/marker-shadow.png',
-        });
+    // ✅ Iconos manuales (cargar desde assets locales)
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+      iconUrl: 'assets/leaflet/marker-icon.png',
+      shadowUrl: 'assets/leaflet/marker-shadow.png',
+    });
 
-        const map = L.map('map').setView([-34.9011, -56.1645], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: 'Map data © OpenStreetMap contributors',
-        }).addTo(map);
+    const map = L.map('map').setView([-34.9011, -56.1645], 13);
 
-        let marker: L.Marker | undefined;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © OpenStreetMap contributors',
+    }).addTo(map);
 
-        map.on('click', (e: any) => {
-          const { lat, lng } = e.latlng;
-          this.form.patchValue({ latitud: lat, longitud: lng });
+    let marker: L.Marker | undefined;
 
-          if (marker) map.removeLayer(marker);
-          marker = L.marker([lat, lng]).addTo(map);
+    map.on('click', (e: any) => {
+      const { lat, lng } = e.latlng;
+      this.form.patchValue({ latitud: lat, longitud: lng });
 
-          this.form.get('latitud')?.markAsTouched();
-          this.form.get('longitud')?.markAsTouched();
-        });
-      } catch (e) {
-        console.error('Error cargando Leaflet:', e);
-      }
-    }
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lng]).addTo(map);
+
+      this.latitud?.markAsTouched();
+      this.longitud?.markAsTouched();
+    });
   }
+}
+
 
   onSubmit() {
     if (this.loading) return;

@@ -1,5 +1,5 @@
 import { environment } from '../../environments/environment';
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import {
   FormGroup,
   FormControl,
@@ -8,7 +8,7 @@ import {
   ValidationErrors,
   ReactiveFormsModule
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import * as L from 'leaflet';
@@ -26,11 +26,12 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
   map!: L.Map;
   marker!: L.Marker;
 
-  constructor(
-    private http: HttpClient,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {}
+ constructor(
+  private http: HttpClient,
+  private router: Router,
+  private route: ActivatedRoute,
+  @Inject(PLATFORM_ID) private platformId: Object
+) {}
 
   ngOnInit(): void {
     this.form = new FormGroup({
@@ -61,29 +62,38 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const existingMap = L.DomUtil.get('map-registro-google');
-    if (existingMap != null) {
-      (existingMap as any)._leaflet_id = null;
-    }
+  if (isPlatformBrowser(this.platformId)) {
+    // @ts-ignore
+    const L = require('leaflet');
 
-    this.map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13);
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+      iconUrl: 'assets/leaflet/marker-icon.png',
+      shadowUrl: 'assets/leaflet/marker-shadow.png',
+    });
+
+    const map = L.map('map-registro-google').setView([-34.9011, -56.1645], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(this.map);
+      attribution: 'Map data © OpenStreetMap contributors',
+    }).addTo(map);
 
-    this.map.on('click', (e: L.LeafletMouseEvent) => {
+    let marker: L.Marker | undefined;
+
+    map.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
-
-      if (this.marker) {
-        this.marker.setLatLng([lat, lng]);
-      } else {
-        this.marker = L.marker([lat, lng]).addTo(this.map);
-      }
-
       this.form.patchValue({ latitud: lat, longitud: lng });
+
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lng]).addTo(map);
+
+      this.form.get('latitud')?.markAsTouched();
+      this.form.get('longitud')?.markAsTouched();
     });
   }
+}
+
 
   matchPasswords(group: AbstractControl): ValidationErrors | null {
     const pass = group.get('contrasenia')?.value;
