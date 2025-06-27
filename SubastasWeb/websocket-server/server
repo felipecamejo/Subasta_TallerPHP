@@ -124,15 +124,23 @@ io.on('connection', (socket) => {
     socket.on('send_message', (data) => {
         const { chatId, fromUserId, toUserId, message, timestamp, fromUserName } = data;
         
-        io.to(`chat_${chatId}`).emit('new_message', {
+        console.log(`📨 Recibido send_message para chat ${chatId}:`, data);
+        
+        // IMPORTANTE: Incluir chatId en el evento que se emite
+        const messageData = {
+            chatId,           // ← Esto faltaba!
             fromUserId,
             toUserId,
             message,
             timestamp,
             fromUserName
-        });
+        };
         
-        console.log(`Mensaje enviado en chat ${chatId}: ${message}`);
+        console.log(`📤 Emitiendo new_message a chat_${chatId}:`, messageData);
+        
+        io.to(`chat_${chatId}`).emit('new_message', messageData);
+        
+        console.log(`✅ Mensaje enviado en chat ${chatId}: ${message}`);
     });
 
     socket.on('auction_timer_update', (data) => {
@@ -157,6 +165,14 @@ io.on('connection', (socket) => {
         });
         
         console.log(`Lote actualizado para subasta ${auctionId}:`, auctionState);
+    });
+
+    // Evento custom para notificaciones de chat finalizado/valoración
+    socket.on('chat_finalizado', (data) => {
+        const { chatId } = data;
+        // Emitir a todos los usuarios conectados a ese chat
+        io.to(`chat_${chatId}`).emit('chat_finalizado', data);
+        console.log(`🔔 Evento chat_finalizado emitido a chat_${chatId}:`, data);
     });
 
     socket.on('disconnect', () => {

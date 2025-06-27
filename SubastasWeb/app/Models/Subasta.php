@@ -27,7 +27,7 @@ class Subasta extends Model
     protected $hidden = [];
 
     public function casaRemate() {
-        return $this->belongsTo(CasaRemate::class, 'casa_remate_id');
+        return $this->belongsTo(CasaRemate::class, 'casa_remate_id', 'usuario_id');
     }
 
     public function rematador() {

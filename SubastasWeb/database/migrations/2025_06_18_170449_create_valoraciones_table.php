@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('valoraciones', function (Blueprint $table) {
             $table->id();
-            $table->integer('valoracion_total')->default(0); // Suma total de todas las valoraciones
+            $table->integer('total_puntaje')->default(0); // Suma total de todas las valoraciones
             $table->integer('cantidad_opiniones')->default(0); // Número de opiniones recibidas
-            $table->string('valorable_type'); // Tipo de modelo (Cliente, CasaRemate, etc.)
-            $table->unsignedBigInteger('valorable_id'); // ID del modelo valorado
-            $table->timestamps();
             
-            // Índice para la relación polimórfica
-            $table->index(['valorable_type', 'valorable_id']);
+            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId('chat_id')->constrained('chats')->onDelete('cascade');
+
+            $table->timestamps();
         });
     }
 

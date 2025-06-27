@@ -819,3 +819,42 @@ hr {
     }
   }
 }
+
+.lotes-ganados-detalle {
+  max-height: 300px;
+  overflow-y: auto;
+  
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .lote-item {
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: #f0f0f0 !important;
+    }
+  }
+}
+
+.winner-notification {
+  .alert {
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+    
+    strong {
+      font-size: 16px;
+    }
+    
+    p {
+      margin: 8px 0;
+      
+      &:last-of-type {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

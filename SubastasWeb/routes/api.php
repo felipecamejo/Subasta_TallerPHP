@@ -57,8 +57,6 @@ Route::post('/chat/{chatId}/valorar-casa', [ChatController::class, 'valorarUsuar
 Route::post('/chat/{chatId}/finalizar-chat', [ChatController::class, 'finalizarChat']);
 Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat']);
 
-Route::apiResource('subastas', SubastaController::class);
-
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -79,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Correo de verificación reenviado.']);
     });
 
+    Route::apiResource('subastas', SubastaController::class);
     Route::apiResource('lotes', LoteController::class);
     Route::apiResource('articulos', ArticuloController::class);
     Route::apiResource('categorias', CategoriaController::class);

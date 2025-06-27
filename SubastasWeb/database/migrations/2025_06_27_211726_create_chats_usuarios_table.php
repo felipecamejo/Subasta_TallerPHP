@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lotes', function (Blueprint $table) {
-            $table->id();
+        Schema::create('chats_usuarios', function (Blueprint $table) {
+            $table->foreignId('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+            $table->foreignId('chat_id')->nullable()->references('id')->on('chats')->onDelete('cascade');
             
-            $table->float('valorBase');
-            $table->float('pujaMinima');
-            $table->foreignId('subasta_id')->nullable()->constrained()->onDelete('cascade');
-            $table->float('umbral')->default(0); 
-            $table->boolean('pago')->default(false);
+            $table->boolean('valorado')->default(false);
 
             $table->timestamps();
         });
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lotes');
+        Schema::dropIfExists('chats_usuarios');
     }
 };

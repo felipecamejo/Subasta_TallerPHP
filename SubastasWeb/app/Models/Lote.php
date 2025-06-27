@@ -12,7 +12,8 @@
             'valorBase', 
             'pujaMinima',
             'subasta_id',
-            'umbral'
+            'umbral',
+            'pago'
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON

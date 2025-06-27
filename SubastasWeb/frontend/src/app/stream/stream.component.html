@@ -1,7 +1,7 @@
 <main class="w-full flex flex-wrap">
     <article class="article-1 col-12 md:col-6 flex">
         <iframe class="video-player-1" 
-            *ngIf="videoUrl && videoUrl !== null; else noVideo"
+            *ngIf="videoUrl; else noVideo"
             [src]="videoUrl"
             frameborder="0"
             allowfullscreen
@@ -12,9 +12,8 @@
         <ng-template #noVideo>
             <div class="no-video-placeholder">
                 <p>Stream no disponible</p>
-                <p>ID de video actual: {{ subasta?.videoId || 'No configurado' }}</p>
-                <input type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video" />
-                <p-button label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
+                <input *ngIf="isRematador()" type="text" class="text-input" pInputText [(ngModel)]="video" placeholder="Ingrese ID del video de YouTube" />
+                <p-button *ngIf="isRematador()" label="Cargar Video" severity="secondary" (click)="initializeVideo(video)"/>
             </div>
         </ng-template>
     </article>
@@ -58,11 +57,11 @@
             </div>
         </div>
 
-        <!-- Mensaje de ganador (solo se muestra cuando la subasta termina) -->
-        <div class="winner-notification" *ngIf="esGanador && !pagando">
+        <!-- Mensaje de ganador con botón de pago (solo si no ha pagado) -->
+        <div class="winner-notification" *ngIf="mostrarBotonPago">
             <div class="alert alert-success">
                 <i class="pi pi-trophy"></i>
-                <strong>¡Felicidades!</strong> Has ganado la subasta con una puja de <strong>${{pujaActual}}</strong>
+                <strong>¡Felicidades!</strong> Has ganado uno o mas lotes
                 <p>Completa el pago para finalizar tu compra.</p>
                 <div class="winner-actions" style="margin-top: 15px;">
                     <p-button 
@@ -79,6 +78,17 @@
             </div>
         </div>
 
+        <!-- Mensaje de pago completado (solo si ya pagó todos los lotes) -->
+        <div class="payment-completed-notification" *ngIf="mostrarMensajePagado">
+            <div class="alert alert-success">
+                <i class="pi pi-check-circle"></i>
+                <strong>¡Pago Completado!</strong> Has completado el pago de todos tus lotes ganados.
+                <p>Total pagado: <strong>${{ montoTotalGanador }}</strong></p>
+                <p><small>El chat con la casa de remate está disponible para coordinar la entrega.</small></p>
+            </div>
+        </div>
+
+        <!-- Modal de pago actualizado -->
         <p-dialog 
             header="🏆 ¡Subasta Ganada! - Método de Pago" 
             [(visible)]="pagando" 
@@ -88,23 +98,57 @@
             [resizable]="false"
             [closeOnEscape]="false"
             [dismissableMask]="false"
-            [style]="{width: '90vw', maxWidth: '600px', minHeight: '400px'}"
-            styleClass="payment-modal">
+            [style]="{width: '90vw', maxWidth: '700px', maxHeight: '90vh'}"
+            styleClass="payment-modal"
+            [contentStyle]="{'overflow': 'auto', 'max-height': '70vh', 'padding': '20px'}"
+            [baseZIndex]="10000">
 
-            <section class="payment-section">
-                <h3>🎉 ¡Felicidades! Has ganado la subasta</h3>
-                <p>Has ganado el <strong>Lote {{indexLotes + 1}}</strong> con una puja de <strong>${{paypalMonto}}</strong></p>
-                <p>Por favor, procede con el pago para completar la transacción:</p>
-                <div class="payment-container">
-                    <app-paypal 
-                        *ngIf="pagando && paypalComponentKey"
-                        [amount]="paypalMonto"
-                        (paymentSuccess)="onPaymentSuccess($event)"
-                        (paymentError)="onPaymentError($event)">
-                    </app-paypal> 
+            <section class="payment-section" style="overflow-y: auto; max-height: 60vh;">
+                <h3>🎉 ¡Felicidades! Has ganado {{ lotesGanadosSinPagar.length === 1 ? '1 lote pendiente de pago' : lotesGanadosSinPagar.length + ' lotes pendientes de pago' }}</h3>
+                
+                <!-- Detalles de lotes ganados sin pagar -->
+                <div class="lotes-ganados-detalle" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
+                    <h4 style="margin-top: 0; color: #28a745;">📋 Resumen de lotes pendientes de pago:</h4>
+                    <div *ngFor="let ganador of lotesGanadosSinPagar; let i = index" style="margin-bottom: 10px; padding: 8px; background-color: white; border-radius: 4px;">
+                        <strong>Lote {{ ganador.numeroLote }}</strong>
+                        <div style="color: #28a745; font-weight: bold; margin-top: 4px;">
+                            Monto ganador: ${{ ganador.monto }}
+                        </div>
+                    </div>
+                    <hr style="margin: 15px 0;">
+                    <div style="font-size: 18px; font-weight: bold; color: #28a745; text-align: right;">
+                        <strong>Total a pagar: ${{ montoTotalGanadorSinPagar }}</strong>
+                    </div>
                 </div>
-                <div class="payment-info">
-                    <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega.</small></p>
+                
+                <!-- Mostrar PayPal solo si hay lotes sin pagar -->
+                <div *ngIf="lotesGanadosSinPagar.length > 0">
+                    <p>Por favor, procede con el pago para completar la transacción:</p>
+                    <div class="payment-container" style="min-height: 300px; overflow: visible;">
+                        <app-paypal 
+                            *ngIf="pagando && paypalComponentKey"
+                            [amount]="paypalMonto"
+                            (paymentSuccess)="onPaymentSuccess($event)"
+                            (paymentError)="onPaymentError($event)">
+                        </app-paypal> 
+                    </div>
+                    <div class="payment-info">
+                        <p><small>💬 Después del pago, se creará automáticamente un chat con la casa de remate para coordinar la entrega de todos tus lotes.</small></p>
+                    </div>
+                </div>
+
+                <!-- Mostrar mensaje de pago completado si NO hay lotes sin pagar -->
+                <div *ngIf="lotesGanadosSinPagar.length === 0 && lotesGanadosPorUsuario.length > 0" style="text-align: center; padding: 20px;">
+                    <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                        <i class="pi pi-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
+                        <h3 style="color: #28a745; margin: 15px 0;">¡Pago Completado Exitosamente! ✅</h3>
+                        <p style="font-size: 16px; margin: 10px 0;">
+                            Has pagado todos tus lotes ganados por un total de <strong style="color: #28a745;">${{ montoTotalGanador }}</strong>
+                        </p>
+                        <p style="color: #6c757d; margin: 15px 0;">
+                            💬 El chat con la casa de remate está disponible para coordinar la entrega de tus artículos.
+                        </p>
+                    </div>
                 </div>
             </section>
         </p-dialog>
