@@ -107,6 +107,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       this.chatService.sendTypingStatus(this.currentUserId, isTyping);
     });
     this.subscriptions.push(typingSubscription);
+
+    // Suscribirse a evento custom de WebSocket para actualización en tiempo real
+    this.websocketService.onEventoCustom('chat_finalizado').subscribe((data: any) => {
+      if (data && data.chatId === this.chatId) {
+        this.verificarEstadoChatYValoracion();
+      }
+    });
   }
 
   /**
@@ -588,16 +595,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
 
     // Extraer información del otro usuario del chatId
     const usuarios = this.chatService.extraerUsuariosDelChatId(this.chatId);
-    if (!usuarios) {
-      alert('Error al obtener información del chat');
-      return;
-    }
-
+    if (!usuarios) return;
     const currentUserIdNum = parseInt(this.currentUserId);
     this.otroUsuarioId = usuarios.usuario1Id === currentUserIdNum ? usuarios.usuario2Id : usuarios.usuario1Id;
-    
-    // Por ahora asumimos que es cliente, se podría mejorar con más contexto
-    this.otroUsuarioTipo = 'cliente';
+    // El tipo de usuario se puede actualizar en verificarEstadoChatYValoracion
     this.valoracionSeleccionada = 0;
     this.mostrarModalValoracion = true;
   }
@@ -631,42 +632,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   }
 
   /**
-   * Finalizar chat solo (sin valoración)
-   */
-  async finalizarChatSinValoracion(): Promise<void> {
-    if (!this.chatId || !this.currentUserId) return;
-    
-    this.enviandoValoracion = true;
-    try {
-      const response = await this.chatService.finalizarChat(
-        this.chatId, 
-        parseInt(this.currentUserId)
-      );
-      
-      if (response.success) {
-        this.chatFinalizado = true;
-        this.cerrarModalValoracion();
-        alert('Chat finalizado exitosamente.');
-      } else {
-        alert('Error al finalizar el chat: ' + response.message);
-      }
-    } catch (error) {
-      console.error('Error al finalizar chat:', error);
-      alert('Error al finalizar el chat');
-    }
-    this.enviandoValoracion = false;
-  }
-
-  /**
    * Finalizar chat con valoración
    */
   async finalizarChatConValoracion(): Promise<void> {
     if (!this.chatId || !this.currentUserId) return;
-    if (this.valoracionSeleccionada === 0) {
-      alert('Por favor selecciona una valoración');
-      return;
-    }
-    
+    if (this.valoracionSeleccionada === 0) return;
     this.enviandoValoracion = true;
     try {
       const response = await this.chatService.finalizarChat(
@@ -676,17 +646,16 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
         this.valoracionSeleccionada,
         this.otroUsuarioTipo
       );
-      
-      if (response.success) {
-        this.chatFinalizado = true;
-        this.necesitaValorarChatFinalizado = false; // Ya valoró, no mostrar más el modal
-        this.cerrarModalValoracion();
-        const mensaje = response.calificacion_agregada 
-          ? `Chat finalizado y valoración agregada. Promedio: ${response.promedio_valoracion}⭐`
-          : 'Chat finalizado exitosamente.';
-        alert(mensaje);
-      } else {
-        alert('Error al finalizar el chat: ' + response.message);
+      // Si la respuesta indica que ya valoró, actualizar flags
+      if (response && response.calificacion_agregada) {
+        this.mostrarModalValoracion = false;
+        this.mostrarValoracion = false;
+        this.necesitaValorarChatFinalizado = false;
+        // Notificar a ambos usuarios usando WebSocket (evento custom)
+        this.websocketService.emitirEventoCustom('chat_finalizado', {
+          chatId: this.chatId,
+          usuarioId: this.currentUserId
+        });
       }
     } catch (error) {
       console.error('Error al finalizar chat:', error);
@@ -859,66 +828,26 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
    * Verificar si el chat está finalizado y si necesita valoración
    */
   private async verificarEstadoChatYValoracion(): Promise<void> {
-    if (!this.chatId || !this.currentUserId) {
-      console.log('❌ No se puede verificar estado: chatId=' + this.chatId + ', currentUserId=' + this.currentUserId);
-      return;
-    }
-
+    if (!this.chatId || !this.currentUserId) return;
     try {
-      console.log('🔍 Verificando estado del chat:', this.chatId, 'para usuario:', this.currentUserId);
-      const response = await this.chatService.verificarEstadoChat(this.chatId, parseInt(this.currentUserId));
-      console.log('📋 Respuesta del backend:', response);
-      
-      if (response.chatFinalizado) {
-        console.log('✅ Chat está finalizado');
-        this.chatFinalizado = true;
-        
-        // Si el chat está finalizado y este usuario aún no ha valorado
-        if (response.necesitaValoracion && !response.yaValoro) {
-          console.log('⭐ Usuario necesita valorar - mostrando modal');
-          this.necesitaValorarChatFinalizado = true;
-          
-          // Configurar información para la valoración
-          const usuarios = this.chatService.extraerUsuariosDelChatId(this.chatId);
-          if (usuarios) {
-            const currentUserIdNum = parseInt(this.currentUserId);
-            this.otroUsuarioId = usuarios.usuario1Id === currentUserIdNum ? usuarios.usuario2Id : usuarios.usuario1Id;
-            
-            // Usar la información del backend si está disponible
-            if (response.otroUsuario) {
-              this.otroUsuarioId = response.otroUsuario.id;
-              this.otroUsuarioTipo = response.otroUsuario.tipo || 'cliente';
-            } else {
-              // Fallback: Por ahora asumimos que es cliente
-              this.otroUsuarioTipo = 'cliente';
-            }
-            
-            this.valoracionSeleccionada = 0;
-            
-            console.log('🎯 Configuración para valoración:', {
-              otroUsuarioId: this.otroUsuarioId,
-              otroUsuarioTipo: this.otroUsuarioTipo
-            });
-            
-            // Abrir el modal automáticamente después de un pequeño delay
-            setTimeout(() => {
-              console.log('🚀 Abriendo modal de valoración...');
-              this.mostrarModalValoracion = true;
-            }, 1000);
-          } else {
-            console.log('❌ No se pudieron extraer usuarios del chatId');
-          }
-        } else {
-          console.log('ℹ️ Usuario no necesita valorar:', {
-            necesitaValoracion: response.necesitaValoracion,
-            yaValoro: response.yaValoro
-          });
-        }
+      const estado = await this.chatService.verificarEstadoChat(this.chatId, parseInt(this.currentUserId));
+      this.chatFinalizado = !!estado.chatFinalizado;
+      this.necesitaValorarChatFinalizado = !!estado.necesitaValoracion;
+      // Usar el campo yaValoro del backend (que viene de chats_usuarios.valorados)
+      if (typeof estado.yaValoro === 'boolean') {
+        this.mostrarValoracion = this.chatFinalizado && !estado.yaValoro;
       } else {
-        console.log('ℹ️ Chat no está finalizado');
+        this.mostrarValoracion = false;
+      }
+      // Si el backend provee info del otro usuario y su tipo
+      if (estado.otroUsuario) {
+        this.otroUsuarioId = estado.otroUsuario.id;
+        this.otroUsuarioTipo = estado.otroUsuario.tipo || 'cliente';
       }
     } catch (error) {
-      console.error('❌ Error al verificar estado del chat:', error);
+      this.chatFinalizado = false;
+      this.necesitaValorarChatFinalizado = false;
+      this.mostrarValoracion = false;
     }
   }
 
@@ -964,18 +893,5 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     }
   }
 
-  /**
-   * Método temporal para debugging - recargar mensajes manualmente
-   */
-  async recargarMensajesManual(): Promise<void> {
-    console.log('🔄 Recargando mensajes manualmente desde componente...');
-    
-    try {
-      // Usar el método público del ChatService
-      await this.chatService.recargarMensajes();
-      console.log('✅ Mensajes recargados exitosamente');
-    } catch (error) {
-      console.error('❌ Error al recargar mensajes:', error);
-    }
-  }
+  
 }

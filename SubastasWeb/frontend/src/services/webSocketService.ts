@@ -194,6 +194,22 @@ export class WebsocketService {
     });
   }
 
+  /**
+   * Emitir un evento custom a todos los usuarios conectados al chat
+   */
+  emitirEventoCustom(evento: string, data: any) {
+    this.socket.emit(evento, data);
+  }
+
+  /**
+   * Escuchar un evento custom por nombre
+   */
+  onEventoCustom(evento: string): Observable<any> {
+    return new Observable(observer => {
+      this.socket.on(evento, (data: any) => observer.next(data));
+    });
+  }
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();

@@ -597,33 +597,15 @@ export class ChatService {
   // Verificar estado del chat (si está finalizado y si necesita valoración)
   async verificarEstadoChat(chatId: string, usuarioId: number): Promise<any> {
     try {
-      console.log('🌐 Haciendo petición al backend para verificar estado del chat:', chatId, 'usuario:', usuarioId);
-      
       const params = new HttpParams()
         .set('usuario_id', usuarioId.toString());
-      
       const response = await firstValueFrom(
         this.http.get<any>(`${this.urlService.baseUrl}/chat/${chatId}/estado`, { params })
       );
-      
-      console.log('✅ Respuesta del backend recibida:', response);
+      // El backend ya devuelve 'yaValoro' y 'otroUsuarioValoro' usando chats_usuarios.valorados
+      // Solo hay que usar esos campos en el frontend
       return response;
     } catch (error: any) {
-      console.error('❌ Error al verificar estado del chat:', error);
-      console.log('URL intentada:', `${this.urlService.baseUrl}/chat/${chatId}/estado`);
-      console.log('Parámetros:', { usuario_id: usuarioId.toString() });
-      
-      // Si el endpoint no existe (404), devolver valores por defecto
-      if (error.status === 404) {
-        console.warn('⚠️ Endpoint /chat/{chatId}/estado no implementado en el backend. Usando valores por defecto.');
-        return {
-          chatFinalizado: false,
-          necesitaValoracion: false,
-          yaValoro: false
-        };
-      }
-      
-      // Para otros errores, también devolver valores por defecto
       return {
         chatFinalizado: false,
         necesitaValoracion: false,

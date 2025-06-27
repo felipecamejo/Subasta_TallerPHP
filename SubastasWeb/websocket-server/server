@@ -167,6 +167,14 @@ io.on('connection', (socket) => {
         console.log(`Lote actualizado para subasta ${auctionId}:`, auctionState);
     });
 
+    // Evento custom para notificaciones de chat finalizado/valoración
+    socket.on('chat_finalizado', (data) => {
+        const { chatId } = data;
+        // Emitir a todos los usuarios conectados a ese chat
+        io.to(`chat_${chatId}`).emit('chat_finalizado', data);
+        console.log(`🔔 Evento chat_finalizado emitido a chat_${chatId}:`, data);
+    });
+
     socket.on('disconnect', () => {
         console.log('Usuario desconectado:', socket.id);
         

@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             RematadorSeeder::class,  
             SubastaSeeder::class,
             LoteSeeder::class,
-            PujaSeeder::class,
+            //PujaSeeder::class,
             CategoriaSeeder::class,
             ArticuloSeeder::class,
         ]);
