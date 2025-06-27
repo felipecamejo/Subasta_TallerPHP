@@ -776,7 +776,7 @@ export class StreamComponent implements OnInit, OnDestroy {
                 });
               }
             }
-            
+
             setTimeout(() => {
               this.actualizarDatosSinSobrescribir();
             }, 500);
@@ -978,7 +978,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       if (this.lotes[this.indexLotes].umbral < bidData.bidAmount && !this.umbralSuperado) {
         this.umbralSuperado = true;
         console.log("🔔 UMBRAL SUPERADO");
-        if (this.esUsuarioGanadorActualLote()) {
+        if (this.esUsuarioUmbral() ) {
           this.enviarNotificacionUmbral(bidData.bidAmount);
         }
       }
@@ -993,6 +993,15 @@ export class StreamComponent implements OnInit, OnDestroy {
     const usuarioActual = localStorage.getItem('usuario_id');
     if (!ganadorLote || !ganadorLote.clienteId || ganadorLote.clienteId === 0) return true;
     if (!usuarioActual) return false;
+    return Number(usuarioActual) === Number(ganadorLote.clienteId);
+  }
+
+   private esUsuarioUmbral(): boolean {
+    // Busca el ganador del lote actual en el array ganadores
+    const ganadorLote = this.ganadores[this.indexLotes];
+    const usuarioActual = localStorage.getItem('usuario_id');
+    
+    if (!usuarioActual || !ganadorLote || !ganadorLote.clienteId || ganadorLote.clienteId === 0) return false;
     return Number(usuarioActual) === Number(ganadorLote.clienteId);
   }
 
