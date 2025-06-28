@@ -621,9 +621,7 @@ class ChatController extends Controller
      *         @OA\JsonContent(
      *             required={"usuario_id"},
      *             @OA\Property(property="usuario_id", type="integer", example=1, description="ID del usuario que finaliza el chat"),
-     *             @OA\Property(property="usuario_valorable_id", type="integer", example=2, description="ID del usuario/casa de remate a calificar (opcional)"),
      *             @OA\Property(property="calificacion", type="integer", minimum=1, maximum=5, example=4, description="Calificación de 1 a 5 estrellas (opcional)"),
-     *             @OA\Property(property="tipo_valorable", type="string", enum={"cliente", "casa_remate"}, example="cliente", description="Tipo de entidad a valorar (opcional)")
      *         )
      *     ),
      *     @OA\Response(
@@ -666,30 +664,53 @@ class ChatController extends Controller
     public function finalizarChat(Request $request, $chatId)
     {
         try {
-            // Validar entrada
             $validated = $request->validate([
                 'usuario_id' => 'required|integer',
-                'usuario_valorable_id' => 'nullable|integer',
-                'calificacion' => 'nullable|integer|min:1|max:5',
-                'tipo_valorable' => 'nullable|string|in:cliente,casa_remate'
+                'calificacion' => 'nullable|integer|min:1|max:5'
             ]);
 
-            // Buscar el chat por chat_id
             $chat = Chat::where('chat_id', $chatId)->first();
-            
             if (!$chat) {
+                \Log::error('Chat no encontrado para chat_id: ' . $chatId);
                 return response()->json([
                     'success' => false,
                     'message' => 'Chat no encontrado'
                 ], 404);
             }
-
-            // Verificar que el usuario tenga acceso al chat
             if (!$chat->perteneceAlChat($validated['usuario_id'])) {
+                \Log::error('Usuario no tiene acceso al chat: ' . $validated['usuario_id']);
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes acceso a este chat'
                 ], 403);
+            }
+
+            // Asegurar que el registro en chats_usuarios existe
+            $pivot = \DB::table('chats_usuarios')
+                ->where('chat_id', $chat->id)
+                ->where('usuario_id', $validated['usuario_id'])
+                ->first();
+            if (!$pivot) {
+                \DB::table('chats_usuarios')->insert([
+                    'chat_id' => $chat->id,
+                    'usuario_id' => $validated['usuario_id'],
+                    'valorado' => false, // CORRECTO: debe ser 'valorado'
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+            // Verificar si ya valoró
+            $yaValoro = \DB::table('chats_usuarios')
+                ->where('chat_id', $chat->id)
+                ->where('usuario_id', $validated['usuario_id'])
+                ->value('valorado'); // CORRECTO: debe ser 'valorado'
+            if ($yaValoro) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este usuario ya valoró en este chat',
+                    'yaValoro' => true
+                ], 200);
             }
 
             // Marcar el chat como inactivo (finalizado)
@@ -700,35 +721,34 @@ class ChatController extends Controller
                 'message' => 'Chat finalizado.',
                 'puede_valorar' => true,
                 'calificacion_agregada' => false
-            ];            // Si se proporcionó información de calificación, procesarla
-            if (isset($validated['usuario_valorable_id']) && 
-                isset($validated['calificacion']) && 
-                isset($validated['tipo_valorable'])) {
-                
+            ];
+
+            // Si se proporcionó calificación, procesarla y marcar valorado
+            if (isset($validated['calificacion'])) {
                 $resultadoCalificacion = $this->procesarCalificacion(
-                    $validated['usuario_valorable_id'],
+                    $validated['usuario_id'],
                     $validated['calificacion'],
-                    $validated['tipo_valorable'],
+                    null,
                     $chat->id
                 );
-
                 if ($resultadoCalificacion['success']) {
-                    // Guardar valoración en la tabla valoraciones y marcar como valorado en chats_usuarios
-                    \DB::table('chats_usuarios')
-                        ->where('usuario_id', $validated['usuario_id'])
-                        ->where('chat_id', $chat->id)
-                        ->update(['valorado' => true]);
-                    $response['message'] = 'Chat finalizado y calificación agregada.';
                     $response['calificacion_agregada'] = true;
                     $response['promedio_valoracion'] = $resultadoCalificacion['promedio'];
+                    // Marcar valorado en la tabla pivote
+                    \DB::table('chats_usuarios')
+                        ->where('chat_id', $chat->id)
+                        ->where('usuario_id', $validated['usuario_id'])
+                        ->update(['valorado' => true, 'updated_at' => now()]);
                 } else {
-                    $response['message'] = 'Chat finalizado, pero hubo un error al agregar la calificación: ' . $resultadoCalificacion['message'];
+                    $response['calificacion_agregada'] = false;
+                    $response['message'] = $resultadoCalificacion['message'] ?? 'Error al agregar calificación';
                 }
             }
 
             return response()->json($response);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validación fallida al finalizar chat: ' . json_encode($e->errors()));
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación',
@@ -738,7 +758,8 @@ class ChatController extends Controller
             \Log::error('Error al finalizar chat: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error interno del servidor'
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -863,7 +884,6 @@ class ChatController extends Controller
                            ->where('chat_id', $chat->id)
                            ->where('usuario_id', $usuarioId)
                            ->value('valorado') == 1;
-            
             // Verificar si el otro usuario ya valoró en este chat específico
             $otroUsuarioValoro = \DB::table('chats_usuarios')
                                     ->where('chat_id', $chat->id)

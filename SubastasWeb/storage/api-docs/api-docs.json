@@ -3013,6 +3013,126 @@
                 }
             }
         },
+        "/api/paypal/create-order": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Crear una nueva orden de pago en PayPal",
+                "operationId": "c32c5eed5d438e82f40c9d5cd14f77cb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "factura_id",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "factura_id": {
+                                        "type": "integer"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Orden creada exitosamente"
+                    },
+                    "400": {
+                        "description": "Error de validación o al crear la orden"
+                    }
+                }
+            }
+        },
+        "/api/paypal/capture-payment": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Capturar un pago de PayPal",
+                "operationId": "9fc573220ccd13a0bb5f9d3c5049e31f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_id"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pago capturado exitosamente"
+                    },
+                    "400": {
+                        "description": "Error al capturar el pago"
+                    }
+                }
+            }
+        },
+        "/api/paypal/webhook": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Webhook para recibir notificaciones de PayPal",
+                "operationId": "c84ba2c002af2a882788abf9a6754b7f",
+                "responses": {
+                    "200": {
+                        "description": "Notificación procesada correctamente"
+                    },
+                    "400": {
+                        "description": "Error al procesar la notificación"
+                    }
+                }
+            }
+        },
+        "/api/paypal/success": {
+            "get": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "URL de retorno para pagos exitosos",
+                "operationId": "21a1527576980adae14c583c31bfb155",
+                "responses": {
+                    "200": {
+                        "description": "Pago exitoso"
+                    }
+                }
+            }
+        },
+        "/api/paypal/cancel": {
+            "get": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "URL de retorno para pagos cancelados",
+                "operationId": "40016c1444ec1278a0214aa165a7c013",
+                "responses": {
+                    "200": {
+                        "description": "Pago cancelado"
+                    }
+                }
+            }
+        },
         "/api/pujas": {
             "get": {
                 "tags": [
@@ -4281,6 +4401,10 @@
         {
             "name": "Facturas",
             "description": "Facturas"
+        },
+        {
+            "name": "PayPal",
+            "description": "PayPal"
         },
         {
             "name": "Pujas",

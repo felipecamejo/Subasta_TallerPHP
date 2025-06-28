@@ -524,25 +524,21 @@ export class ChatService {
   }
 
   /**
-   * Finalizar chat y opcionalmente calificar usuario
+   * Finalizar chat y calificar usuario
    */
   async finalizarChat(
-    chatId: string, 
-    usuarioId: number, 
-    usuarioValorableId?: number, 
-    calificacion?: number, 
-    tipoValorable?: 'cliente' | 'casa_remate'
+    chatId: string,
+    usuarioId: number,
+    calificacion?: number
   ): Promise<any> {
     try {
       const body: any = {
         usuario_id: usuarioId
       };
 
-      // Agregar parámetros de calificación si se proporcionan
-      if (usuarioValorableId && calificacion && tipoValorable) {
-        body.usuario_valorable_id = usuarioValorableId;
+      // Agregar calificación si se proporciona
+      if (calificacion) {
         body.calificacion = calificacion;
-        body.tipo_valorable = tipoValorable;
       }
 
       const response = await firstValueFrom(
