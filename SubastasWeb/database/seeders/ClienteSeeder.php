@@ -34,7 +34,6 @@ class ClienteSeeder extends Seeder
             'total_puntaje' => 20, // 20 puntos en total 
             'cantidad_opiniones' => 4, // 4 opiniones recibidas (promedio será 5.0)
             'usuario_id' => $clienteUsuario->id,
-            'chat_id' => null,
             'created_at' => now(),
             'updated_at' => now(),
             'valorable_id' => 4,

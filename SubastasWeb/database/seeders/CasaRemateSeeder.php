@@ -38,7 +38,6 @@ class CasaRemateSeeder extends Seeder
             'total_puntaje' => 23,
             'cantidad_opiniones' => 5,
             'usuario_id' => $usuario->id,
-            'chat_id' => null, // Si no hay chat asociado, puede ser null o eliminar este campo si no corresponde
             'created_at' => now(),
             'updated_at' => now(),
             'valorable_id' => 2,
@@ -80,7 +79,6 @@ class CasaRemateSeeder extends Seeder
                 'total_puntaje' => $faker->numberBetween(0, 50),
                 'cantidad_opiniones' => $faker->numberBetween(0, 10),
                 'usuario_id' => $usuario->id,
-                'chat_id' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'valorable_id' => 3,
