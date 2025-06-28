@@ -19,7 +19,7 @@ class CasaRemateSeeder extends Seeder
             'email' => 'cocoarodri@gmail.com',
             'cedula' => '212345670018', // Usamos el idFiscal como cédula para casas de remate
             'telefono' => '099123456',
-            'contrasenia' => Hash::make('12345678'),
+            'contrasenia' => Hash::make('123456789'),
             'latitud' => -34.9011,
             'longitud' => -56.1645,
             'email_verified_at' => now(),
@@ -87,5 +87,6 @@ class CasaRemateSeeder extends Seeder
                 'valorable_type' => 'n/c',
             ]);
         }
+    
     }
 }

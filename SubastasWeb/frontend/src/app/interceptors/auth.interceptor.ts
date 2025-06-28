@@ -18,9 +18,9 @@ export class AuthInterceptor implements HttpInterceptor {
     const isApiUrl = req.url.startsWith(environment.apiUrl);
 
     // 👉 Log para debug
-    console.log('[INTERCEPTOR] URL:', req.url);
-    console.log('[INTERCEPTOR] Token obtenido:', token);
-    console.log('[INTERCEPTOR] ¿Es API URL?:', isApiUrl);
+    //console.log('[INTERCEPTOR] URL:', req.url);
+    //console.log('[INTERCEPTOR] Token obtenido:', token);
+    //console.log('[INTERCEPTOR] ¿Es API URL?:', isApiUrl);
 
     let headers: any = {
       Accept: 'application/json',
@@ -38,9 +38,9 @@ export class AuthInterceptor implements HttpInterceptor {
     const clonedReq = req.clone({ setHeaders: headers });
 
     if (headers['Authorization']) {
-      console.log('[INTERCEPTOR] ✅ Header Authorization agregado');
+      //console.log('[INTERCEPTOR] ✅ Header Authorization agregado');
     } else {
-      console.log('[INTERCEPTOR] ❌ NO se agregó token');
+      //console.log('[INTERCEPTOR] ❌ NO se agregó token');
     }
 
     return next.handle(clonedReq);

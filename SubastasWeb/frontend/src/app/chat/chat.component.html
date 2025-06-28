@@ -83,60 +83,6 @@
       </button>
     </div>
 
-    <!-- Área de valoración (aparece después de finalizar el chat) -->
-    <div *ngIf="mostrarValoracion" class="valoracion-section">
-      <div class="valoracion-header">
-        <h3>¡Transacción completada!</h3>
-        <p>Por favor, valora tu experiencia:</p>
-      </div>
-
-      <!-- Valoración del cliente a la casa de remate -->
-      <div class="valoracion-item" *ngIf="puntuacionCliente >= 0">
-        <h4>Valorar Casa de Remate</h4>
-        <div class="estrellas">
-          <span *ngFor="let i of [1,2,3,4,5]" 
-                class="estrella"
-                [class.active]="i <= puntuacionCliente"
-                (click)="setPuntuacion('cliente', i)">
-            ⭐
-          </span>
-        </div>
-        <textarea 
-          [(ngModel)]="comentarioCliente" 
-          placeholder="Comentario opcional..."
-          class="comentario-input">
-        </textarea>
-        <button (click)="enviarValoracionCliente()" 
-                class="btn-valorar"
-                [disabled]="puntuacionCliente === 0">
-          Enviar Valoración
-        </button>
-      </div>
-
-      <!-- Valoración de la casa de remate al cliente -->
-      <div class="valoracion-item" *ngIf="puntuacionCasa >= 0">
-        <h4>Valorar Cliente</h4>
-        <div class="estrellas">
-          <span *ngFor="let i of [1,2,3,4,5]" 
-                class="estrella"
-                [class.active]="i <= puntuacionCasa"
-                (click)="setPuntuacion('casa', i)">
-            ⭐
-          </span>
-        </div>
-        <textarea 
-          [(ngModel)]="comentarioCasa" 
-          placeholder="Comentario opcional..."
-          class="comentario-input">
-        </textarea>
-        <button (click)="enviarValoracionCasa()" 
-                class="btn-valorar"
-                [disabled]="puntuacionCasa === 0">
-          Enviar Valoración
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- Modal de valoración -->
   <div class="modal-overlay" *ngIf="mostrarModalValoracion" (click)="cerrarModalValoracion()">
@@ -153,26 +99,7 @@
           Te invitamos a valorar tu experiencia para ayudar a otros usuarios.
         </p>
         
-        <!-- Selector de tipo de usuario -->
-        <div class="tipo-usuario-selector">
-          <label>Estás valorando a:</label>
-          <div class="radio-group">
-            <label>
-              <input type="radio" 
-                     [value]="'cliente'" 
-                     [(ngModel)]="otroUsuarioTipo" 
-                     name="tipoUsuario">
-              Cliente
-            </label>
-            <label>
-              <input type="radio" 
-                     [value]="'casa_remate'" 
-                     [(ngModel)]="otroUsuarioTipo" 
-                     name="tipoUsuario">
-              Casa de Remate
-            </label>
-          </div>
-        </div>
+        
 
         <!-- Valoración con estrellas -->
         <div class="valoracion-estrellas">

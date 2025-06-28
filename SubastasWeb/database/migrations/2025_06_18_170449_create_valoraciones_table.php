@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('valorable_type')->nullable(); 
 
             $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->onDelete('cascade');
-            $table->foreignId(column: 'chat_id')->nullable()->constrained('chats')->onDelete('cascade');
 
             $table->timestamps();
         });
