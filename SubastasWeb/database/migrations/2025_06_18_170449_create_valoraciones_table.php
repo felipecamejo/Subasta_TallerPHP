@@ -17,7 +17,6 @@ return new class extends Migration
             $table->integer('cantidad_opiniones')->default(0); // Número de opiniones recibidas
             
             $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->onDelete('cascade');
-            $table->foreignId(column: 'chat_id')->nullable()->constrained('chats')->onDelete('cascade');
 
             $table->timestamps();
         });

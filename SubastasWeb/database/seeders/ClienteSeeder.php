@@ -28,16 +28,6 @@ class ClienteSeeder extends Seeder
         $cliente = Cliente::create([
             'usuario_id' => $clienteUsuario->id,
         ]);
-        
-        // Insertar valoración solo con los campos válidos
-        DB::table('valoraciones')->insert([
-            'total_puntaje' => 20, // 20 puntos en total 
-            'cantidad_opiniones' => 4, // 4 opiniones recibidas (promedio será 5.0)
-            'usuario_id' => $clienteUsuario->id,
-            'chat_id' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
 
         $clienteUsuario = Usuario::create([
             'nombre' => 'Audrey Hepburn',

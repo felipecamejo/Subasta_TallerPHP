@@ -685,6 +685,9 @@ class ChatController extends Controller
                 ], 403);
             }
 
+            // Determinar el otro usuario del chat
+            $otroUsuarioId = $chat->usuario1_id == $validated['usuario_id'] ? $chat->usuario2_id : $chat->usuario1_id;
+
             // Asegurar que el registro en chats_usuarios existe
             $pivot = \DB::table('chats_usuarios')
                 ->where('chat_id', $chat->id)
@@ -694,7 +697,7 @@ class ChatController extends Controller
                 \DB::table('chats_usuarios')->insert([
                     'chat_id' => $chat->id,
                     'usuario_id' => $validated['usuario_id'],
-                    'valorado' => false, // CORRECTO: debe ser 'valorado'
+                    'valorado' => false,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -704,7 +707,7 @@ class ChatController extends Controller
             $yaValoro = \DB::table('chats_usuarios')
                 ->where('chat_id', $chat->id)
                 ->where('usuario_id', $validated['usuario_id'])
-                ->value('valorado'); // CORRECTO: debe ser 'valorado'
+                ->value('valorado');
             if ($yaValoro) {
                 return response()->json([
                     'success' => false,
@@ -726,7 +729,7 @@ class ChatController extends Controller
             // Si se proporcionó calificación, procesarla y marcar valorado
             if (isset($validated['calificacion'])) {
                 $resultadoCalificacion = $this->procesarCalificacion(
-                    $validated['usuario_id'],
+                    $otroUsuarioId, // CORREGIDO: valorar al otro usuario
                     $validated['calificacion'],
                     null,
                     $chat->id
@@ -767,20 +770,22 @@ class ChatController extends Controller
     /**
      * Procesar calificación para cliente o casa de remate
      */
-    private function procesarCalificacion($usuarioId, $calificacion, $tipo, $chatId = null)
-    {
+    private function procesarCalificacion(
+        $usuarioId,
+        $calificacion,
+        $tipo,
+        $chatId = null
+    ) {
         try {
-            // Buscar valoración existente para este usuario y chat
+            // Buscar valoración existente para este usuario (global, no por chat)
             $valoracion = \DB::table('valoraciones')
                 ->where('usuario_id', $usuarioId)
-                ->where('chat_id', $chatId)
                 ->first();
 
             if ($valoracion) {
-                // Actualizar
+                // Actualizar sumando puntaje y cantidad de opiniones
                 \DB::table('valoraciones')
                     ->where('usuario_id', $usuarioId)
-                    ->where('chat_id', $chatId)
                     ->update([
                         'total_puntaje' => $valoracion->total_puntaje + $calificacion,
                         'cantidad_opiniones' => $valoracion->cantidad_opiniones + 1,
@@ -789,10 +794,9 @@ class ChatController extends Controller
                 $nuevoTotal = $valoracion->total_puntaje + $calificacion;
                 $nuevaCantidad = $valoracion->cantidad_opiniones + 1;
             } else {
-                // Crear nueva
+                // Crear nueva valoración global para el usuario
                 \DB::table('valoraciones')->insert([
                     'usuario_id' => $usuarioId,
-                    'chat_id' => $chatId,
                     'total_puntaje' => $calificacion,
                     'cantidad_opiniones' => 1,
                     'created_at' => now(),

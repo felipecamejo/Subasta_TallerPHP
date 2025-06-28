@@ -33,16 +33,7 @@ class CasaRemateSeeder extends Seeder
             'activo' => false,
         ]);
 
-        // Insertar valoración solo con los campos válidos
-        DB::table('valoraciones')->insert([
-            'total_puntaje' => 23,
-            'cantidad_opiniones' => 5,
-            'usuario_id' => $usuario->id,
-            'chat_id' => null, // Si no hay chat asociado, puede ser null o eliminar este campo si no corresponde
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
+        
         /*
         // Casas generadas con Faker
         $faker = Faker::create('es_UY');
