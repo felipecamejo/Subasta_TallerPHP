@@ -19,6 +19,7 @@ import { PayPalComponent } from '../pay-pal/pay-pal.component';
 import { NotificacionService } from '../../services/notificacion.service';
 import { ChatService } from '../../services/chat.service';
 import { notificacionUsuarioDto } from '../../models/notificacionDto';
+import { TimezoneService } from '../../services/timezone.service';
 
 interface PujaRequest {
   fechaHora: string;
@@ -55,6 +56,8 @@ const TIMER_CONSTANTS = {
   styleUrls: ['./stream.component.scss']
 })
 export class StreamComponent implements OnInit, OnDestroy {
+
+  fechaFormateada: Date | null = null;
 
   subasta: subastaDto | null = null;
   lotes: loteDto[] = [];
@@ -269,7 +272,8 @@ export class StreamComponent implements OnInit, OnDestroy {
     private websocketService: WebsocketService,
     private notificacionService: NotificacionService,
     private chatService: ChatService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private timezoneService: TimezoneService
   ) {
     (window as any).streamComponent = this;
   }
@@ -297,6 +301,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           },
           pago: lote.pago
         }));
+
 
         // Inicializar array de ganadores con el tamaño correcto
         this.initializarArrayGanadores();
@@ -1461,7 +1466,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.timerInitialized = true;
 
       const ahora = new Date();
-      const fechaSubasta = this.parsearFechaSubasta(this.subasta.fecha);
+      const fechaSubasta = this.parsearFechaSubasta(this.timezoneService.convertToUserTimezone(new Date(this.subasta.fecha)));
       const tiempoRestanteMs = fechaSubasta!.getTime() + this.subasta.duracionMinutos! * 60000 - ahora.getTime();
       const tiempoRestanteSegundos = Math.max(0, Math.ceil(tiempoRestanteMs / 1000));
 

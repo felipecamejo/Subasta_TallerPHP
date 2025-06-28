@@ -10,7 +10,7 @@ class Valoracion extends Model
     protected $table = 'valoraciones';
 
     protected $fillable = [
-        'valoracion_total',
+        'total_puntaje',
         'cantidad_opiniones',
         'valorable_type',
         'valorable_id'
