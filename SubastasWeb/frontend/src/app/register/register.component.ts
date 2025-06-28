@@ -1,4 +1,6 @@
 import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
 
 import { environment } from '../../environments/environment';
 import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit } from '@angular/core';
@@ -88,10 +90,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
  ngAfterViewInit() {
   if (isPlatformBrowser(this.platformId)) {
-    // @ts-ignore
-    const L = require('leaflet');
-
-    // ✅ Iconos manuales (cargar desde assets locales)
+    // Configurar iconos
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
@@ -105,9 +104,9 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       attribution: 'Map data © OpenStreetMap contributors',
     }).addTo(map);
 
-    let marker: L.Marker | undefined;
+    let marker: L.Marker;
 
-    map.on('click', (e: any) => {
+    map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       this.form.patchValue({ latitud: lat, longitud: lng });
 
@@ -121,76 +120,76 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 }
 
 
-  onSubmit() {
-    if (this.loading) return;
-
+onSubmit() {
+  if (this.loading) return;
     this.submissionError = '';
     this.fieldErrors = {};
     this.form.markAllAsTouched();
 
-    if (this.form.valid) {
-      this.loading = true;
+  if (this.form.valid) {
+     this.loading = true;
 
-      const formData = {
-        ...this.form.value,
-        contrasenia_confirmation: this.form.value.confirmarContrasenia,
-        rol: this.form.value.tipo
-      };
+    const formData = {
+      ...this.form.value,
+      contrasenia_confirmation: this.form.value.confirmarContrasenia,
+      rol: this.form.value.tipo
+    };
 
       // Limpieza
-      delete formData.confirmarContrasenia;
-      delete formData.tipo;
+  delete formData.confirmarContrasenia;
+  delete formData.tipo;
 
-      if (formData.rol !== 'rematador') delete formData.matricula;
-      if (formData.rol !== 'casa_remate') delete formData.idFiscal;
+  if (formData.rol !== 'rematador') delete formData.matricula;
+  if (formData.rol !== 'casa_remate') delete formData.idFiscal;
 
-      const url = formData.rol === 'casa_remate'
-        ? `${environment.apiUrl}/api/register-casa-remate`
-        : `${environment.apiUrl}/api/register`;
+  const url = formData.rol === 'casa_remate'
+    ? `${environment.apiUrl}/api/register-casa-remate`
+    : `${environment.apiUrl}/api/register`;
 
-      this.http.post(url, formData).subscribe({
-        next: () => {
-          alert('Registro exitoso. Verificá tu correo.');
-          this.router.navigate(['/verificar-email']);
-          this.loading = false;
-        },
-        error: (err: HttpErrorResponse) => {
-          this.loading = false;
+  this.http.post(url, formData).subscribe({
+    next: () => {
+      alert('Registro exitoso. Verificá tu correo.');
+      this.router.navigate(['/verificar-email']);
+      this.loading = false;
+    },
+    error: (err: HttpErrorResponse) => {
+      this.loading = false;
 
-          if (err.status === 422 && err.error?.errors) {
-            this.fieldErrors = err.error.errors;
-            let generalMessage = 'Por favor, corrige los siguientes errores:\n';
-            for (const key in this.fieldErrors) {
-              generalMessage += `- ${this.fieldErrors[key].join(', ')}\n`;
-            }
-            this.submissionError = generalMessage;
-            alert(generalMessage);
-          } else if (err.error?.message) {
-            this.submissionError = err.error.message;
-            alert(`Error: ${err.error.message}`);
+      if (err.status === 422 && err.error?.errors) {
+        this.fieldErrors = err.error.errors;
+        let generalMessage = 'Por favor, corrige los siguientes errores:\n';
+        for (const key in this.fieldErrors) {
+           generalMessage += `- ${this.fieldErrors[key].join(', ')}\n`;
+        }
+        this.submissionError = generalMessage;
+          alert(generalMessage);
+        } else if (err.error?.message) {
+          this.submissionError = err.error.message;
+          alert(`Error: ${err.error.message}`);
           } else {
             this.submissionError = 'Error inesperado. Intenta de nuevo.';
             alert('Error en el registro');
           }
         },
-      });
+    });
     } else {
       this.submissionError = 'Completá todos los campos correctamente.';
     }
-  }
+}
 
-  // Getters para acceder desde el HTML
-  get nombre() { return this.form.get('nombre'); }
-  get cedula() { return this.form.get('cedula'); }
-  get email() { return this.form.get('email'); }
-  get telefono() { return this.form.get('telefono'); }
-  get contrasenia() { return this.form.get('contrasenia'); }
-  get confirmarContrasenia() { return this.form.get('confirmarContrasenia'); }
-  get tipo() { return this.form.get('tipo'); }
-  get matricula() { return this.form.get('matricula'); }
-  get idFiscal() { return this.form.get('idFiscal'); }
-  get latitud() { return this.form.get('latitud'); }
-  get longitud() { return this.form.get('longitud'); }
-  get esRematador() { return this.tipo?.value === 'rematador'; }
-  get esCasaRemate() { return this.tipo?.value === 'casa_remate'; }
+
+get nombre() { return this.form.get('nombre'); }
+get cedula() { return this.form.get('cedula'); }
+get email() { return this.form.get('email'); }
+get telefono() { return this.form.get('telefono'); }
+get contrasenia() { return this.form.get('contrasenia'); }
+get confirmarContrasenia() { return this.form.get('confirmarContrasenia'); }
+get tipo() { return this.form.get('tipo'); }
+get matricula() { return this.form.get('matricula'); }
+get idFiscal() { return this.form.get('idFiscal'); }
+get latitud() { return this.form.get('latitud'); }
+get longitud() { return this.form.get('longitud'); }
+get esRematador() { return this.tipo?.value === 'rematador'; }
+get esCasaRemate() { return this.tipo?.value === 'casa_remate'; }
+
 }

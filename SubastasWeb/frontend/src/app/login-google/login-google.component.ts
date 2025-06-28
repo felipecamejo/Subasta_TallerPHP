@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../services/auth.service'; // ajustá el path si es necesario
 
 @Component({
   selector: 'app-login-google',
@@ -10,7 +11,7 @@ export class LoginGoogleComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -20,26 +21,13 @@ export class LoginGoogleComponent implements OnInit {
       const rol = params['rol'];
 
       if (token && usuario_id && rol) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('usuario_id', usuario_id);
-        localStorage.setItem('rol', rol);
-
-        switch (rol) {
-          case 'cliente':
-            this.router.navigate(['/dashboard-cliente']);
-            break;
-          case 'rematador':
-            this.router.navigate(['/dashboard-rematador']);
-            break;
-          case 'casa_remate':
-            this.router.navigate(['/dashboard-casa-remate']);
-            break;
-          default:
-            this.router.navigate(['/']);
-        }
+        this.authService.loginYRedirigir({
+          token,
+          usuario_id: Number(usuario_id),
+          rol
+        });
       } else {
-        // Si faltan datos, redirige al login
-        this.router.navigate(['/login']);
+        this.authService.logout(); // limpia y redirige al login
       }
     });
   }

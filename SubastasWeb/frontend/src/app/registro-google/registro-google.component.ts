@@ -1,3 +1,6 @@
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
 import { environment } from '../../environments/environment';
 import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import {
@@ -11,7 +14,7 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import * as L from 'leaflet';
+
 
 @Component({
   selector: 'app-registro-google',
@@ -61,11 +64,8 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
+ngAfterViewInit() {
   if (isPlatformBrowser(this.platformId)) {
-    // @ts-ignore
-    const L = require('leaflet');
-
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
@@ -79,9 +79,9 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
       attribution: 'Map data © OpenStreetMap contributors',
     }).addTo(map);
 
-    let marker: L.Marker | undefined;
+    let marker: L.Marker;
 
-    map.on('click', (e: any) => {
+    map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       this.form.patchValue({ latitud: lat, longitud: lng });
 
@@ -95,71 +95,72 @@ export class RegistroGoogleComponent implements OnInit, AfterViewInit {
 }
 
 
-  matchPasswords(group: AbstractControl): ValidationErrors | null {
-    const pass = group.get('contrasenia')?.value;
-    const confirm = group.get('contrasenia_confirmation')?.value;
-    return pass === confirm ? null : { passwordMismatch: true };
+matchPasswords(group: AbstractControl): ValidationErrors | null {
+  const pass = group.get('contrasenia')?.value;
+  const confirm = group.get('contrasenia_confirmation')?.value;
+  return pass === confirm ? null : { passwordMismatch: true };
+}
+
+onRolChange() {
+  const rol = this.form.get('rol')?.value;
+  const idFiscal = this.form.get('idFiscal');
+  const matricula = this.form.get('matricula');
+
+  if (rol === 'casa_remate') {
+    idFiscal?.setValidators([Validators.required]);
+    matricula?.clearValidators();
+  } else if (rol === 'rematador') {
+    matricula?.setValidators([Validators.required]);
+    idFiscal?.clearValidators();
+  } else {
+    idFiscal?.clearValidators();
+    matricula?.clearValidators();
   }
 
-  onRolChange() {
-    const rol = this.form.get('rol')?.value;
-    const idFiscal = this.form.get('idFiscal');
-    const matricula = this.form.get('matricula');
-
-    if (rol === 'casa_remate') {
-      idFiscal?.setValidators([Validators.required]);
-      matricula?.clearValidators();
-    } else if (rol === 'rematador') {
-      matricula?.setValidators([Validators.required]);
-      idFiscal?.clearValidators();
-    } else {
-      idFiscal?.clearValidators();
-      matricula?.clearValidators();
-    }
-
-    idFiscal?.updateValueAndValidity();
+  idFiscal?.updateValueAndValidity();
     matricula?.updateValueAndValidity();
+}
+
+enviar() {
+  this.form.markAllAsTouched();
+
+  if (this.form.invalid) {
+    console.log('Formulario inválido.');
+    Object.entries(this.form.controls).forEach(([key, control]) => {
+      if (control.invalid) {
+        console.warn(`Campo inválido: ${key}`, control.errors);
+      }
+  });
+  return;
   }
 
-  enviar() {
-    this.form.markAllAsTouched();
+  console.log('Formulario válido.');
 
-    if (this.form.invalid) {
-      console.log('Formulario inválido.');
-      Object.entries(this.form.controls).forEach(([key, control]) => {
-        if (control.invalid) {
-          console.warn(`Campo inválido: ${key}`, control.errors);
-        }
-      });
-      return;
-    }
+  const rol = this.form.get('rol')?.value;
+  const url = rol === 'casa_remate'
+      ? `${environment.apiUrl}/api/register-google-casa-remate`
+      : `${environment.apiUrl}/api/register-google-user`;
+ const payload = {
+    ...this.form.value,
+    ...(rol !== 'rematador' && { matricula: undefined }),
+    ...(rol !== 'casa_remate' && { idFiscal: undefined })
+  };
 
-    console.log('Formulario válido.');
+  this.http.post(url, payload).subscribe({
+    next: (res: any) => {
+      console.log('Registro exitoso', res);
+      localStorage.setItem('token', res.access_token);
+      localStorage.setItem('usuario_id', res.usuario_id);
+      localStorage.setItem('rol', res.rol);
 
-    const rol = this.form.get('rol')?.value;
-    const url = rol === 'casa_remate'
-             ? `${environment.apiUrl}/api/register-google-casa-remate`
-             : `${environment.apiUrl}/api/register-google-user`;
-    const payload = {
-      ...this.form.value,
-      ...(rol !== 'rematador' && { matricula: undefined }),
-      ...(rol !== 'casa_remate' && { idFiscal: undefined })
-    };
-
-    this.http.post(url, payload).subscribe({
-      next: (res: any) => {
-        console.log('Registro exitoso', res);
-        localStorage.setItem('token', res.access_token);
-        localStorage.setItem('usuario_id', res.usuario_id);
-        localStorage.setItem('rol', res.rol);
-
-        if (res.rol === 'cliente') this.router.navigate(['/dashboard-cliente']);
-        else if (res.rol === 'rematador') this.router.navigate(['/dashboard-rematador']);
+      if (res.rol === 'cliente') this.router.navigate(['/dashboard-cliente']);
+      else if (res.rol === 'rematador') this.router.navigate(['/dashboard-rematador']);
         else if (res.rol === 'casa_remate') this.router.navigate(['/dashboard-casa']);
-      },
-      error: err => {
-        console.error('Error al registrar con Google:', err);
-        alert('Error: ' + JSON.stringify(err.error.details || err.error));
+  },
+  
+  error: err => {
+      console.error('Error al registrar con Google:', err);
+      alert('Error: ' + JSON.stringify(err.error.details || err.error));
       }
     });
   }
