@@ -59,5 +59,15 @@ export class SubastaService {
       })
     );
   }
+
+  // Si querés buscar usuario por email, usá este método aparte
+  getUsuarioPorEmail(email: string): Observable<string | null> {
+    return this.http.get<string>(`${this.urlService.baseUrl}/buscar-usuario-email/${email}`).pipe(
+      catchError(error => {
+        console.error('Error al buscar usuario por email:', error);
+        return of(null);
+      })
+    );
+  }
 }
 

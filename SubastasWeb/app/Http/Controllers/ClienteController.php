@@ -280,4 +280,30 @@ class ClienteController extends Controller
 
         return response()->json(['message' => 'Cliente eliminado con éxito'], 200);
     }
+
+    /**
+     * Buscar el email de un usuario por su id
+     * @OA\Get(
+     *     path="/api/usuarioEmail/{id}",
+     *     summary="Buscar email de usuario por id",
+     *     tags={"Cliente"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de usuario a buscar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=200, description="Email encontrado"),
+     *     @OA\Response(response=404, description="Usuario no encontrado")
+     * )
+     */
+    public function buscarUsuarioPorId($id)
+    {
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+        return response()->json($usuario->email);
+    }
 }

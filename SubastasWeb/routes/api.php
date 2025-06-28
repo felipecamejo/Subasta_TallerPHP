@@ -32,6 +32,7 @@ Route::get('/debug-log', function () {
     return response()->json(['mensaje' => 'Log generado. Revisa storage/logs/laravel.log']);
 });
 
+/*
 Route::middleware('auth:sanctum')->get('/debug-admin', function (Request $request) {
    
     return response()->json([
@@ -42,6 +43,7 @@ Route::middleware('auth:sanctum')->get('/debug-admin', function (Request $reques
         'token' => $request->bearerToken(),
     ]);
 });
+*/
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -85,7 +87,7 @@ Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat
 Route::apiResource('casa-remates', CasaRemateController::class);
 
 // 🛡️ Rutas protegidas por Sanctum
-Route::middleware('auth:sanctum')->group(function () {
+//Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/user', function (Request $request) {
@@ -129,16 +131,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subastas/{id}/lotes', [SubastaController::class, 'agregarLotes']);
     Route::post('/subastas/enviarMail', [SubastaController::class, 'enviarEmailNotificacion']);
 
-    Route::middleware(['auth:sanctum', 'isAdmin'])
-    ->prefix('admin')
-    ->group(function () {
-        Route::get('/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
-        Route::get('/casas-activas', [AdminController::class, 'casasActivas']);
-        Route::post('/aprobar-casa/{usuarioId}', [AdminController::class, 'aprobarCasa']);
-        Route::post('/desaprobar-casa/{usuarioId}', [AdminController::class, 'desaprobarCasa']);
-        Route::delete('/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
-        Route::get('/usuarios', [AdminController::class, 'usuariosPorRol']);
-    });
+    // Rutas de administración SIN protección para testing
+    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
+    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
+    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+    
+    // Quitar grupo admin protegido
+    //Route::middleware(['auth:sanctum', 'isAdmin'])
+    //->prefix('admin')
+    //->group(function () {
+    //    Route::get('/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
+    //    Route::get('/casas-activas', [AdminController::class, 'casasActivas']);
+    //    Route::post('/aprobar-casa/{usuarioId}', [AdminController::class, 'aprobarCasa']);
+    //    Route::post('/desaprobar-casa/{usuarioId}', [AdminController::class, 'desaprobarCasa']);
+    //    Route::delete('/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
+    //    Route::get('/usuarios', [AdminController::class, 'usuariosPorRol']);
+    //});
     // Rutas de administración
     Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
     Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
@@ -152,4 +162,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/paypal/webhook', [PaypalController::class, 'webhook']);
     Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal.success');
     Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal.cancel');
-});
+//});
+
+Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);

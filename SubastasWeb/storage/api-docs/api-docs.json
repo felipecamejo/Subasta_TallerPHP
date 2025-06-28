@@ -2045,26 +2045,12 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "usuario_valorable_id": {
-                                        "description": "ID del usuario/casa de remate a calificar (opcional)",
-                                        "type": "integer",
-                                        "example": 2
-                                    },
                                     "calificacion": {
                                         "description": "Calificación de 1 a 5 estrellas (opcional)",
                                         "type": "integer",
                                         "maximum": 5,
                                         "minimum": 1,
                                         "example": 4
-                                    },
-                                    "tipo_valorable": {
-                                        "description": "Tipo de entidad a valorar (opcional)",
-                                        "type": "string",
-                                        "enum": [
-                                            "cliente",
-                                            "casa_remate"
-                                        ],
-                                        "example": "cliente"
                                     }
                                 },
                                 "type": "object"
@@ -2499,6 +2485,35 @@
                     },
                     "404": {
                         "description": "Cliente no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/usuarioEmail/{id}": {
+            "get": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Buscar email de usuario por id",
+                "description": "Buscar el email de un usuario por su id",
+                "operationId": "ec13d48e0742a773fb451a16457c0bc1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de usuario a buscar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email encontrado"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
                     }
                 }
             }
