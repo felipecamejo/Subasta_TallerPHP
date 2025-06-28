@@ -19,7 +19,10 @@
     </ul>
 
     <div class="right-section">
-      <a *ngIf="isLoggedIn" [routerLink]="['/perfil', usuarioId]" class="profile-link">
+      <a *ngIf="isLoggedIn" 
+         [routerLink]="getProfileRoute()" 
+         class="profile-link"
+         [pTooltip]="getProfileTooltip()">
         <i class="pi pi-user"></i>
       </a>
       <i *ngIf="!isLoggedIn" class="pi pi-user"></i>
