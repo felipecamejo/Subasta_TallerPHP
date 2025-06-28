@@ -27,7 +27,7 @@ class ClienteController extends Controller
     public function index()
     {
         try {
-            $clientes = Cliente::with(['usuario', 'valoracion'])->get();
+            $clientes = Cliente::with(['usuario'])->get();
             return response()->json($clientes, 200);
         } catch (\Throwable $e) {
             return response()->json([
@@ -127,7 +127,7 @@ class ClienteController extends Controller
             'usuario_id' => $usuario->id,
         ]);
 
-        $cliente->load(['usuario', 'valoracion']);
+        $cliente->load(['usuario']);
         return response()->json($cliente, 201);
     }
 
@@ -155,7 +155,7 @@ class ClienteController extends Controller
     */
     public function show($usuario_id)
     {
-        $cliente = Cliente::with(['usuario', 'valoracion', 'pujas' => function($query) {
+        $cliente = Cliente::with(['usuario', 'pujas' => function($query) {
             $query->with(['lote', 'factura']);
         }, 'notificaciones'])->find($usuario_id);
         
@@ -237,7 +237,7 @@ class ClienteController extends Controller
         ]);
 
         // Actualizar cliente (ya no hay campo calificacion)
-        $cliente->load(['usuario', 'valoracion']);
+        $cliente->load(['usuario']);
         return response()->json($cliente);
     }
 
@@ -304,6 +304,7 @@ class ClienteController extends Controller
         if (!$usuario) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
-        return response()->json($usuario->email);
+        // Devolver el email como string plano, sin comillas extra ni JSON
+        return response($usuario->email, 200)->header('Content-Type', 'text/plain');
     }
 }
