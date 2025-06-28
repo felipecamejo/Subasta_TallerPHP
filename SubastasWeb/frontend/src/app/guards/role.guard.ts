@@ -15,11 +15,11 @@ export const RoleGuard: CanActivateFn = (route, state) => {
   console.log('Rol actual:', rolUsuario);
 
   if (rolUsuario && rolesPermitidos.includes(rolUsuario)) {
-    console.log('[RoleGuard] ✅ Acceso permitido');
+    console.log('[RoleGuard]  Acceso permitido');
     return true;
   }
 
-  console.warn('[RoleGuard] ❌ Acceso denegado. Redirigiendo a /login');
+  console.warn('[RoleGuard]  Acceso denegado. Redirigiendo a /login');
   router.navigate(['/login']);
   return false;
 };

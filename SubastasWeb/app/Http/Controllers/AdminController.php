@@ -24,8 +24,7 @@ use OpenApi\Annotations as OA;
 *     bearerFormat="JWT"
 * )
 */
-class AdminController extends Controller
-{
+class AdminController extends Controller {
     /**
     * @OA\Get(
     *     path="/api/admin/usuarios-pendientes",
@@ -67,9 +66,7 @@ class AdminController extends Controller
     *     )
     * )
     */
-
-   public function casasPendientes()
-{
+    public function casasPendientes(){
     try {
         // Verifica si el usuario está autenticado
         $user = Auth::user();  // Obtiene el usuario autenticado
@@ -182,8 +179,7 @@ class AdminController extends Controller
     *     )
     * )
     */
-    public function aprobarCasa($usuarioId)
-    {
+    public function aprobarCasa($usuarioId) {
         try {
             $casa = CasaRemate::where('usuario_id', $usuarioId)->firstOrFail();
             $casa->activo = true;
@@ -339,8 +335,7 @@ class AdminController extends Controller
  *     )
  * )
  */
-public function usuariosPorRol(Request $request)
-{
+public function usuariosPorRol(Request $request){
     $rol = $request->query('rol');
     $perPage = $request->query('per_page', 10); // por defecto 10
 

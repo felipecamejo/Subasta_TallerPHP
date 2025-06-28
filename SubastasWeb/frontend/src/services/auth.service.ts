@@ -21,39 +21,36 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+ ) {}
 
-  login(authData: AuthData): void {
+ login(authData: AuthData): void {
+
     localStorage.setItem('auth', JSON.stringify(authData));
     localStorage.setItem('token', authData.token);
     localStorage.setItem('rol', authData.rol);
     localStorage.setItem('usuario_id', authData.usuario_id.toString());
     this.isAuthenticatedSubject.next(true); // Cambia el estado de autenticación
-  }
+}
 
   loginYRedirigir(authData: AuthData): void {
     this.login(authData);
     this.redirigirPorRol(authData.rol);
   }
 
-  redirigirPorRol(rol: string | undefined): void {
-    switch (rol) {
-      case 'cliente':
-        this.router.navigate(['/dashboard-cliente']);
-        break;
-      case 'rematador':
-        this.router.navigate(['/dashboard-rematador']);
-        break;
-      case 'casa_remate':
-        this.router.navigate(['/dashboard-casa-remate']);
-        break;
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      default:
-        this.router.navigate(['/']);
-    }
+  
+redirigirPorRol(rol: string | undefined): void {
+  switch (rol) {
+    case 'admin':
+      this.router.navigate(['/admin']);
+      break;
+    case 'cliente':
+    case 'rematador':
+    case 'casa_remate':
+    default:
+      this.router.navigate(['/buscadorRemates']); 
+      break;
   }
+}
 
   logout(): void {
     localStorage.removeItem('auth');
@@ -70,7 +67,6 @@ export class AuthService {
 
   getToken(): string | null {
     const auth = this.getAuthObject();
-    // Primero verifica si hay un token en el objeto 'auth' o en 'localStorage'
     return auth?.token || localStorage.getItem('token');
   }
 
@@ -103,7 +99,6 @@ export class AuthService {
 
   private hasToken(): boolean {
     const auth = this.getAuthObject();
-    // Verifica si el token está presente
     return !!auth?.token || !!localStorage.getItem('token');
   }
 

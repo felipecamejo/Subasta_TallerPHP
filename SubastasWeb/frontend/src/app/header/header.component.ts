@@ -23,9 +23,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
-  items: MenuItem[] = [
-    { label: 'Home', routerLink: ['/buscadorRemates'] },
-  ];
+  items: MenuItem[] = [];
 
   usuarioId: number | null = null;
   isLoggedIn: boolean = false;
@@ -33,10 +31,18 @@ export class HeaderComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
+    const rol = this.authService.getRol();
+
+    // Redirige a diferentes rutas según el rol
+    if (rol === 'admin') {
+      this.items = [{ label: 'Home', routerLink: ['/admin'] }];
+    } else {
+      this.items = [{ label: 'Home', routerLink: ['/buscadorRemates'] }];
+    }
+
     this.usuarioId = this.authService.getUsuarioId();
     this.isLoggedIn = this.authService.isLoggedIn();
-    
-    // Suscribirse a cambios en el estado de autenticación
+
     this.authService.isAuthenticated$.subscribe(isAuthenticated => {
       this.isLoggedIn = isAuthenticated;
       if (isAuthenticated) {
@@ -44,4 +50,9 @@ export class HeaderComponent implements OnInit {
       }
     });
   }
+
+  logout() {
+    this.authService.logout();
+  }
 }
+
