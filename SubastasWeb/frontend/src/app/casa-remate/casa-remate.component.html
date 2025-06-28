@@ -8,79 +8,25 @@
             <p>Rut: {{model.idFiscal}}</p>
             <p>Email: {{model.usuario?.email}}</p>
             <p>Telefono: {{model.usuario?.telefono}}</p>
-            <p>Telefono: {{model.usuario?.telefono}}</p>
-            <form [formGroup]="estrellas">
-              <p-rating formControlName="value" [readonly]="true"></p-rating>
-            </form>
+            <!-- ACA VAN LAS VALORACIONES -->
+
         </div>
-        <div class="w-full flex flex-wrap gap">
-            <p-button label="Crear Subasta" class="boton" severity="secondary" (click)="mostrarSubasta()"/>
-            <p-dialog header="Añadir nuevo cliente a credito" [modal]="true" [(visible)]="modalSubasta" [style]="{ width: '25rem' }">
-              <div class="flex items-center gap-4 mb-4">
-                <label for="username" class="font-semibold w-24 modal">Nombre</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="telefono" class="font-semibold w-24 modal">Telefono</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="min" class="font-semibold w-24 modal">Min</label>
-                <input pInputTex class="flex-auto modal" autocomplete="off" type="number" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="max" class="font-semibold w-24 modal">Max</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" type="number"/>
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="deuda" class="font-semibold w-24 modal">Deuda</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" type="number" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="pago" class="font-semibold w-24 modal">Pago</label>
-                <input pInputText class="flex-auto modal"  autocomplete="off" type="number"/>
-              </div>
-              <div class="flex justify-end gap-2">
-                <p-button label="Confirmar" severity="secondary" (click)="saveSubasta()" />
-              </div>
-            </p-dialog>
-            <p-button label="Crear Articulo" class="boton" severity="secondary" (click)="mostrarArticulo()"/>
-            <p-dialog header="Añadir nuevo cliente a credito" [modal]="true" [(visible)]="modalSubasta" [style]="{ width: '25rem' }">
-              <div class="flex items-center gap-4 mb-4">
-                <label for="username" class="font-semibold w-24 modal">Nombre</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="telefono" class="font-semibold w-24 modal">Telefono</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="min" class="font-semibold w-24 modal">Min</label>
-                <input pInputTex class="flex-auto modal" autocomplete="off" type="number" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="max" class="font-semibold w-24 modal">Max</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" type="number"/>
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="deuda" class="font-semibold w-24 modal">Deuda</label>
-                <input pInputText class="flex-auto modal" autocomplete="off" type="number" />
-              </div>
-              <div class="flex items-center gap-4 mb-4">
-                <label for="pago" class="font-semibold w-24 modal">Pago</label>
-                <input pInputText class="flex-auto modal"  autocomplete="off" type="number"/>
-              </div>
-              <div class="flex justify-end gap-2">
-                <p-button label="Confirmar" severity="secondary" (click)="saveArticulo()" />
-              </div>
-            </p-dialog>
-        </div>
+          <div class="w-full flex flex-wrap gap">
+            <button pButton type="button" label="Crear Subasta" (click)="abrirModalSubasta()"></button>
+            <crear-subasta-modal (close)="cerrarModalSubasta()" #crearSubastaModal></crear-subasta-modal>
+            
+            
+            <button pButton type="button" label="Crear Artículo" (click)="abrirModalArticulo()"></button>
+            <app-crear-articulo-modal (close)="cerrarModalArticulo()" #crearArticuloModal></app-crear-articulo-modal>
+
+
+          </div>
     </article>
     <article class="w-full">
         <p class="tituloCentrado w-full">Articulos</p>
         <p-table
         class="texto"
-        [value]="lalala || []"
+        [value]="[]"
         showGridlines
         [paginator]="true"
         [rows]="5"

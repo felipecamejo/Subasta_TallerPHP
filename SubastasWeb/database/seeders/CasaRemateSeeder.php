@@ -41,6 +41,8 @@ class CasaRemateSeeder extends Seeder
             'chat_id' => null, // Si no hay chat asociado, puede ser null o eliminar este campo si no corresponde
             'created_at' => now(),
             'updated_at' => now(),
+            'valorable_id' => 2,
+            'valorable_type' => 'vaya uno a saber',
         ]);
 
         // Casas generadas con Faker
@@ -81,6 +83,8 @@ class CasaRemateSeeder extends Seeder
                 'chat_id' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'valorable_id' => 3,
+                'valorable_type' => 'n/c',
             ]);
         }
     }
