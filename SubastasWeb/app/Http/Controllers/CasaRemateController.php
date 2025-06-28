@@ -89,13 +89,13 @@ class CasaRemateController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/clientes/{usuario_id}",
-     *     summary="Actualizar un cliente",
-     *     tags={"Cliente"},
+     *     path="/api/casa-remates/{usuario_id}",
+     *     summary="Actualizar una casa de remate",
+     *     tags={"CasaRemates"},
      *     @OA\Parameter(
      *         name="usuario_id",
      *         in="path",
-     *         description="ID del usuario asociado al cliente a actualizar",
+     *         description="ID del usuario asociado a la casa de remate a actualizar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -107,14 +107,13 @@ class CasaRemateController extends Controller
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="telefono", type="string"),
      *             @OA\Property(property="imagen", type="string"),
-     *             @OA\Property(property="calificacion", type="number"),
      *             @OA\Property(property="latitud", type="number"),
      *             @OA\Property(property="longitud", type="number"),
      *             @OA\Property(property="idFiscal", type="number"),
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Cliente actualizado correctamente"),
-     *     @OA\Response(response=404, description="Cliente no encontrado")
+     *     @OA\Response(response=200, description="Casa Remate actualizado correctamente"),
+     *     @OA\Response(response=404, description="Casa Remate no encontrado")
      * )
     */
     public function update(Request $request, string $usuario_id)

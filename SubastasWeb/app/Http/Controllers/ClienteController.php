@@ -175,35 +175,8 @@ class ClienteController extends Controller
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/clientes/{usuario_id}",
-     *     summary="Actualizar un cliente",
-     *     tags={"Cliente"},
-     *     @OA\Parameter(
-     *         name="usuario_id",
-     *         in="path",
-     *         description="ID del usuario asociado al cliente a actualizar",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"nombre", "cedula", "email", "contrasenia"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="cedula", type="string"),
-     *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="imagen", type="string"),
-     *             @OA\Property(property="calificacion", type="number"),
-     *             @OA\Property(property="latitud", type="number"),
-     *             @OA\Property(property="longitud", type="number"),
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Cliente actualizado correctamente"),
-     *     @OA\Response(response=404, description="Cliente no encontrado")
-     * )
-    */
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, string $usuario_id)
     {
        $cliente = Cliente::find($usuario_id);

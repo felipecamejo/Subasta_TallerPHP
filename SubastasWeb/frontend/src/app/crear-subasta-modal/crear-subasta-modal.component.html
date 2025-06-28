@@ -1,3 +1,4 @@
+<p-toast></p-toast>
 <p-dialog 
   header="Crear Nueva Subasta" 
   [(visible)]="visible" 
@@ -27,6 +28,34 @@
       .responsive-map {
         height: 200px !important;
       }
+    }
+
+    /* Arreglar z-index para que el calendario aparezca sobre el mapa */
+    ::ng-deep .p-datepicker {
+      z-index: 10000 !important;
+    }
+
+    ::ng-deep .p-datepicker-panel {
+      z-index: 10000 !important;
+    }
+
+    ::ng-deep .p-component-overlay {
+      z-index: 10000 !important;
+    }
+
+    /* Estilos para el mapa */
+    #map {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Asegurar que los dropdowns también aparezcan sobre el mapa */
+    ::ng-deep .p-dropdown-panel {
+      z-index: 10000 !important;
+    }
+
+    ::ng-deep .p-dropdown-items-wrapper {
+      z-index: 10000 !important;
     }
   </style>
   
@@ -71,23 +100,43 @@
           [showSeconds]="false" 
           dateFormat="dd/mm/yy"
           placeholder="Seleccione fecha y hora"
-          styleClass="w-full" />
+          styleClass="w-full"
+          appendTo="body" />
         <small *ngIf="form.get('fecha')?.invalid && form.get('fecha')?.touched" style="color: #dc3545;">
           La fecha es obligatoria
         </small>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label for="rematador" style="font-weight: bold; color: #495057;">ID del Rematador *</label>
-        <input 
+        <label for="rematador" style="font-weight: bold; color: #495057;">Seleccionar Rematador *</label>
+        <p-dropdown 
           id="rematador"
-          type="number" 
-          pInputText 
-          formControlName="rematador_id" 
-          placeholder="Ingrese el ID del rematador"
-          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+          formControlName="rematador_id"
+          [options]="rematadores"
+          optionLabel="usuario.nombre"
+          optionValue="usuario_id"
+          placeholder="Seleccione un rematador"
+          [style]="{ width: '100%' }"
+          [panelStyle]="{ 'max-height': '200px' }"
+          appendTo="body">
+          <ng-template pTemplate="selectedItem" let-selectedRematador>
+            <div *ngIf="selectedRematador" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="pi pi-user" style="color: #6366f1;"></i>
+              <span>{{ selectedRematador.usuario?.nombre }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-rematador>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem;">
+              <i class="pi pi-user" style="color: #6366f1;"></i>
+              <div>
+                <div style="font-weight: 500;">{{ rematador.usuario?.nombre }}</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">{{ rematador.usuario?.email }}</div>
+              </div>
+            </div>
+          </ng-template>
+        </p-dropdown>
         <small *ngIf="form.get('rematador_id')?.invalid && form.get('rematador_id')?.touched" style="color: #dc3545;">
-          El rematador es obligatorio
+          Debe seleccionar un rematador
         </small>
       </div>
 

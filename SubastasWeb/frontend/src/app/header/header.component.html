@@ -9,6 +9,13 @@
       <li *ngFor="let item of items">
         <a [routerLink]="item.routerLink">{{ item.label }}</a>
       </li>
+      <!-- Botón de estadísticas solo para casas de remate -->
+      <li *ngIf="isCasaRemate">
+        <a [routerLink]="['/estadisticas']">
+          <i class="pi pi-chart-bar"></i>
+          Estadísticas
+        </a>
+      </li>
     </ul>
 
     <div class="right-section">
@@ -17,11 +24,16 @@
       </a>
       <i *ngIf="!isLoggedIn" class="pi pi-user"></i>
       <app-notificaciones></app-notificaciones>
-      <div class="social-icons">
-        <i class="pi pi-twitter"></i>
-        <i class="pi pi-instagram"></i>
-        <i class="pi pi-facebook"></i>
-      </div>
+      
+      <!-- Botón de logout cuando el usuario está logueado -->
+      <button *ngIf="isLoggedIn" 
+              pButton 
+              type="button" 
+              icon="pi pi-sign-out" 
+              class="p-button-text p-button-rounded logout-button"
+              (click)="logout()"
+              pTooltip="Cerrar sesión">
+      </button>
     </div>
   </nav>
 </div>

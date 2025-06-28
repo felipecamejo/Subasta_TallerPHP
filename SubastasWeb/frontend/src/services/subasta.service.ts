@@ -46,6 +46,11 @@ export class SubastaService {
     };
     return this.http.post<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}`, subastaConZona);
   }
+
+  // Método para crear subasta usando la nueva API
+  crearSubasta(subastaData: any): Observable<subastaDto> {
+    return this.http.post<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}`, subastaData);
+  }
   
   getClienteMail(clienteId: number | null): Observable<string | null> {
     if (!clienteId) {

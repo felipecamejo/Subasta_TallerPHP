@@ -84,6 +84,12 @@ Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat
 
 Route::apiResource('casa-remates', CasaRemateController::class);
 
+// Ruta pública para obtener rematadores
+Route::get('/rematadores', [RematadorController::class, 'index']);
+
+// Ruta pública para obtener lotes
+Route::get('/lotes', [LoteController::class, 'index']);
+
 // 🛡️ Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -107,11 +113,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('subastas', SubastaController::class);
-    Route::apiResource('lotes', LoteController::class);
+    Route::apiResource('lotes', LoteController::class)->except(['index']);
     Route::apiResource('articulos', ArticuloController::class);
     Route::apiResource('categorias', CategoriaController::class);
     Route::apiResource('clientes', ClienteController::class);
-    Route::apiResource('rematadores', RematadorController::class);
+    Route::apiResource('rematadores', RematadorController::class)->except(['index']);
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
     Route::apiResource('vendedores', VendedorController::class);

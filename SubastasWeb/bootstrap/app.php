@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\IsAdmin;
 use App\Providers\AppServiceProvider;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -30,6 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
         AppServiceProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Configurar respuesta para autenticación fallida en APIs
+        $exceptions->render(function (Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Unauthenticated.',
+                    'error' => 'Token de autenticación requerido'
+                ], 401);
+            }
+        });
     })
     ->create();
