@@ -21,6 +21,13 @@ import { ChatService } from '../../services/chat.service';
 import { notificacionUsuarioDto } from '../../models/notificacionDto';
 import { TimezoneService } from '../../services/timezone.service';
 
+// ✅ Redis-compatible request format
+interface PujaRedisRequest {
+  cliente_id: number | null;
+  monto: number;
+}
+
+// 🔄 Legacy format (for compatibility)
 interface PujaRequest {
   fechaHora: string;
   monto: number;
@@ -646,6 +653,15 @@ export class StreamComponent implements OnInit, OnDestroy {
     return { valida: true };
   }
 
+  // ✅ UPDATED: Create Redis-compatible bid request
+  private crearPujaRedis(monto: number): PujaRedisRequest {
+    return {
+      monto: monto,
+      cliente_id: localStorage.getItem('usuario_id') !== null ? Number(localStorage.getItem('usuario_id')) : null
+    };
+  }
+
+  // 🔄 LEGACY: Keep for compatibility if needed
   private crearPujaBase(monto: number): PujaRequest {
     return {
       fechaHora: new Date().toISOString(),
@@ -666,8 +682,9 @@ export class StreamComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const puja = this.crearPujaBase(this.pujaRapida!);
-    this.enviarPuja(puja);
+    // ✅ UPDATED: Use Redis-compatible request
+    const puja = this.crearPujaRedis(this.pujaRapida!);
+    this.enviarPujaRedis(puja);
   }
 
   crearPujaComun(): void {
@@ -679,8 +696,9 @@ export class StreamComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const puja = this.crearPujaBase(this.pujaComun!);
-    this.enviarPuja(puja);
+    // ✅ UPDATED: Use Redis-compatible request
+    const puja = this.crearPujaRedis(this.pujaComun!);
+    this.enviarPujaRedis(puja);
   }
 
   private enviarPuja(puja: PujaRequest): void {
@@ -794,6 +812,167 @@ export class StreamComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error al obtener el email del cliente:', err);
       }
+    });
+  }
+
+  // ✅ NEW: Redis-based bidding method
+  private enviarPujaRedis(puja: PujaRedisRequest): void {
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!usuarioId) {
+      alert('Debe iniciar sesión para realizar una puja');
+      return;
+    }
+
+    if (puja.cliente_id === null) {
+      puja.cliente_id = Number(usuarioId);
+    }
+
+    // Get current lot ID from URL/index
+    const loteId = this.lotes[this.indexLotes]?.id;
+    if (!loteId || loteId <= 0) {
+      alert('Error: ID de lote inválido');
+      return;
+    }
+
+    // Get client email for notifications
+    this.subastaService.getClienteMail(puja.cliente_id).subscribe({
+      next: (mail) => {
+        const exGanador = mail;
+
+        const email: mailDto = {
+          email: mail || '',
+          asunto: `Puja realizada en la subasta ${this.subasta?.nombre || 'desconocida'}`,
+          mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${loteId} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
+        };
+
+        // Update winners array before making the bid
+        if (!this.ganadores[this.indexLotes]) {
+          this.ganadores[this.indexLotes] = {
+            numeroLote: loteId,
+            clienteId: puja.cliente_id || 0,
+            monto: Number(puja.monto)
+          };
+          console.log(`🏆 NUEVO GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
+        } else {
+          const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
+          const montoAnterior = this.ganadores[this.indexLotes].monto;
+          this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
+          this.ganadores[this.indexLotes].monto = Number(puja.monto);
+          console.log(`🔄 CAMBIO DE GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
+        }
+
+        // Make the Redis bid request
+        this.pujaService.crearPujaRedis(loteId, puja).subscribe({
+          next: (data) => {
+            console.log(`💰 NUEVA PUJA REDIS CREADA: Lote ${loteId} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
+            
+            // Update UI with the new bid
+            this.pujaActual = data.monto;
+            this.pujaRapida = data.monto + 1;
+            this.pujaComun = null;
+
+            // Create the bid object for local display
+            const nuevaPuja: pujaDto = {
+              id: data.id || Date.now(), // Use timestamp as fallback ID
+              fechaHora: new Date(data.fechaHora || Date.now()),
+              monto: data.monto,
+              lote: this.lotes[this.indexLotes],
+              factura: null as any,
+              cliente: {
+                usuario: {
+                  id: puja.cliente_id!,
+                  nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
+                  email: this.clienteMail || '',
+                  imagen: ''
+                }
+              }
+            };
+            this.pujas.push(nuevaPuja);
+
+            // Send WebSocket notification
+            this.sendWebSocketBidRedis(puja, loteId);
+
+            // Send confirmation email to bidder
+            if (mail && this.esUsuarioGanadorActualLote()) {
+              this.subastaService.enviarMail(email).subscribe({
+                next: (response) => console.log('📧 MAIL ENVIADO: Email de confirmación enviado exitosamente a', mail),
+                error: (error) => console.error('❌ ERROR AL ENVIAR MAIL DE CONFIRMACIÓN:', error)
+              });
+            }
+
+            // Check if threshold is exceeded and send notification
+            if (this.lotes[this.indexLotes].umbral && puja.monto > this.lotes[this.indexLotes].umbral && !this.umbralSuperado) {
+              this.umbralSuperado = true;
+              this.enviarNotificacionUmbral(puja.monto);
+            }
+
+            // Notify previous winner if exists and is different from current user
+            if (exGanador && exGanador !== mail) {
+              const exEmail: mailDto = {
+                email: exGanador,
+                asunto: `Puja superada - ${this.subasta?.nombre}`,
+                mensaje: `Tu puja en el lote ${loteId} de la subasta ${this.subasta?.nombre} ha sido superada.`
+              };
+
+              console.log('🔔 NOTIFICACIÓN AL EX GANADOR:', exGanador);
+
+              if (this.esUsuarioGanadorActualLote()) {
+                this.subastaService.enviarMail(exEmail).subscribe({
+                  next: () => console.log('📧 MAIL ENVIADO: Notificación de puja superada enviada a', exGanador),
+                  error: (error) => console.error('❌ ERROR AL ENVIAR MAIL AL EX GANADOR:', error)
+                });
+              }
+            }
+
+            // Update data after a short delay
+            setTimeout(() => {
+              this.actualizarDatosSinSobrescribir();
+            }, 500);
+          },
+          error: (err) => {
+            console.error('❌ ERROR EN PUJA REDIS:', err);
+            
+            // Handle specific Redis errors
+            if (err.status === 409) {
+              alert('Tu puja ha sido superada por otra más alta. Por favor, intenta con un monto mayor.');
+            } else if (err.status === 400) {
+              alert('Puja inválida. Verifica que el monto sea mayor al actual.');
+            } else if (err.status === 404) {
+              alert('El lote no fue encontrado o ya no está disponible.');
+            } else {
+              alert('Error al procesar la puja. Por favor, intente nuevamente.');
+            }
+            
+            // Reset input values on error
+            this.pujaRapida = this.pujaActual + 1;
+            this.pujaComun = null;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error al obtener el email del cliente:', err);
+        alert('Error al procesar la información del usuario. Por favor, intente nuevamente.');
+      }
+    });
+  }
+
+  // ✅ NEW: WebSocket notification for Redis bids
+  private sendWebSocketBidRedis(puja: PujaRedisRequest, loteId: number): void {
+    if (!this.subasta?.id) return;
+
+    this.websocketService.sendBid(
+      this.subasta.id,
+      puja.cliente_id || 0,
+      localStorage.getItem('usuario_nombre') || 'Usuario',
+      puja.monto,
+      loteId
+    );
+    
+    console.log('🌐 WEBSOCKET: Puja Redis enviada via WebSocket', {
+      subastaId: this.subasta.id,
+      clienteId: puja.cliente_id,
+      monto: puja.monto,
+      loteId: loteId
     });
   }
 
@@ -1389,7 +1568,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     }
     
     const ahora = new Date();
-    const diferenciaMilisegundos = fechaSubasta.getTime() - ahora.getTime();
+    const diferenciaMiliseundos = fechaSubasta.getTime() - ahora.getTime();
     
     if (this.subasta.activa) {
       this.manejarSubastaActiva(fechaSubasta, ahora);
