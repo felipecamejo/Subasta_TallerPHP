@@ -62,3 +62,8 @@ Route::get('/test-env', function () {
 // Rutas para login con Google
 Route::get('/auth/redirect/google', [SocialAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/callback/google', [SocialAuthController::class, 'handleGoogleCallback']);
+
+// Ruta dummy para login (evita error Route [login] not defined)
+Route::get('/login', function () {
+    return response()->json(['message' => 'No autenticado. Ruta login dummy para testing.'], 401);
+})->name('login');

@@ -33,17 +33,7 @@ class CasaRemateSeeder extends Seeder
             'activo' => false,
         ]);
 
-        // Insertar valoración solo con los campos válidos
-        DB::table('valoraciones')->insert([
-            'total_puntaje' => 23,
-            'cantidad_opiniones' => 5,
-            'usuario_id' => $usuario->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-            'valorable_id' => 2,
-            'valorable_type' => 'vaya uno a saber',
-        ]);
-
+        /*
         // Casas generadas con Faker
         $faker = Faker::create('es_UY');
 
@@ -73,18 +63,7 @@ class CasaRemateSeeder extends Seeder
                 'idFiscal' => $cedula,
                 'activo' => $faker->boolean(80),
             ]);
-
-            // Insertar valoración solo con los campos válidos
-            DB::table('valoraciones')->insert([
-                'total_puntaje' => $faker->numberBetween(0, 50),
-                'cantidad_opiniones' => $faker->numberBetween(0, 10),
-                'usuario_id' => $usuario->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'valorable_id' => 3,
-                'valorable_type' => 'n/c',
-            ]);
         }
-    
+        */
     }
 }
