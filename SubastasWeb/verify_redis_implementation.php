@@ -12,10 +12,34 @@ echo "🔍 VERIFICANDO IMPLEMENTACIÓN REDIS...\n\n";
 // Check if Redis is running
 echo "1. ✅ Verificando conexión a Redis...\n";
 try {
-    $redis = new Redis();
-    $redis->connect('127.0.0.1', 6379);
-    $redis->ping();
-    echo "   ✅ Redis conectado correctamente\n\n";
+    // Try different paths for redis-cli
+    $redis_paths = [
+        'redis-cli',
+        'C:\\Users\\USUARIO\\Desktop\\Renzo\\Lab_0_git\\Subasta_TallerPHP\\redis\\redis-cli.exe',
+        '.\\redis\\redis-cli.exe',
+        '.\\redis-cli.exe'
+    ];
+    
+    $connected = false;
+    foreach ($redis_paths as $redis_path) {
+        $output = shell_exec("$redis_path ping 2>&1");
+        if (trim($output) === 'PONG') {
+            echo "   ✅ Redis conectado correctamente (usando: $redis_path)\n\n";
+            $connected = true;
+            break;
+        }
+    }
+    
+    if (!$connected) {
+        // Try to connect via socket to verify Redis is running
+        $socket = @fsockopen('127.0.0.1', 6379, $errno, $errstr, 5);
+        if ($socket) {
+            echo "   ✅ Redis está ejecutándose en puerto 6379 (servidor activo)\n\n";
+            fclose($socket);
+        } else {
+            throw new Exception("No se puede conectar al puerto 6379");
+        }
+    }
 } catch (Exception $e) {
     echo "   ❌ ERROR: Redis no está disponible - " . $e->getMessage() . "\n";
     echo "   💡 Solución: Ejecutar 'redis-server' en otra terminal\n\n";
