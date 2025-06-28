@@ -20,5 +20,8 @@ export class LoteService {
     return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
   }
 
+  crearLote(loteData: any): Observable<loteDto> {
+    return this.http.post<loteDto>(`${this.urlService.baseUrl}${this.endpoint}`, loteData);
+  }
 
 }

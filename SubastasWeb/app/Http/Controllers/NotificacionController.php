@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\Rematador;
 use App\Models\Usuario;
 use App\Models\CasaRemate;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use OpenApi\Annotations as OA;
@@ -37,17 +38,21 @@ class NotificacionController extends Controller
 {
     try {
         $usuario = Auth::user();
+        if (!$usuario) {
+            return response()->json([], 200);
+        }
+        // Buscar notificaciones por usuario.id, no por usuario_id
         $cliente = Cliente::where('usuario_id', $usuario->id)->first();
         $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-        $casa = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
-        $admin = \App\Models\Admin::where('usuario_id', $usuario->id)->first();
+        $casa = CasaRemate::where('usuario_id', $usuario->id)->first();
+        $admin = Admin::where('usuario_id', $usuario->id)->first();
 
-        // Si no tiene ningún tipo válido
+        // Si no tiene ningún tipo válido, devolver array vacío
         if (!$cliente && !$rematador && !$casa && !$admin) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
+            return response()->json([], 200);
         }
 
-        // Solo cliente y rematador reciben notificaciones
+        $notificaciones = [];
         if ($cliente) {
             $notificaciones = $cliente->notificaciones()
                 ->orderBy('fecha_hora', 'desc')
@@ -63,11 +68,8 @@ class NotificacionController extends Controller
                 ->orderBy('fecha_hora', 'desc')
                 ->get()
                 ->map(fn($n) => $this->formatNotification($n, $casa->usuario));
-        } else {
-            // Admins no reciben notificaciones por ahora
-            return response()->json([]);
         }
-
+        // Admins no reciben notificaciones, pero no es error
         return response()->json($notificaciones);
     } catch (\Throwable $e) {
         return response()->json([
