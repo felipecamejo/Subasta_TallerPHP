@@ -16,8 +16,8 @@ return new class extends Migration
             $table->integer('total_puntaje')->default(0); // Suma total de todas las valoraciones
             $table->integer('cantidad_opiniones')->default(0); // Número de opiniones recibidas
             
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
-            $table->foreignId('chat_id')->constrained('chats')->onDelete('cascade');
+            $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId(column: 'chat_id')->nullable()->constrained('chats')->onDelete('cascade');
 
             $table->timestamps();
         });

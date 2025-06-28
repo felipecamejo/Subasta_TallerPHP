@@ -7,6 +7,7 @@ use App\Models\Usuario;
 use App\Models\CasaRemate;
 use Illuminate\Support\Facades\Hash;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class CasaRemateSeeder extends Seeder
 {
@@ -32,9 +33,14 @@ class CasaRemateSeeder extends Seeder
             'activo' => false,
         ]);
 
-        $casaRemate->valoracion()->create([
-            'valoracion_total' => 23,
+        // Insertar valoración solo con los campos válidos
+        DB::table('valoraciones')->insert([
+            'total_puntaje' => 23,
             'cantidad_opiniones' => 5,
+            'usuario_id' => $usuario->id,
+            'chat_id' => null, // Si no hay chat asociado, puede ser null o eliminar este campo si no corresponde
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Casas generadas con Faker
@@ -61,15 +67,20 @@ class CasaRemateSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            $casa = CasaRemate::create([
+            $casaRemate = CasaRemate::create([
                 'usuario_id' => $usuario->id,
                 'idFiscal' => $cedula,
-                'activo' => $faker->boolean(70),
+                'activo' => $faker->boolean(80),
             ]);
 
-            $casa->valoracion()->create([
-                'valoracion_total' => $faker->numberBetween(10, 50),
-                'cantidad_opiniones' => $faker->numberBetween(1, 10),
+            // Insertar valoración solo con los campos válidos
+            DB::table('valoraciones')->insert([
+                'total_puntaje' => $faker->numberBetween(0, 50),
+                'cantidad_opiniones' => $faker->numberBetween(0, 10),
+                'usuario_id' => $usuario->id,
+                'chat_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }
