@@ -8,7 +8,6 @@ import { Subscription } from 'rxjs';
 import { NotificacionService } from '../../services/notificacion.service';
 import { notificacionUsuarioDto } from '../../models/notificacionDto';
 import { AuthService } from '../../services/auth.service';
-import { TimezoneService } from '../../services/timezone.service';
 
 @Component({
   selector: 'app-notificaciones',
@@ -28,17 +27,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificacionService: NotificacionService,
-    private router: Router,
-    private timezoneService: TimezoneService
-  ) {
-    // Debug: Verificar que la hora local se está calculando correctamente
-    console.log('=== DEBUG TIMEZONE ===');
-    console.log('Hora local del navegador:', new Date().toLocaleString('es-UY'));
-    console.log('Zona horaria detectada:', this.timezoneService.getUserTimezone());
-    console.log('Hora actual según TimezoneService:', this.timezoneService.getCurrentUserTime().toLocaleString('es-UY'));
-    console.log('Hora local formateada:', this.timezoneService.formatCurrentLocalTime());
-    console.log('======================');
-  }
+    private router: Router
+  ) {}
   private subscriptions = new Subscription();
 
   ngOnInit(): void {
@@ -162,14 +152,15 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
   formatearFechaCompleta(fechaHora: any): string {
     if (!fechaHora) return 'Sin fecha';
-    
-    // Debug
-    console.log('Fecha original:', fechaHora);
-    console.log('Fecha parseada:', new Date(fechaHora).toLocaleString('es-UY'));
-    console.log('Fecha formateada por TimezoneService:', this.timezoneService.formatDate(fechaHora, 'datetime'));
-    
-    // Usar el TimezoneService para formatear correctamente
-    return this.timezoneService.formatDate(fechaHora, 'datetime');
+    const fecha = new Date(fechaHora);
+    return fecha.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   obtenerTitulo(notificacion: notificacionUsuarioDto): string {

@@ -10,6 +10,7 @@ import { categoriaDto } from '../../models/categoriaDto';
 import { CategoriaService } from '../../services/categoria.service';
 import { DialogModule } from 'primeng/dialog';
 import { TimezoneService } from '../../services/timezone.service';
+import { UserTimezonePipe } from '../shared/pipes/user-timezone.pipe';
 import { TimezoneSelectorComponent } from '../shared/timezone-selector/timezone-selector.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subscription } from 'rxjs';
@@ -23,6 +24,7 @@ import { Subscription } from 'rxjs';
     SelectModule, 
     FormsModule, 
     DialogModule,
+    UserTimezonePipe,
     TimezoneSelectorComponent,
     TooltipModule
   ],
@@ -346,11 +348,11 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
     
     // Opción 1: Convertir fechas de subasta a zona horaria del usuario
-    const inicio = this.timezoneService.convertFromBaseToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertFromBaseToUserTimezone(fechaFin);
+    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
+    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
     
-    // También convertir "ahora" a la zona horaria del usuario para comparar correctamente
-    const ahoraEnZonaUsuario = this.timezoneService.getCurrentUserTime();
+    // También convertir "ahora" a la misma zona horaria para comparar correctamente
+    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
     
     if (ahoraEnZonaUsuario < inicio) {
       return 'pendiente';
@@ -373,11 +375,11 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
     
     // Convertir fechas a zona horaria del usuario
-    const inicio = this.timezoneService.convertFromBaseToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertFromBaseToUserTimezone(fechaFin);
+    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
+    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
     
-    // También convertir "ahora" a la zona horaria del usuario para comparar correctamente
-    const ahoraEnZonaUsuario = this.timezoneService.getCurrentUserTime();
+    // También convertir "ahora" a la misma zona horaria para comparar correctamente
+    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
     
     if (ahoraEnZonaUsuario < inicio) {
       // Calcular tiempo hasta el inicio
@@ -530,8 +532,11 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   formatearFechaSubasta(fecha: Date | string): string {
     if (!fecha) return 'Fecha no disponible';
     
-    // La fecha viene del backend (UTC-3), usar el método formatDate que ya hace la conversión
-    return this.timezoneService.formatDate(fecha, 'datetime');
+    // Convierte la fecha a la zona horaria del usuario
+    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
+    
+    // Formato: "24 Jun 2025, 15:30"
+    return this.timezoneService.formatDate(fechaLocal, 'datetime');
   }
   
   /**
