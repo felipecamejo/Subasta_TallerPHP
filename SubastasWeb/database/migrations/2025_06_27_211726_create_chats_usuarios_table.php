@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chats_usuarios', function (Blueprint $table) {
+            $table->boolean('valorado')->default(false);
+
             $table->foreignId('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
             $table->foreignId('chat_id')->nullable()->references('id')->on('chats')->onDelete('cascade');
-            
-            $table->boolean('valorado')->default(false);
 
             $table->timestamps();
         });

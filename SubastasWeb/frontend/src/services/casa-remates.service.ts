@@ -32,6 +32,10 @@ export class CasaRematesService {
     return this.http.put<casaRemateDto>(`${this.urlService.baseUrl}${this.endpoint}`, x);
   }
 
+  putActualizarCasaRematesPorUsuario(usuarioId: number, data: any): Observable<casaRemateDto> {
+    return this.http.put<casaRemateDto>(`${this.urlService.baseUrl}${this.endpoint}/${usuarioId}`, data);
+  }
+
   deleteCasaRemates(id: number): Observable<{message: string}> {
     return this.http.delete<{message: string}>(`${this.urlService.baseUrl}${this.endpoint}/${id}`);
   }

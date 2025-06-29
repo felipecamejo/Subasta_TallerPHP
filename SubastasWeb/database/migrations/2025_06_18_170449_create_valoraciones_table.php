@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('valoraciones', function (Blueprint $table) {
             $table->id();
             $table->integer('total_puntaje')->default(0); // Suma total de todas las valoraciones
-            $table->integer('cantidad_opiniones')->default(0); // Número de opiniones recibidas
-            
+            $table->integer('cantidad_opiniones')->default(0); // Número de opiniones recibidas 
+
+            $table->unsignedBigInteger('valorable_id')->nullable();
+
             $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->onDelete('cascade');
 
             $table->timestamps();

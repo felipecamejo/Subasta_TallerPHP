@@ -114,12 +114,10 @@ export class NotificacionService {
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
     const rol = this.authService.getRol();
-    
     // Para casas de remate, usar endpoint público
     if (rol === 'casa_remate' && usuarioId) {
       return this.obtenerNotificacionesPublico(Number(usuarioId));
     }
-    
     // Para otros roles, usar endpoint autenticado
     return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
       map(notificaciones => {
@@ -138,10 +136,19 @@ export class NotificacionService {
             }
           }));
         }
+        // Si el backend devuelve un objeto de error, mostrar mensaje amigable
+        if (notificaciones && notificaciones.error) {
+          console.warn('No se pudieron cargar notificaciones:', notificaciones.message || notificaciones.error);
+        }
         return [];
       }),
       catchError(error => {
-        console.error('Error al obtener notificaciones:', error);
+        // Mostrar mensaje más claro en consola
+        if (error && error.error && error.error.message) {
+          console.error('Error al obtener notificaciones:', error.error.message);
+        } else {
+          console.error('Error al obtener notificaciones:', error);
+        }
         return of([]);
       })
     );

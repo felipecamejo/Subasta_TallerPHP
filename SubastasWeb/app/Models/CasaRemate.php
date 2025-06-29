@@ -2,7 +2,6 @@
     namespace App\Models;
     use App\Models\Rematador;
     use App\Models\Subasta;
-    use App\Models\Valoracion;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\MorphOne;
 
@@ -17,14 +16,6 @@
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
-
-        /**
-         * Relación polimórfica con valoraciones
-         */
-        public function valoracion(): MorphOne
-        {
-            return $this->morphOne(Valoracion::class, 'valorable');
-        }
 
         public function rematadores() {
             return $this->belongsToMany(Rematador::class, 'casa_remate_rematador', 'casa_remate_id', 'rematador_id');
@@ -42,10 +33,9 @@
             return $this->hasOne(Rematador::class, 'usuario_id');
         }
 
-        public function notificaciones() {
-            return $this->belongsToMany(Notificacion::class, 'notificaciones_casaremates', 'casa_remate_id', 'notificacion_id')
-                ->withPivot('leido')
-                ->withTimestamps();
+        public function valoracion()
+        {
+            return $this->hasOne(Valoracion::class, 'casa_remate_id', 'usuario_id');
         }
 
     }

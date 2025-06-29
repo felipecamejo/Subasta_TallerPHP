@@ -11,15 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categorias', function (Blueprint $table) {
-            $table->id();
-            
-            $table->string('nombre');
-            
-            $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias')->onDelete('set null');
-
-            $table->timestamps();
-            
+        Schema::table('facturas', function (Blueprint $table) {
+            $table->foreign('puja_id')->references('id')->on('pujas')->onDelete('set null');
         });
     }
 
@@ -28,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categorias');
+        Schema::table('facturas', function (Blueprint $table) {
+            //
+        });
     }
 };
