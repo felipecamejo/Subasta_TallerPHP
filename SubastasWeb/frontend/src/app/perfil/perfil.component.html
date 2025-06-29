@@ -5,21 +5,43 @@
     <section class="perfil-header">
       <!-- Imagen de perfil - siempre se muestra (imagen del usuario o avatar genérico) -->
       <div class="perfil-imagen">
-        <img [src]="getImageUrl()" alt="Imagen de perfil" onerror="this.src='assets/img/default-avatar.png'">
+        <img [src]="getImageUrl()" alt="Imagen de perfil" onerror="this.src='assets/img/default.jpg'">
       </div>
       
       <!-- Información básica -->
       <div class="perfil-info" *ngIf="cliente?.usuario || rematador?.usuario">
-        <h2>{{ cliente?.usuario?.nombre || rematador?.usuario?.nombre }}</h2>
+        <div class="perfil-header-actions">
+          <h2>{{ cliente?.usuario?.nombre || rematador?.usuario?.nombre }}</h2>
+          <!-- Botón de editar perfil - solo visible para el propio usuario -->
+          <button *ngIf="isOwnProfile" 
+                  pButton 
+                  type="button" 
+                  icon="pi pi-pencil" 
+                  class="p-button-rounded p-button-outlined p-button-sm edit-profile-btn"
+                  (click)="abrirModalEditarPerfil()"
+                  pTooltip="Editar perfil">
+          </button>
+        </div>
+        
         <div class="info-container">
           <div class="info-item">
             <i class="pi pi-envelope"></i>
             <span>{{ cliente?.usuario?.email || rematador?.usuario?.email }}</span>
           </div>
-          <!-- No mostramos teléfono ya que no está en el Pick<usuarioDto> -->
-          <div class="info-item">
+          
+          <div class="info-item" *ngIf="cliente?.usuario?.telefono || rematador?.usuario?.telefono">
+            <i class="pi pi-phone"></i>
+            <span>{{ formatearTelefono(cliente?.usuario?.telefono || rematador?.usuario?.telefono || '') }}</span>
+          </div>
+          
+          <div class="info-item" *ngIf="cliente?.usuario?.cedula || rematador?.usuario?.cedula">
+            <i class="pi pi-id-card"></i>
+            <span>{{ formatearCedula(cliente?.usuario?.cedula || rematador?.usuario?.cedula || '') }}</span>
+          </div>
+          
+          <div class="info-item" *ngIf="(cliente?.usuario?.latitud && cliente?.usuario?.longitud) || (rematador?.usuario?.latitud && rematador?.usuario?.longitud)">
             <i class="pi pi-map-marker"></i>
-            <span>Ubicación registrada</span>
+            <span [class.ubicacion-cargando]="cargandoUbicacion">{{ getUbicacion() }}</span>
           </div>
           
           <!-- Información específica de cliente - Valoración con estrellas -->
@@ -109,4 +131,13 @@
   
 
 </div>
+
+<!-- Modal de edición de perfil -->
+<app-perfil-editar-modal
+  [(visible)]="mostrarModalEdicion"
+  [cliente]="cliente"
+  [rematador]="rematador"
+  (perfilActualizado)="onPerfilActualizado()"
+  (imagenActualizada)="onImagenActualizada($event)">
+</app-perfil-editar-modal>
 

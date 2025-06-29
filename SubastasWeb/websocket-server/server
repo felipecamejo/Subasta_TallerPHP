@@ -6,8 +6,18 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
+// CORS más permisivo para Docker
+const allowedOrigins = [
+    "http://localhost:4200", 
+    "http://localhost:8000",
+    "http://localhost:80",
+    "http://127.0.0.1:4200",
+    "http://frontend:4200",
+    "http://nginx:80"
+];
+
 app.use(cors({
-    origin: ["http://localhost:4200", "http://localhost:8000"],
+    origin: allowedOrigins,
     credentials: true
 }));
 
@@ -15,7 +25,7 @@ app.use(express.json());
 
 const io = socketIo(server, {
     cors: {
-        origin: ["http://localhost:4200", "http://localhost:8000"],
+        origin: allowedOrigins,
         methods: ["GET", "POST"]
     }
 });
@@ -207,6 +217,8 @@ app.post('/api/notify-bid', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-    console.log(`Servidor WebSocket ejecutándose en puerto ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
+    console.log(`Servidor WebSocket ejecutándose en ${HOST}:${PORT}`);
 });

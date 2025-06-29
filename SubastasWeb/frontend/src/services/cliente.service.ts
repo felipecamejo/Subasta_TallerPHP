@@ -34,4 +34,8 @@ export class ClienteService {
   listarClientes(): Observable<{clientes: clienteDto[]}> {
     return this.http.get<{clientes: clienteDto[]}>(`${this.urlService.baseUrl}${this.endpoint}/listar`);
   }
+
+  actualizarPerfil(usuarioId: number, datos: any): Observable<clienteDto> {
+    return this.http.put<clienteDto>(`${this.urlService.baseUrl}${this.endpoint}/${usuarioId}`, datos);
+  }
 }
