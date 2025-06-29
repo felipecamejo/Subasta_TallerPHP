@@ -211,11 +211,29 @@ export class CrearSubastaModalComponent implements AfterViewInit, OnDestroy, OnI
       }
 
       // Preparar los datos para la API
+      // Asegurar que la fecha se envíe tal como se ingresó (sin conversiones de zona horaria)
+      const fechaOriginal = this.form.value.fecha;
+      let fechaFormateada;
+      
+      if (fechaOriginal instanceof Date) {
+        // Si es un objeto Date, formatear manualmente para evitar conversiones de zona horaria
+        const year = fechaOriginal.getFullYear();
+        const month = String(fechaOriginal.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaOriginal.getDate()).padStart(2, '0');
+        const hours = String(fechaOriginal.getHours()).padStart(2, '0');
+        const minutes = String(fechaOriginal.getMinutes()).padStart(2, '0');
+        const seconds = String(fechaOriginal.getSeconds()).padStart(2, '0');
+        fechaFormateada = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      } else {
+        // Si ya es string, usar tal como está
+        fechaFormateada = fechaOriginal;
+      }
+      
       const subastaData = {
         nombre: this.form.value.nombre,
         duracionMinutos: this.form.value.duracionMinutos,
         activa: this.form.value.activa,
-        fecha: this.form.value.fecha,
+        fecha: fechaFormateada, // Fecha sin conversiones de zona horaria
         casa_remate_id: parseInt(casaRemateId),
         rematador_id: this.form.value.rematador_id,
         latitud: this.form.value.latitud,
@@ -223,6 +241,8 @@ export class CrearSubastaModalComponent implements AfterViewInit, OnDestroy, OnI
         videoId: this.form.value.videoId || ''
       };
 
+      console.log('Fecha original del formulario:', fechaOriginal);
+      console.log('Fecha formateada para enviar:', fechaFormateada);
       console.log('Datos de subasta a enviar:', subastaData);
 
       // Hacer la petición POST a /api/subastas

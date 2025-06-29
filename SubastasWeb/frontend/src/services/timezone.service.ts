@@ -16,14 +16,19 @@ export class TimezoneService {
   private userTimezoneSubject = new BehaviorSubject<string>(this.getDefaultTimezone());
   public userTimezone$: Observable<string> = this.userTimezoneSubject.asObservable();
   
-  // Almacenar el offset en minutos para cálculos rápidos
-  private timezoneOffsetMinutes: number = new Date().getTimezoneOffset();
+  // Zona horaria base del sistema (UTC-3, Uruguay/Argentina)
+  private readonly BASE_TIMEZONE = 'America/Montevideo';
+  private readonly BASE_OFFSET_HOURS = -3; // UTC-3
+  
+  // Almacenar el offset del usuario en minutos para cálculos rápidos
+  private userTimezoneOffsetMinutes: number = 0;
 
   constructor(private http: HttpClient) {
     // Intentar obtener zona horaria guardada
     const savedTimezone = localStorage.getItem('userTimezone');
     if (savedTimezone) {
       this.userTimezoneSubject.next(savedTimezone);
+      this.updateUserTimezoneOffset(savedTimezone);
     } else {
       // Si no existe, detectar y guardar
       this.detectAndSetUserTimezone();
@@ -51,11 +56,26 @@ export class TimezoneService {
   public setUserTimezone(timezone: string): void {
     localStorage.setItem('userTimezone', timezone);
     this.userTimezoneSubject.next(timezone);
+    this.updateUserTimezoneOffset(timezone);
+  }
 
-    // También actualizar el offset
+  /**
+   * Actualiza el offset de la zona horaria del usuario
+   */
+  private updateUserTimezoneOffset(timezone: string): void {
+    // Simplificar el cálculo del offset
     const date = new Date();
-    const timezoneDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-    this.timezoneOffsetMinutes = (date.getTime() - timezoneDate.getTime()) / (60 * 1000);
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+    
+    // Crear una fecha en la zona horaria específica
+    const localTime = new Date(utcTime).toLocaleString('en-CA', { 
+      timeZone: timezone,
+      hour12: false 
+    });
+    const timezoneTime = new Date(localTime).getTime();
+    
+    // Calcular la diferencia en minutos
+    this.userTimezoneOffsetMinutes = (timezoneTime - utcTime) / (60 * 1000);
   }
 
   /**
@@ -66,28 +86,95 @@ export class TimezoneService {
   }
 
   /**
+   * Convierte una fecha desde UTC-3 (hora base del sistema) a UTC
+   * Usar este método cuando recibas una fecha desde el backend
+   */
+  public convertFromBaseToUTC(baseDate: Date | string): Date {
+    const date = new Date(baseDate);
+    // UTC-3 = UTC + 3 horas, así que para convertir a UTC restamos 3 horas
+    return new Date(date.getTime() + (3 * 60 * 60 * 1000));
+  }
+
+  /**
+   * Convierte una fecha desde UTC a UTC-3 (hora base del sistema)
+   * Usar este método cuando envíes una fecha al backend
+   */
+  public convertFromUTCToBase(utcDate: Date | string): Date {
+    const date = new Date(utcDate);
+    // Para convertir de UTC a UTC-3, restamos 3 horas
+    return new Date(date.getTime() - (3 * 60 * 60 * 1000));
+  }
+
+  /**
    * Convierte una fecha UTC a la zona horaria del usuario
    */
-  public convertToUserTimezone(utcDate: Date | string): Date {
+  public convertUTCToUserTimezone(utcDate: Date | string): Date {
     const date = new Date(utcDate);
+    const userTimezone = this.getUserTimezone();
     
-    // El offset está en minutos y es negativo para zonas al este de UTC
-    // Ajustamos el tiempo sumando los minutos del offset
-    return new Date(date.getTime() - (this.timezoneOffsetMinutes * 60 * 1000));
+    // Usar toLocaleString para obtener la fecha en la zona horaria del usuario
+    const dateString = date.toLocaleString('en-CA', {
+      timeZone: userTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    // Parsear el string resultante
+    return new Date(dateString);
   }
 
   /**
    * Convierte una fecha de la zona horaria del usuario a UTC
    */
-  public convertToUTC(localDate: Date): Date {
-    return new Date(localDate.getTime() + (this.timezoneOffsetMinutes * 60 * 1000));
+  public convertUserTimezoneToUTC(localDate: Date): Date {
+    const userTimezone = this.getUserTimezone();
+    
+    // Crear la fecha como si fuera UTC
+    const utcDate = new Date(Date.UTC(
+      localDate.getFullYear(),
+      localDate.getMonth(),
+      localDate.getDate(),
+      localDate.getHours(),
+      localDate.getMinutes(),
+      localDate.getSeconds(),
+      localDate.getMilliseconds()
+    ));
+    
+    // Ajustar por el offset de la zona horaria del usuario
+    const offsetMinutes = this.userTimezoneOffsetMinutes;
+    return new Date(utcDate.getTime() - (offsetMinutes * 60 * 1000));
+  }
+
+  /**
+   * Método principal para mostrar fechas al usuario
+   * Convierte desde UTC-3 (backend) -> UTC -> Zona horaria del usuario
+   */
+  public convertFromBaseToUserTimezone(baseDate: Date | string): Date {
+    const utcDate = this.convertFromBaseToUTC(baseDate);
+    return this.convertUTCToUserTimezone(utcDate);
+  }
+
+  /**
+   * Método principal para enviar fechas al backend
+   * Convierte desde Zona horaria del usuario -> UTC -> UTC-3 (backend)
+   */
+  public convertFromUserTimezoneToBase(userDate: Date): Date {
+    const utcDate = this.convertUserTimezoneToUTC(userDate);
+    return this.convertFromUTCToBase(utcDate);
   }
 
   /**
    * Formatea una fecha según la zona horaria del usuario
+   * @param date Fecha en formato UTC-3 (desde el backend)
+   * @param format Formato de salida
    */
   public formatDate(date: Date | string, format: string = 'full'): string {
-    const userDate = this.convertToUserTimezone(date);
+    const userDate = this.convertFromBaseToUserTimezone(date);
     
     const options: Intl.DateTimeFormatOptions = {};
     
@@ -109,6 +196,39 @@ export class TimezoneService {
     }
     
     return new Intl.DateTimeFormat('es-UY', options).format(userDate);
+  }
+
+  /**
+   * Formatea una fecha directamente en la zona horaria del usuario (sin conversión desde base)
+   * @param date Fecha ya en la zona horaria correcta
+   * @param format Formato de salida
+   */
+  public formatDateDirect(date: Date | string, format: string = 'full'): string {
+    const dateObj = new Date(date);
+    const userTimezone = this.getUserTimezone();
+    
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: userTimezone
+    };
+    
+    switch(format) {
+      case 'full':
+        options.dateStyle = 'full';
+        options.timeStyle = 'long';
+        break;
+      case 'datetime':
+        options.dateStyle = 'medium';
+        options.timeStyle = 'short';
+        break;
+      case 'date':
+        options.dateStyle = 'medium';
+        break;
+      case 'time':
+        options.timeStyle = 'short';
+        break;
+    }
+    
+    return new Intl.DateTimeFormat('es-UY', options).format(dateObj);
   }
 
   /**
@@ -196,5 +316,91 @@ export class TimezoneService {
     this.getTimezoneFromCoordinates(lat, lng).subscribe(timezone => {
       this.setUserTimezone(timezone);
     });
+  }
+
+  /**
+   * Obtiene la fecha actual en UTC-3 (zona base del sistema)
+   */
+  public getCurrentBaseTime(): Date {
+    const now = new Date();
+    return this.convertFromUTCToBase(now);
+  }
+
+  /**
+   * Obtiene la fecha actual en la zona horaria del usuario
+   * Como JavaScript Date ya está en la zona horaria local, simplemente devolvemos la fecha actual
+   */
+  public getCurrentUserTime(): Date {
+    return new Date(); // JavaScript Date ya está en zona horaria local
+  }
+
+  /**
+   * Obtiene la fecha actual real del navegador (sin conversiones)
+   * Útil para debugging y verificación
+   */
+  public getCurrentLocalTime(): Date {
+    return new Date();
+  }
+
+  /**
+   * Obtiene la fecha actual formateada en la zona horaria del navegador
+   */
+  public formatCurrentLocalTime(): string {
+    const now = new Date();
+    return now.toLocaleString('es-UY', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+
+  /**
+   * Valida si una fecha de subasta es válida (futura)
+   * @param auctionDate Fecha de subasta en formato UTC-3 (desde backend)
+   */
+  public isValidAuctionDate(auctionDate: Date | string): boolean {
+    const auctionDateUTC = this.convertFromBaseToUTC(auctionDate);
+    const now = new Date();
+    return auctionDateUTC > now;
+  }
+
+  /**
+   * Calcula el tiempo restante hasta una subasta
+   * @param auctionDate Fecha de subasta en formato UTC-3 (desde backend)
+   * @returns Tiempo restante en milisegundos
+   */
+  public getTimeUntilAuction(auctionDate: Date | string): number {
+    const auctionDateUTC = this.convertFromBaseToUTC(auctionDate);
+    const now = new Date();
+    return Math.max(0, auctionDateUTC.getTime() - now.getTime());
+  }
+
+  /**
+   * Formatea el tiempo restante en formato legible
+   * @param milliseconds Tiempo en milisegundos
+   */
+  public formatTimeRemaining(milliseconds: number): string {
+    if (milliseconds <= 0) {
+      return 'Finalizada';
+    }
+
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+      return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
   }
 }

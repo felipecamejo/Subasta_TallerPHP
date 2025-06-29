@@ -10,7 +10,6 @@ import { categoriaDto } from '../../models/categoriaDto';
 import { CategoriaService } from '../../services/categoria.service';
 import { DialogModule } from 'primeng/dialog';
 import { TimezoneService } from '../../services/timezone.service';
-import { UserTimezonePipe } from '../shared/pipes/user-timezone.pipe';
 import { TimezoneSelectorComponent } from '../shared/timezone-selector/timezone-selector.component';
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -23,7 +22,6 @@ import { TooltipModule } from 'primeng/tooltip';
     SelectModule, 
     FormsModule, 
     DialogModule,
-    UserTimezonePipe,
     TimezoneSelectorComponent,
     TooltipModule
   ],
@@ -350,8 +348,8 @@ export class BuscadorRematesComponent implements AfterViewInit {
     fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
     
     // Convertir fechas a zona horaria del usuario
-    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
+    const inicio = this.timezoneService.convertFromBaseToUserTimezone(fechaInicio);
+    const fin = this.timezoneService.convertFromBaseToUserTimezone(fechaFin);
     
     if (ahora < inicio) {
       // Calcular tiempo hasta el inicio
@@ -392,11 +390,8 @@ export class BuscadorRematesComponent implements AfterViewInit {
   formatearFechaSubasta(fecha: Date | string): string {
     if (!fecha) return 'Fecha no disponible';
     
-    // Convierte la fecha a la zona horaria del usuario
-    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
-    
-    // Formato: "24 Jun 2025, 15:30"
-    return this.timezoneService.formatDate(fechaLocal, 'datetime');
+    // La fecha viene del backend (UTC-3), usar el método formatDate que ya hace la conversión
+    return this.timezoneService.formatDate(fecha, 'datetime');
   }
   
   /**

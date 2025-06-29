@@ -3,7 +3,6 @@
     use App\Models\Rematador;
     use App\Models\Subasta;
     use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Database\Eloquent\Relations\MorphOne;
 
     class CasaRemate extends Model{
 
@@ -33,9 +32,8 @@
             return $this->hasOne(Rematador::class, 'usuario_id');
         }
 
-        public function valoracion()
-        {
-            return $this->hasOne(Valoracion::class, 'casa_remate_id', 'usuario_id');
+        public function valoracion(){
+            return $this->hasOne(Valoracion::class, 'valorable_id', 'usuario_id');
         }
 
     }

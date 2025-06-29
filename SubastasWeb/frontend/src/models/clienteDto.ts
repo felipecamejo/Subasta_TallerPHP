@@ -9,5 +9,5 @@
         usuario: Pick<usuarioDto, 'id' | 'nombre' | 'imagen' | 'email'>;
         pujas: Pick<pujaDto, 'id' | 'fechaHora'| 'monto'>[];
         notificaciones: Pick<notificacionDto, 'id' | 'mensaje'>[];
-        valoracion: Pick<valoracionDto, 'id' | 'valoracion_total' | 'cantidad_opiniones' | 'valorable_type' | 'valorable_id'> | null;
+        valoracion: Pick<valoracionDto, 'id' | 'total_puntaje' | 'cantidad_opiniones' | 'valorable_id'> | null;
     } 

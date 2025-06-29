@@ -1645,7 +1645,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.timerInitialized = true;
 
       const ahora = new Date();
-      const fechaSubasta = this.parsearFechaSubasta(this.timezoneService.convertToUserTimezone(new Date(this.subasta.fecha)));
+      const fechaSubasta = this.parsearFechaSubasta(this.timezoneService.convertFromBaseToUserTimezone(new Date(this.subasta.fecha)));
       const tiempoRestanteMs = fechaSubasta!.getTime() + this.subasta.duracionMinutos! * 60000 - ahora.getTime();
       const tiempoRestanteSegundos = Math.max(0, Math.ceil(tiempoRestanteMs / 1000));
 
