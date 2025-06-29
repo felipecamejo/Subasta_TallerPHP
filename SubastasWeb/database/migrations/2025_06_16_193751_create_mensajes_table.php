@@ -13,17 +13,17 @@ return new class extends Migration
     {
         Schema::create('mensajes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('chat_id')->constrained('chats')->onDelete('cascade');
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
             $table->text('contenido');
             $table->timestamp('enviado_at')->useCurrent();
             $table->boolean('leido')->default(false);
             $table->enum('tipo', ['texto', 'imagen', 'archivo'])->default('texto');
-            $table->timestamps();
             
-            // Índices para optimizar consultas
+            $table->foreignId('chat_id')->constrained('chats')->onDelete('cascade');
+            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
             $table->index(['chat_id', 'enviado_at']);
             $table->index(['usuario_id', 'enviado_at']);
+
+            $table->timestamps();
         });
     }
 

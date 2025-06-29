@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('chats', function (Blueprint $table) {
-            //
+        Schema::create('categorias', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre');
+            
+            $table->foreignId('categoria_padre_id')->nullable()->constrained('categorias')->onDelete('set null');
+
+            $table->timestamps();
+            
         });
     }
 
@@ -21,8 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('chats', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('categorias');
     }
 };

@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('lotes', function (Blueprint $table) {
             $table->id();
-            
             $table->float('valorBase');
             $table->float('pujaMinima');
-            $table->foreignId('subasta_id')->nullable()->constrained()->onDelete('cascade');
             $table->float('umbral')->default(0); 
             $table->boolean('pago')->default(false);
+
+            $table->foreignId('subasta_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->timestamps();
         });

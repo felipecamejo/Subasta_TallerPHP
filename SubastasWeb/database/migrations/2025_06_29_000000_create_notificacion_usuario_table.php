@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notificaciones_casaremates', function (Blueprint $table) {
-            $table->bigInteger('casa_remate_id');
-            $table->foreign('casa_remate_id')->references('usuario_id')->on('casa_remates')->onDelete('cascade');
-
-            $table->foreignId('notificacion_id')->nullable()->references('id')->on('notificaciones')->onDelete('cascade');
+        Schema::create('notificacion_usuario', function (Blueprint $table) {
             $table->boolean('leido')->default(false);
+        
+            $table->unsignedBigInteger('usuario_id');
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+            $table->foreignId('notificacion_id')->constrained('notificaciones')->onDelete('cascade');
+
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notificaciones_casaremates');
+        Schema::dropIfExists('notificacion_usuario');
     }
 };
