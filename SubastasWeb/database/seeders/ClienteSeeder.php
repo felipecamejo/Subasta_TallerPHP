@@ -37,7 +37,6 @@ class ClienteSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
             'valorable_id' => 4,
-            'valorable_type' => 'n/c',
         ]);
 
         $clienteUsuario = Usuario::create([
