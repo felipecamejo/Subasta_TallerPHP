@@ -35,9 +35,9 @@
         }
 
     
-        public function valoracion(): MorphOne
+        public function valoracion()
         {
-            return $this->morphOne(Valoracion::class, 'valorable');
+            return $this->hasOne(Valoracion::class, 'cliente_id', 'usuario_id');
         }
 
 }

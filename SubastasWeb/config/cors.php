@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*'], // Permite rutas de la API y la ruta de CSRF de Sanctum
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'paypal/*'], // Permite rutas de la API y la ruta de CSRF de Sanctum
     'allowed_methods' => ['*'], // Permite todos los métodos HTTP
     'allowed_origins' => ['*'], // Permite todos los orígenes (solo para desarrollo)
     'allowed_headers' => ['*'], // Permite todos los encabezados

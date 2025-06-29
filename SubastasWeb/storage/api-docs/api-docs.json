@@ -2442,6 +2442,35 @@
                 }
             }
         },
+        "/api/usuarioEmail/{id}": {
+            "get": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Buscar email de usuario por id",
+                "description": "Buscar el email de un usuario por su id",
+                "operationId": "ec13d48e0742a773fb451a16457c0bc1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de usuario a buscar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email encontrado"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
+                    }
+                }
+            }
+        },
         "/api/facturas": {
             "get": {
                 "tags": [

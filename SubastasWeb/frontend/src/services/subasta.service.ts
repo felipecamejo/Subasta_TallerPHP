@@ -35,6 +35,7 @@ export class SubastaService {
   }
 
   enviarMail(mail : mailDto): Observable<any> {
+    console.log('DEBUG enviarMail payload:', mail); // DEBUG
     return this.http.post<any>(`${this.urlService.baseUrl}/subastas/enviarMail`, mail);
   }
 
@@ -56,10 +57,21 @@ export class SubastaService {
     if (!clienteId) {
       return of(null);
     }
-    return this.http.get<clienteDto>(`${this.urlService.baseUrl}/clientes/${clienteId}`).pipe(
-      map(cliente => cliente.usuario?.email || null),
+    // El endpoint /usuarioEmail/{id} devuelve un string plano (el email), no un objeto
+    return this.http.get(`${this.urlService.baseUrl}/usuarioEmail/${clienteId}`, { responseType: 'text' }).pipe(
+      map(email => email || null),
       catchError(error => {
-        console.error('Error al obtener cliente:', error);
+        console.error('Error al obtener email del cliente:', error);
+        return of(null);
+      })
+    );
+  }
+
+  // Si querés buscar usuario por email, usá este método aparte
+  getUsuarioPorEmail(email: string): Observable<string | null> {
+    return this.http.get<string>(`${this.urlService.baseUrl}/buscar-usuario-email/${email}`).pipe(
+      catchError(error => {
+        console.error('Error al buscar usuario por email:', error);
         return of(null);
       })
     );
