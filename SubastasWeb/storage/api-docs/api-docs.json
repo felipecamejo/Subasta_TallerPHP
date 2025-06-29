@@ -672,6 +672,7 @@
                     "Autenticación"
                 ],
                 "summary": "Enviar enlace para restablecer contraseña",
+                "description": "* @OA\\Post(\n*     path=\"/api/forgot-password\",\n*     summary=\"Enviar enlace para restablecer contraseña\",\n*     tags={\"Autenticación\"},\n*     @OA\\RequestBody(\n*         required=true,\n*         @OA\\MediaType(\n*             mediaType=\"application/json\",\n*             @OA\\Schema(\n*                 required={\"email\"},\n*                 @OA\\Property(property=\"email\", type=\"string\", example=\"elchati@adinet.com.uy\")\n*             )\n*         )\n*     ),\n*     @OA\\Response(response=200, description=\"Enlace de restablecimiento enviado.\"),\n*     @OA\\Response(response=422, description=\"Email no válido o no registrado.\"),\n*     @OA\\Response(response=500, description=\"Error al enviar el enlace.\")\n* )",
                 "operationId": "27192d4d04cb48a2f83216053554a56c",
                 "requestBody": {
                     "required": true,
@@ -684,7 +685,7 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "example": "usuario@ejemplo.com"
+                                        "example": "elchati@adinet.com.uy"
                                     }
                                 },
                                 "type": "object"
@@ -717,22 +718,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "email",
-                                    "password"
-                                ],
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "example": "usuario@ejemplo.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "12345678"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/LoginRequest"
                             }
                         }
                     }
@@ -743,38 +729,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "token": {
-                                            "type": "string",
-                                            "example": "1|abcde12345..."
-                                        },
-                                        "usuario_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        },
-                                        "rol": {
-                                            "type": "string",
-                                            "example": "cliente"
-                                        },
-                                        "usuario": {
-                                            "properties": {
-                                                "nombre": {
-                                                    "type": "string",
-                                                    "example": "Juan Pérez"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "juan@example.com"
-                                                },
-                                                "imagen": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/avatar.jpg"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/LoginResponse"
                                 }
                             }
                         }
@@ -812,89 +767,57 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Registro de cliente o rematador",
+                "summary": "Registrar nuevo usuario (cliente o rematador)",
                 "operationId": "8a56853624e025573120a09a4c75d468",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "nombre",
-                                    "email",
-                                    "telefono",
-                                    "cedula",
-                                    "latitud",
-                                    "longitud",
-                                    "rol",
-                                    "contrasenia",
-                                    "contrasenia_confirmation"
-                                ],
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string",
-                                        "example": "Ana Gómez"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "ana@ejemplo.com"
-                                    },
-                                    "telefono": {
-                                        "type": "string",
-                                        "example": "099123456"
-                                    },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "11223344"
-                                    },
-                                    "latitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -34.9011
-                                    },
-                                    "longitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -56.1645
-                                    },
-                                    "rol": {
-                                        "type": "string",
-                                        "enum": [
-                                            "cliente",
-                                            "rematador"
-                                        ],
-                                        "example": "cliente"
-                                    },
-                                    "matricula": {
-                                        "description": "Solo requerido si el rol es rematador",
-                                        "type": "string",
-                                        "example": "MAT456"
-                                    },
-                                    "contrasenia": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "claveSegura123"
-                                    },
-                                    "contrasenia_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "claveSegura123"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/RegisterUsuarioRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "Registro exitoso. Verifica tu correo."
+                        "description": "Registro exitoso. Se envió email de verificación.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registro exitoso. Verifica tu correo."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Error de validación."
+                        "description": "Errores de validación.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Error al registrar usuario."
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "El campo email ya está en uso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Error al registrar el usuario."
+                        "description": "Error inesperado al registrar usuario."
                     }
                 }
             }
@@ -3013,6 +2936,126 @@
                 }
             }
         },
+        "/api/paypal/create-order": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Crear una nueva orden de pago en PayPal",
+                "operationId": "c32c5eed5d438e82f40c9d5cd14f77cb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "factura_id",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "factura_id": {
+                                        "type": "integer"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Orden creada exitosamente"
+                    },
+                    "400": {
+                        "description": "Error de validación o al crear la orden"
+                    }
+                }
+            }
+        },
+        "/api/paypal/capture-payment": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Capturar un pago de PayPal",
+                "operationId": "9fc573220ccd13a0bb5f9d3c5049e31f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_id"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pago capturado exitosamente"
+                    },
+                    "400": {
+                        "description": "Error al capturar el pago"
+                    }
+                }
+            }
+        },
+        "/api/paypal/webhook": {
+            "post": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "Webhook para recibir notificaciones de PayPal",
+                "operationId": "c84ba2c002af2a882788abf9a6754b7f",
+                "responses": {
+                    "200": {
+                        "description": "Notificación procesada correctamente"
+                    },
+                    "400": {
+                        "description": "Error al procesar la notificación"
+                    }
+                }
+            }
+        },
+        "/api/paypal/success": {
+            "get": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "URL de retorno para pagos exitosos",
+                "operationId": "21a1527576980adae14c583c31bfb155",
+                "responses": {
+                    "200": {
+                        "description": "Pago exitoso"
+                    }
+                }
+            }
+        },
+        "/api/paypal/cancel": {
+            "get": {
+                "tags": [
+                    "PayPal"
+                ],
+                "summary": "URL de retorno para pagos cancelados",
+                "operationId": "40016c1444ec1278a0214aa165a7c013",
+                "responses": {
+                    "200": {
+                        "description": "Pago cancelado"
+                    }
+                }
+            }
+        },
         "/api/pujas": {
             "get": {
                 "tags": [
@@ -4216,12 +4259,135 @@
         }
     },
     "components": {
+        "schemas": {
+            "LoginResponse": {
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "example": "1|abc123..."
+                    },
+                    "usuario_id": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "rol": {
+                        "type": "string",
+                        "example": "cliente"
+                    },
+                    "usuario": {
+                        "properties": {
+                            "nombre": {
+                                "type": "string",
+                                "example": "Juan Pérez"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "juan@example.com"
+                            },
+                            "imagen": {
+                                "type": "string",
+                                "example": "https://example.com/avatar.jpg"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "usuario@ejemplo.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "12345678"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterUsuarioRequest": {
+                "required": [
+                    "nombre",
+                    "email",
+                    "telefono",
+                    "cedula",
+                    "contrasenia",
+                    "latitud",
+                    "longitud",
+                    "rol"
+                ],
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan@example.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "091234567"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "example": "12345678"
+                    },
+                    "contrasenia": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "contrasenia_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "latitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-34.9011"
+                    },
+                    "longitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-56.1645"
+                    },
+                    "rol": {
+                        "type": "string",
+                        "enum": [
+                            "cliente",
+                            "rematador"
+                        ],
+                        "example": "cliente"
+                    },
+                    "matricula": {
+                        "type": "string",
+                        "example": "RM12345"
+                    },
+                    "imagen": {
+                        "description": "Imagen de perfil opcional",
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "type": "object"
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
-                "scheme": "bearer",
                 "bearerFormat": "JWT",
-                "description": "Pegar el token en formato: Bearer {token}"
+                "scheme": "bearer"
             }
         }
     },
@@ -4283,17 +4449,16 @@
             "description": "Facturas"
         },
         {
+            "name": "PayPal",
+            "description": "PayPal"
+        },
+        {
             "name": "Pujas",
             "description": "Pujas"
         },
         {
             "name": "Autenticación Social",
             "description": "Autenticación Social"
-        }
-    ],
-    "security": [
-        {
-            "bearerAuth": []
         }
     ]
 }

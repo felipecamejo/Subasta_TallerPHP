@@ -9,10 +9,13 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\RegisterUsuarioRequest;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
 use App\Models\CasaRemate;
+use Illuminate\Support\Arr;
+use App\Http\Requests\LoginRequest;
 use Google_Client;
 use OpenApi\Annotations as OA;
 
@@ -67,74 +70,51 @@ class AuthController extends Controller{
         return response()->json(['error' => __($status)], 500);
 
     }
+/**
+ * @OA\Post(
+ *     path="/api/login",
+ *     summary="Inicio de sesión",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/LoginRequest")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Login exitoso con token de acceso.",
+ *         @OA\JsonContent(ref="#/components/schemas/LoginResponse")
+ *     ),
+ *     @OA\Response(response=403, description="Email no verificado."),
+ *     @OA\Response(response=422, description="Credenciales inválidas.")
+ * )
+ */
+public function login(LoginRequest $request)
+{
+    $usuario = Usuario::where('email', $request->email)->first();
 
-    /**
-    * @OA\Post(
-    *     path="/api/login",
-    *     summary="Inicio de sesión",
-    *     tags={"Autenticación"},
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\MediaType(
-    *             mediaType="application/json",
-    *             @OA\Schema(
-    *                 required={"email", "password"},
-    *                 @OA\Property(property="email", type="string", example="usuario@ejemplo.com"),
-    *                 @OA\Property(property="password", type="string", format="password", example="12345678")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(
-    *         response=200,
-    *         description="Login exitoso con token de acceso.",
-    *         @OA\JsonContent(
-    *             @OA\Property(property="token", type="string", example="1|abcde12345..."),
-    *             @OA\Property(property="usuario_id", type="integer", example=12),
-    *             @OA\Property(property="rol", type="string", example="cliente"),
-    *             @OA\Property(
-    *                 property="usuario",
-    *                 type="object",
-    *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
-    *                 @OA\Property(property="email", type="string", example="juan@example.com"),
-    *                 @OA\Property(property="imagen", type="string", example="https://example.com/avatar.jpg")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(response=403, description="Email no verificado."),
-    *     @OA\Response(response=422, description="Credenciales inválidas.")
-    * )
-    */
-    public function login(Request $request){
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string'
+    if (!$usuario || !Hash::check($request->password, $usuario->contrasenia)) {
+        throw ValidationException::withMessages([
+            'email' => ['Las credenciales son incorrectas.'],
         ]);
+    }
 
-        $usuario = Usuario::where('email', $request->email)->first();
+    if (!$usuario->email_verified_at) {
+        return response()->json(['message' => 'Email no verificado'], 403);
+    }
 
-        if (!$usuario || !Hash::check($request->password, $usuario->contrasenia)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
-            ]);
-        }
+    $rol = $this->determinarRol($usuario);
 
-        if (!$usuario->email_verified_at) {
-            return response()->json(['message' => 'Email no verificado'], 403);
-        }
-
-        $rol = $this->determinarRol($usuario);
-
-        return response()->json([
-            'token' => $usuario->createToken('token')->plainTextToken,
-            'usuario_id' => $usuario->id,
-            'rol' => $rol,
-            'usuario' => [
+    return response()->json([
+        'token' => $usuario->createToken('token')->plainTextToken,
+        'usuario_id' => $usuario->id,
+        'rol' => $rol,
+        'usuario' => [
             'nombre' => $usuario->nombre,
             'email' => $usuario->email,
             'imagen' => $usuario->imagen,
-            ]
-            ]);
-    }
+        ]
+    ]);
+}
 
     /**
      * @OA\Post(
@@ -150,73 +130,64 @@ class AuthController extends Controller{
         return response()->json(['message' => 'Sesión cerrada con éxito.']);
     }
             
-    /**
-    * @OA\Post(
-    *     path="/api/register",
-    *     summary="Registro de cliente o rematador",
-    *     tags={"Autenticación"},
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\MediaType(
-    *             mediaType="application/json",
-    *             @OA\Schema(
-    *                 required={"nombre", "email", "telefono", "cedula", "latitud", "longitud", "rol", "contrasenia", "contrasenia_confirmation"},
-    *                 @OA\Property(property="nombre", type="string", example="Ana Gómez"),
-    *                 @OA\Property(property="email", type="string", example="ana@ejemplo.com"),
-    *                 @OA\Property(property="telefono", type="string", example="099123456"),
-    *                 @OA\Property(property="cedula", type="string", example="11223344"),
-    *                 @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
-    *                 @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
-    *                 @OA\Property(property="rol", type="string", enum={"cliente", "rematador"}, example="cliente"),
-    *                 @OA\Property(property="matricula", type="string", example="MAT456", description="Solo requerido si el rol es rematador"),
-    *                 @OA\Property(property="contrasenia", type="string", format="password", example="claveSegura123"),
-    *                 @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="claveSegura123")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
-    *     @OA\Response(response=422, description="Error de validación."),
-    *     @OA\Response(response=500, description="Error al registrar el usuario.")
-    * )
-    */
-    public function register(Request $request){
-        $request->validate([
-
-        'nombre' => 'required|string|max:255',
-        'email' => 'required|email|unique:usuarios,email',
-        'telefono' => 'required|string',
-        'cedula' => 'required|string|unique:usuarios,cedula',
-        'contrasenia' => 'required|string|min:8|confirmed',
-        'latitud' => 'required|numeric',
-        'longitud' => 'required|numeric',
-        'rol' => 'required|in:cliente,rematador',
-        
-    ]);
-
+/**
+ * @OA\Post(
+ *     path="/api/register",
+ *     summary="Registro de nuevo usuario",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/RegisterUsuarioRequest")
+ *     ),
+ *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
+ *     @OA\Response(response=422, description="Datos inválidos."),
+ *     @OA\Response(response=500, description="Error interno.")
+ * )
+ */
+public function register(RegisterUsuarioRequest $request)
+{
     DB::beginTransaction();
 
-        try {
-            $usuario = Usuario::create([
-            'nombre' => $request->nombre,
-            'email' => $request->email,
-            'telefono' => $request->telefono,
-            'cedula' => $request->cedula,
-            'contrasenia' => Hash::make($request->contrasenia),
-            'latitud' => $request->latitud,
-            'longitud' => $request->longitud,
+    try {
+        if ($request->hasFile('imagen')) {
+            $imagenPath = $request->file('imagen')->store('perfiles', 'public');
+        } else {
+            $imagenPath = Arr::random([
+                'avatars/default1.png',
+                'avatars/default2.png',
+                'avatars/default3.png',
+                'avatars/default4.png',
             ]);
+        }
 
-        $this->asignarRol($usuario, $request->rol, $request->matricula ?? null);
+        $data = $request->validated();
+        $usuario = Usuario::create([
+            'nombre' => $data['nombre'],
+            'email' => $data['email'],
+            'telefono' => $data['telefono'],
+            'cedula' => $data['cedula'],
+            'contrasenia' => Hash::make($data['contrasenia']),
+            'latitud' => $data['latitud'],
+            'longitud' => $data['longitud'],
+            'imagen' => $imagenPath,
+        ]);
 
-            event(new Registered($usuario));
-                DB::commit();
+        $this->asignarRol($usuario, $data['rol'], $data['matricula'] ?? null);
 
-                return response()->json(['message' => 'Registro exitoso. Verifica tu correo.'], 201);
-            }catch (\Exception $e) {
-                    DB::rollBack();
-                    return response()->json(['error' => 'Error al registrar usuario.', 'details' => $e->getMessage()], 500);
-            }
+        event(new Registered($usuario));
+        DB::commit();
+
+        return response()->json(['message' => 'Registro exitoso. Verifica tu correo.'], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al registrar usuario.',
+            'details' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     /**
     * @OA\Post(
@@ -394,11 +365,12 @@ class AuthController extends Controller{
             'nombre' => 'required|string|max:255',
             'email' => 'required|email|unique:usuarios,email',
             'telefono' => 'required|string',
-            'cedula' => 'required|string|unique:usuarios,cedula',
+            'cedula' => 'nullable|string|unique:usuarios,cedula',
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
             'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
             'contrasenia' => 'required|string|min:8|confirmed',
+            'imagen' => 'nullable|string',
             ]);
 
             DB::beginTransaction();
@@ -407,6 +379,7 @@ class AuthController extends Controller{
                 $usuario = Usuario::create([
                 'nombre' => $request->nombre,
                 'email' => $request->email,
+                'imagen' => $request->imagen ?? null,
                 'telefono' => $request->telefono,
                 'cedula' => $request->cedula,
                 'latitud' => $request->latitud,

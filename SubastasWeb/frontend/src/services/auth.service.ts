@@ -109,4 +109,13 @@ redirigirPorRol(rol: string | undefined): void {
   obtenerDatosAutenticado(): Observable<any> {
     return this.http.get(`${environment.apiUrl}/api/usuario-autenticado`);
   }
+
+  registerUsuario(formData: FormData): Observable<any> {
+  return this.http.post(`${environment.apiUrl}/api/register`, formData);
+}
+
+registerCasaRemate(formData: FormData): Observable<any> {
+  return this.http.post(`${environment.apiUrl}/api/register-casa-remate`, formData);
+}
+
 }
