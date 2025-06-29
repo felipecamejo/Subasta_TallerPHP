@@ -39,12 +39,8 @@ export class SubastaService {
   }
 
   // Método para crear subasta con zona horaria
-  createSubasta(subasta: any, timezone: string): Observable<subastaDto> {
-    const subastaConZona = {
-      ...subasta,
-      timezone: timezone // Enviar zona horaria del usuario
-    };
-    return this.http.post<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}`, subastaConZona);
+  crearSubasta(subastaData: any): Observable<subastaDto> {
+    return this.http.post<subastaDto>(`${this.urlService.baseUrl}${this.endpoint}`, subastaData);
   }
   
   getClienteMail(clienteId: number | null): Observable<string | null> {

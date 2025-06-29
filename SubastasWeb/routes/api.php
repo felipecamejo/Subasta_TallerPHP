@@ -169,3 +169,4 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);
 
 Route::get('notificaciones/{usuarioId}', [NotificacionController::class, 'index']);
+});
