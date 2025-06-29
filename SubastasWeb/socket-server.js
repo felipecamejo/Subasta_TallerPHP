@@ -1,6 +1,6 @@
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-const Redis = require('ioredis');
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import Redis from 'ioredis';
 
 const server = createServer();
 const io = new Server(server, {

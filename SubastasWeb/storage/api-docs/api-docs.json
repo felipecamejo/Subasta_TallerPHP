@@ -3629,6 +3629,178 @@
                 }
             }
         },
+        "/api/pujas-inteligente/{loteId}/pujar": {
+            "post": {
+                "tags": [
+                    "Pujas Inteligentes"
+                ],
+                "summary": "Realizar puja usando el mejor sistema disponible",
+                "operationId": "a1d6e2ef99a384c6fb99d839c6057fe3",
+                "parameters": [
+                    {
+                        "name": "loteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cliente_id",
+                                    "monto"
+                                ],
+                                "properties": {
+                                    "cliente_id": {
+                                        "type": "integer"
+                                    },
+                                    "monto": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Puja procesada exitosamente"
+                    }
+                }
+            }
+        },
+        "/api/pujas-redis/{loteId}/pujar": {
+            "post": {
+                "tags": [
+                    "Pujas Redis"
+                ],
+                "summary": "Realizar una puja usando Redis para prevenir conflictos",
+                "operationId": "eb95d8b292b116b1473c40d037224d7b",
+                "parameters": [
+                    {
+                        "name": "loteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cliente_id",
+                                    "monto"
+                                ],
+                                "properties": {
+                                    "cliente_id": {
+                                        "type": "integer"
+                                    },
+                                    "monto": {
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Puja realizada exitosamente"
+                    },
+                    "422": {
+                        "description": "Puja rechazada"
+                    },
+                    "404": {
+                        "description": "Lote no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/pujas-redis/{loteId}/actual": {
+            "get": {
+                "tags": [
+                    "Pujas Redis"
+                ],
+                "summary": "Obtener puja actual de un lote desde Redis",
+                "operationId": "d0a365e9964dbc96edc2c49f1b52c202",
+                "parameters": [
+                    {
+                        "name": "loteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Puja actual obtenida"
+                    }
+                }
+            }
+        },
+        "/api/pujas-redis/{loteId}/historial": {
+            "get": {
+                "tags": [
+                    "Pujas Redis"
+                ],
+                "summary": "Obtener historial de pujas de un lote desde Redis",
+                "operationId": "245e0bf0894411e1c45f637dd6ab7dd4",
+                "parameters": [
+                    {
+                        "name": "loteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de pujas obtenido"
+                    }
+                }
+            }
+        },
+        "/api/pujas-redis/{loteId}/estadisticas": {
+            "get": {
+                "tags": [
+                    "Pujas Redis"
+                ],
+                "summary": "Obtener estadísticas en tiempo real de un lote",
+                "operationId": "1a10da3c8fd67149f18527cc4a751b39",
+                "parameters": [
+                    {
+                        "name": "loteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estadísticas obtenidas"
+                    }
+                }
+            }
+        },
         "/api/rematadores": {
             "get": {
                 "tags": [
@@ -4450,6 +4622,14 @@
         {
             "name": "Notificaciones",
             "description": "API para gestionar notificaciones"
+        },
+        {
+            "name": "Pujas Inteligentes",
+            "description": "Sistema que decide automáticamente usar Redis o PostgreSQL según la carga"
+        },
+        {
+            "name": "Pujas Redis",
+            "description": "API para gestionar pujas usando Redis para alta concurrencia"
         },
         {
             "name": "Rematador",

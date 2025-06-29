@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Inject, PLATFORM_ID, OnInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, Inject, PLATFORM_ID, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -61,6 +61,7 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     private categoriaService: CategoriaService,
     private router: Router,
     private timezoneService: TimezoneService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Obtener la zona horaria actual
@@ -231,7 +232,10 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     // Suscribirse a los cambios de zona horaria
     const timezoneSub = this.timezoneService.userTimezone$.subscribe(timezone => {
       this.currentTimezone = timezone;
-      // Solo actualizamos la UI, no recargamos datos
+      
+      // IMPORTANTE: Forzar actualización de la vista cuando cambie la zona horaria
+      // Esto hace que Angular vuelva a ejecutar los métodos de formateo
+      this.forceViewUpdate();
     });
     this.subscriptions.push(timezoneSub);
 
@@ -341,57 +345,98 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
    */
   obtenerEstadoSubasta(subasta: subastaDto): 'pendiente' | 'activa' | 'finalizada' {
     const ahora = new Date();
-    const fechaInicio = new Date(subasta.fecha);
+    const timezone = this.timezoneService.getUserTimezone();
     
-    // Calcular fecha fin basada en duración
-    const fechaFin = new Date(subasta.fecha);
-    fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
-    
-    // Opción 1: Convertir fechas de subasta a zona horaria del usuario
-    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
-    
-    // También convertir "ahora" a la misma zona horaria para comparar correctamente
-    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
-    
-    if (ahoraEnZonaUsuario < inicio) {
-      return 'pendiente';
-    } else if (ahoraEnZonaUsuario > fin) {
-      return 'finalizada';
-    } else {
-      return 'activa';
+    try {
+      let fechaInicioEnZonaUsuario: Date;
+      
+      if (timezone === 'America/Montevideo') {
+        // Si estamos en Montevideo (zona original), usar la fecha tal como está
+        fechaInicioEnZonaUsuario = new Date(subasta.fecha);
+      } else {
+        // Si cambiamos de zona, convertir desde UTC-3 a la nueva zona
+        const fechaLocal = new Date(subasta.fecha);
+        const fechaUTC = new Date(fechaLocal.getTime() + (3 * 60 * 60 * 1000)); // UTC-3 a UTC
+        const offsetMinutos = this.getTimezoneOffset(timezone);
+        fechaInicioEnZonaUsuario = new Date(fechaUTC.getTime() + (offsetMinutos * 60 * 1000));
+      }
+      
+      const fechaFinEnZonaUsuario = new Date(fechaInicioEnZonaUsuario.getTime() + (subasta.duracionMinutos * 60000));
+      
+      if (ahora < fechaInicioEnZonaUsuario) {
+        return 'pendiente';
+      } else if (ahora > fechaFinEnZonaUsuario) {
+        return 'finalizada';
+      } else {
+        return 'activa';
+      }
+    } catch (error) {
+      console.error('Error al obtener estado de subasta:', error);
+      return 'pendiente'; // Valor por defecto
     }
   }
   
   /**
-   * Obtiene un mensaje sobre el tiempo restante
+   * Obtiene un mensaje sobre el tiempo restante - VERSIÓN SIMPLIFICADA
    */
   obtenerTiempoRestante(subasta: subastaDto): string {
     const ahora = new Date();
-    const fechaInicio = new Date(subasta.fecha);
+    const timezone = this.timezoneService.getUserTimezone();
     
-    // Calcular fecha fin basada en duración
-    const fechaFin = new Date(subasta.fecha);
-    fechaFin.setMinutes(fechaFin.getMinutes() + subasta.duracionMinutos);
-    
-    // Convertir fechas a zona horaria del usuario
-    const inicio = this.timezoneService.convertToUserTimezone(fechaInicio);
-    const fin = this.timezoneService.convertToUserTimezone(fechaFin);
-    
-    // También convertir "ahora" a la misma zona horaria para comparar correctamente
-    const ahoraEnZonaUsuario = this.timezoneService.convertToUserTimezone(ahora);
-    
-    if (ahoraEnZonaUsuario < inicio) {
-      // Calcular tiempo hasta el inicio
-      const diffMs = inicio.getTime() - ahoraEnZonaUsuario.getTime();
-      return this.formatearTiempoRestante(diffMs, 'Comienza en');
-    } else if (ahoraEnZonaUsuario < fin) {
-      // Calcular tiempo hasta el fin
-      const diffMs = fin.getTime() - ahoraEnZonaUsuario.getTime();
-      return this.formatearTiempoRestante(diffMs, 'Finaliza en');
-    } else {
-      // Ya finalizó
-      return 'Finalizada';
+    try {
+      // NUEVA LÓGICA: La fecha de la BD ya está en la zona horaria correcta (UTC-3)
+      // Solo necesitamos convertir si cambiamos de zona horaria
+      
+      let fechaInicioEnZonaUsuario: Date;
+      
+      if (timezone === 'America/Montevideo') {
+        // Si estamos en Montevideo (zona original), usar la fecha tal como está
+        fechaInicioEnZonaUsuario = new Date(subasta.fecha);
+      } else {
+        // Si cambiamos de zona, convertir desde UTC-3 a la nueva zona
+        const fechaLocal = new Date(subasta.fecha);
+        const fechaUTC = new Date(fechaLocal.getTime() + (3 * 60 * 60 * 1000)); // UTC-3 a UTC
+        const offsetMinutos = this.getTimezoneOffset(timezone);
+        // El offset está en minutos negativos, así que lo aplicamos directamente
+        fechaInicioEnZonaUsuario = new Date(fechaUTC.getTime() + (offsetMinutos * 60 * 1000));
+        
+        console.log('=== DEBUG CONVERSIÓN ZONA HORARIA ===');
+        console.log('Timezone destino:', timezone);
+        console.log('Fecha original (UTC-3):', subasta.fecha);
+        console.log('Fecha convertida a UTC:', fechaUTC.toISOString());
+        console.log('Offset en minutos:', offsetMinutos);
+        console.log('Offset en horas:', offsetMinutos / 60);
+        console.log('Fecha final en zona destino:', fechaInicioEnZonaUsuario.toString());
+        console.log('Hora final que debería mostrar:', fechaInicioEnZonaUsuario.getHours() + ':' + fechaInicioEnZonaUsuario.getMinutes().toString().padStart(2, '0'));
+        console.log('===================================');
+      }
+      
+      const fechaFinEnZonaUsuario = new Date(fechaInicioEnZonaUsuario.getTime() + (subasta.duracionMinutos * 60000));
+      
+      console.log('=== DEBUG TIEMPO RESTANTE SIMPLIFICADO ===');
+      console.log('Zona horaria actual:', timezone);
+      console.log('Fecha BD original:', subasta.fecha);
+      console.log('Fecha inicio calculada:', fechaInicioEnZonaUsuario.toString());
+      console.log('Hora que muestra:', fechaInicioEnZonaUsuario.getHours() + ':' + fechaInicioEnZonaUsuario.getMinutes().toString().padStart(2, '0'));
+      console.log('Ahora:', ahora.toString());
+      console.log('Diferencia (min):', (fechaInicioEnZonaUsuario.getTime() - ahora.getTime()) / 60000);
+      console.log('========================================');
+      
+      if (ahora < fechaInicioEnZonaUsuario) {
+        // Calcular tiempo hasta el inicio
+        const diffMs = fechaInicioEnZonaUsuario.getTime() - ahora.getTime();
+        return this.formatearTiempoRestante(diffMs, 'Comienza en');
+      } else if (ahora < fechaFinEnZonaUsuario) {
+        // Calcular tiempo hasta el fin
+        const diffMs = fechaFinEnZonaUsuario.getTime() - ahora.getTime();
+        return this.formatearTiempoRestante(diffMs, 'Finaliza en');
+      } else {
+        // Ya finalizó
+        return 'Finalizada';
+      }
+    } catch (error) {
+      console.error('Error al calcular tiempo restante:', error);
+      return 'Error de cálculo';
     }
   }
   
@@ -525,18 +570,40 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   }
 
   /**
-   * Formatea la fecha de una subasta para mostrarla en la tarjeta
+   * Formatea la fecha de una subasta para mostrarla en la tarjeta - VERSIÓN DINÁMICA
    * @param fecha Fecha de la subasta
-   * @returns Fecha formateada
+   * @returns Fecha formateada según la zona horaria actual
    */
   formatearFechaSubasta(fecha: Date | string): string {
     if (!fecha) return 'Fecha no disponible';
     
-    // Convierte la fecha a la zona horaria del usuario
-    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
-    
-    // Formato: "24 Jun 2025, 15:30"
-    return this.timezoneService.formatDate(fechaLocal, 'datetime');
+    try {
+      const timezone = this.timezoneService.getUserTimezone();
+      let fechaEnZonaUsuario: Date;
+      
+      if (timezone === 'America/Montevideo') {
+        // Si estamos en Montevideo (zona original), usar la fecha tal como está
+        fechaEnZonaUsuario = new Date(fecha);
+      } else {
+        // Si cambiamos de zona, convertir desde UTC-3 a la nueva zona
+        const fechaLocal = new Date(fecha);
+        const fechaUTC = new Date(fechaLocal.getTime() + (3 * 60 * 60 * 1000)); // UTC-3 a UTC
+        const offsetMinutos = this.getTimezoneOffset(timezone);
+        fechaEnZonaUsuario = new Date(fechaUTC.getTime() + (offsetMinutos * 60 * 1000));
+      }
+      
+      // Formatear la fecha
+      return fechaEnZonaUsuario.toLocaleString('es-UY', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Error de formato';
+    }
   }
   
   /**
@@ -582,5 +649,66 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   ngOnDestroy() {
     // Cancelar todas las suscripciones para evitar fugas de memoria
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   * Fuerza la actualización de la vista cuando cambia la zona horaria
+   */
+  private forceViewUpdate(): void {
+    // Forzar detección de cambios para actualizar las fechas mostradas
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Obtiene el offset en minutos para una zona horaria específica
+   */
+  private getTimezoneOffset(timezone: string): number {
+    // Mapa de offsets en minutos desde UTC (negativos = atrás de UTC)
+    // Referencia: Montevideo es UTC-3, por lo que Lima (UTC-5) está 2 horas atrás
+    const offsets: { [key: string]: number } = {
+      // América del Sur
+      'America/Montevideo': -180,        // UTC-3 (Uruguay) - BASE
+      'America/Santiago': -240,          // UTC-4 (Chile) - 1 hora atrás de Montevideo  
+      'America/Lima': -300,              // UTC-5 (Perú) - 2 horas atrás de Montevideo
+      'America/Bogota': -300,            // UTC-5 (Colombia) - 2 horas atrás de Montevideo
+      'America/Caracas': -240,           // UTC-4 (Venezuela) - 1 hora atrás de Montevideo
+      'America/La_Paz': -240,            // UTC-4 (Bolivia) - 1 hora atrás de Montevideo
+      'America/Asuncion': -180,          // UTC-3 (Paraguay) - igual que Montevideo
+      'America/Sao_Paulo': -180,         // UTC-3 (Brasil) - igual que Montevideo
+      'America/Argentina/Buenos_Aires': -180, // UTC-3 (Argentina) - igual que Montevideo
+      'America/Guayaquil': -300,         // UTC-5 (Ecuador) - 2 horas atrás de Montevideo
+      
+      // América Central y del Norte
+      'America/Panama': -300,            // UTC-5 (Panamá) - 2 horas atrás de Montevideo
+      'America/Costa_Rica': -360,        // UTC-6 (Costa Rica) - 3 horas atrás de Montevideo
+      'America/Guatemala': -360,         // UTC-6 (Guatemala) - 3 horas atrás de Montevideo
+      'America/Mexico_City': -360,       // UTC-6 (México) - 3 horas atrás de Montevideo
+      'America/New_York': -300,          // UTC-5 (EST) - 2 horas atrás de Montevideo
+      'America/Chicago': -360,           // UTC-6 (CST) - 3 horas atrás de Montevideo
+      'America/Denver': -420,            // UTC-7 (MST) - 4 horas atrás de Montevideo
+      'America/Los_Angeles': -480,       // UTC-8 (PST) - 5 horas atrás de Montevideo
+      'America/Havana': -300,            // UTC-5 (Cuba) - 2 horas atrás de Montevideo
+      
+      // Europa
+      'Europe/London': 0,                // UTC+0 (Reino Unido) - 3 horas adelante de Montevideo
+      'Europe/Madrid': 60,               // UTC+1 (España) - 4 horas adelante de Montevideo
+      'Europe/Paris': 60,                // UTC+1 (Francia) - 4 horas adelante de Montevideo
+      'Europe/Berlin': 60,               // UTC+1 (Alemania) - 4 horas adelante de Montevideo
+      'Europe/Rome': 60,                 // UTC+1 (Italia) - 4 horas adelante de Montevideo
+      'Europe/Lisbon': 0,                // UTC+0 (Portugal) - 3 horas adelante de Montevideo
+      
+      // Otras zonas comunes
+      'UTC': 0,                          // UTC+0 - 3 horas adelante de Montevideo
+      'GMT': 0                           // GMT - 3 horas adelante de Montevideo
+    };
+    
+    const offset = offsets[timezone];
+    if (offset !== undefined) {
+      console.log(`Offset para ${timezone}: ${offset} minutos (${offset/60} horas desde UTC)`);
+      return offset;
+    }
+    
+    console.warn(`Timezone ${timezone} no encontrado en el mapa, usando UTC-3 por defecto`);
+    return -180; // Default a UTC-3 si no se encuentra
   }
 }
