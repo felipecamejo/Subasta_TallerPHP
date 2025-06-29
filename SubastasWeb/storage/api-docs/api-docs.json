@@ -672,23 +672,13 @@
                     "Autenticación"
                 ],
                 "summary": "Enviar enlace para restablecer contraseña",
-                "description": "* @OA\\Post(\n*     path=\"/api/forgot-password\",\n*     summary=\"Enviar enlace para restablecer contraseña\",\n*     tags={\"Autenticación\"},\n*     @OA\\RequestBody(\n*         required=true,\n*         @OA\\MediaType(\n*             mediaType=\"application/json\",\n*             @OA\\Schema(\n*                 required={\"email\"},\n*                 @OA\\Property(property=\"email\", type=\"string\", example=\"elchati@adinet.com.uy\")\n*             )\n*         )\n*     ),\n*     @OA\\Response(response=200, description=\"Enlace de restablecimiento enviado.\"),\n*     @OA\\Response(response=422, description=\"Email no válido o no registrado.\"),\n*     @OA\\Response(response=500, description=\"Error al enviar el enlace.\")\n* )",
                 "operationId": "27192d4d04cb48a2f83216053554a56c",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "email"
-                                ],
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "example": "elchati@adinet.com.uy"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
                             }
                         }
                     }
@@ -767,12 +757,12 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Registrar nuevo usuario (cliente o rematador)",
+                "summary": "Registro de nuevo usuario",
                 "operationId": "8a56853624e025573120a09a4c75d468",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/RegisterUsuarioRequest"
                             }
@@ -781,43 +771,13 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Registro exitoso. Se envió email de verificación.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Registro exitoso. Verifica tu correo."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Registro exitoso. Verifica tu correo."
                     },
                     "422": {
-                        "description": "Errores de validación.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Error al registrar usuario."
-                                        },
-                                        "details": {
-                                            "type": "string",
-                                            "example": "El campo email ya está en uso."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Datos inválidos."
                     },
                     "500": {
-                        "description": "Error inesperado al registrar usuario."
+                        "description": "Error interno."
                     }
                 }
             }
@@ -834,62 +794,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "google_id",
-                                    "nombre",
-                                    "email",
-                                    "telefono",
-                                    "cedula",
-                                    "latitud",
-                                    "longitud",
-                                    "rol"
-                                ],
-                                "properties": {
-                                    "google_id": {
-                                        "type": "string",
-                                        "example": "123456789012345678901"
-                                    },
-                                    "nombre": {
-                                        "type": "string",
-                                        "example": "Juan Pérez"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "juan@gmail.com"
-                                    },
-                                    "telefono": {
-                                        "type": "string",
-                                        "example": "098765432"
-                                    },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "45678901"
-                                    },
-                                    "latitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -34.9011
-                                    },
-                                    "longitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -56.1645
-                                    },
-                                    "rol": {
-                                        "type": "string",
-                                        "enum": [
-                                            "cliente",
-                                            "rematador"
-                                        ],
-                                        "example": "cliente"
-                                    },
-                                    "matricula": {
-                                        "description": "Solo requerido si el rol es rematador",
-                                        "type": "string",
-                                        "example": "MAT123"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/GoogleRegisterRequest"
                             }
                         }
                     }
@@ -919,53 +824,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "google_id",
-                                    "nombre",
-                                    "email",
-                                    "telefono",
-                                    "cedula",
-                                    "latitud",
-                                    "longitud",
-                                    "idFiscal"
-                                ],
-                                "properties": {
-                                    "google_id": {
-                                        "type": "string",
-                                        "example": "123456789012345678901"
-                                    },
-                                    "nombre": {
-                                        "type": "string",
-                                        "example": "Casa de Subastas Google"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "casa@subastas.com"
-                                    },
-                                    "telefono": {
-                                        "type": "string",
-                                        "example": "099123456"
-                                    },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "12345678"
-                                    },
-                                    "latitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -34.901112
-                                    },
-                                    "longitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -56.164532
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "RUT123456789"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/GoogleRegisterCasaRemateRequest"
                             }
                         }
                     }
@@ -995,60 +854,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "nombre",
-                                    "email",
-                                    "telefono",
-                                    "cedula",
-                                    "latitud",
-                                    "longitud",
-                                    "idFiscal",
-                                    "contrasenia",
-                                    "contrasenia_confirmation"
-                                ],
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string",
-                                        "example": "Casa de Subastas XYZ"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "casa@subastas.com"
-                                    },
-                                    "telefono": {
-                                        "type": "string",
-                                        "example": "099123456"
-                                    },
-                                    "cedula": {
-                                        "type": "string",
-                                        "example": "12345678"
-                                    },
-                                    "latitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -34.901112
-                                    },
-                                    "longitud": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": -56.164532
-                                    },
-                                    "idFiscal": {
-                                        "type": "string",
-                                        "example": "RUT123456789"
-                                    },
-                                    "contrasenia": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "password123"
-                                    },
-                                    "contrasenia_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "password123"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/RegisterCasaRemateRequest"
                             }
                         }
                     }
@@ -4294,6 +4100,141 @@
                 },
                 "type": "object"
             },
+            "ForgotPasswordRequest": {
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "elchati@adinet.com.uy"
+                    }
+                },
+                "type": "object"
+            },
+            "GoogleRegisterCasaRemateRequest": {
+                "required": [
+                    "google_id",
+                    "nombre",
+                    "email",
+                    "telefono",
+                    "cedula",
+                    "latitud",
+                    "longitud",
+                    "idFiscal"
+                ],
+                "properties": {
+                    "google_id": {
+                        "type": "string",
+                        "example": "1234567890"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Casa Rematadora S.A."
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "casa@example.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "099123456"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "example": "12345678"
+                    },
+                    "latitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-34.9011"
+                    },
+                    "longitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-56.1645"
+                    },
+                    "idFiscal": {
+                        "type": "string",
+                        "example": "RUT123456789"
+                    },
+                    "imagen_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/avatar.jpg",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "GoogleRegisterRequest": {
+                "required": [
+                    "google_id",
+                    "nombre",
+                    "email",
+                    "telefono",
+                    "cedula",
+                    "latitud",
+                    "longitud",
+                    "rol"
+                ],
+                "properties": {
+                    "google_id": {
+                        "type": "string",
+                        "example": "1234567890"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan@example.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "099123456"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "example": "12345678"
+                    },
+                    "latitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-34.9011"
+                    },
+                    "longitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": "-56.1645"
+                    },
+                    "rol": {
+                        "type": "string",
+                        "enum": [
+                            "cliente",
+                            "rematador",
+                            "casa_remate"
+                        ],
+                        "example": "cliente"
+                    },
+                    "matricula": {
+                        "type": "string",
+                        "example": "MAT1234",
+                        "nullable": true
+                    },
+                    "imagen_url": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://example.com/avatar.jpg",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "LoginRequest": {
                 "required": [
                     "email",
@@ -4309,6 +4250,66 @@
                         "type": "string",
                         "format": "password",
                         "example": "12345678"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterCasaRemateRequest": {
+                "required": [
+                    "nombre",
+                    "email",
+                    "telefono",
+                    "latitud",
+                    "longitud",
+                    "idFiscal",
+                    "contrasenia",
+                    "contrasenia_confirmation"
+                ],
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Casa de Subastas XYZ"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "casa@subastas.com"
+                    },
+                    "telefono": {
+                        "type": "string",
+                        "example": "099123456"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "example": "12345678"
+                    },
+                    "latitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": -34.901112
+                    },
+                    "longitud": {
+                        "type": "number",
+                        "format": "float",
+                        "example": -56.164532
+                    },
+                    "idFiscal": {
+                        "type": "string",
+                        "example": "RUT123456789"
+                    },
+                    "contrasenia": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "contrasenia_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    },
+                    "imagen": {
+                        "type": "string",
+                        "example": "avatars/default1.png"
                     }
                 },
                 "type": "object"

@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterUsuarioRequest;
+use App\Http\Requests\GoogleRegisterRequest;
+use App\Http\Requests\RegisterCasaRemateRequest;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
 use App\Models\CasaRemate;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 use App\Http\Requests\LoginRequest;
 use Google_Client;
 use OpenApi\Annotations as OA;
@@ -36,25 +39,19 @@ use OpenApi\Annotations as OA;
 class AuthController extends Controller{
 
 /**
-* @OA\Post(
-*     path="/api/forgot-password",
-*     summary="Enviar enlace para restablecer contraseña",
-*     tags={"Autenticación"},
-*     @OA\RequestBody(
-*         required=true,
-*         @OA\MediaType(
-*             mediaType="application/json",
-*             @OA\Schema(
-*                 required={"email"},
-*                 @OA\Property(property="email", type="string", example="elchati@adinet.com.uy")
-*             )
-*         )
-*     ),
-*     @OA\Response(response=200, description="Enlace de restablecimiento enviado."),
-*     @OA\Response(response=422, description="Email no válido o no registrado."),
-*     @OA\Response(response=500, description="Error al enviar el enlace.")
-* )
-*/
+ * @OA\Post(
+ *     path="/api/forgot-password",
+ *     summary="Enviar enlace para restablecer contraseña",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/ForgotPasswordRequest")
+ *     ),
+ *     @OA\Response(response=200, description="Enlace de restablecimiento enviado."),
+ *     @OA\Response(response=422, description="Email no válido o no registrado."),
+ *     @OA\Response(response=500, description="Error al enviar el enlace.")
+ * )
+ */
     public function enviarLinkReset(Request $request){
         $request->validate([
             'email' => 'required|email|exists:usuarios,email',
@@ -188,51 +185,123 @@ public function register(RegisterUsuarioRequest $request)
     }
 }
 
+/**
+ * @OA\Post(
+ *     path="/api/register-google-user",
+ *     summary="Registro de cliente o rematador con cuenta de Google",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/GoogleRegisterRequest")
+ *     ),
+ *     @OA\Response(response=201, description="Registro exitoso con Google."),
+ *     @OA\Response(response=422, description="Error de validación."),
+ *     @OA\Response(response=500, description="Error al registrar con Google.")
+ * )
+ */
+   public function registerGoogleUser(GoogleRegisterRequest $request) {
+    DB::beginTransaction();
 
-    /**
-    * @OA\Post(
-    *     path="/api/register-google-user",
-    *     summary="Registro de cliente o rematador con cuenta de Google",
-    *     tags={"Autenticación"},
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\MediaType(
-    *             mediaType="application/json",
-    *             @OA\Schema(
-    *                 required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "rol"},
-    *                 @OA\Property(property="google_id", type="string", example="123456789012345678901"),
-    *                 @OA\Property(property="nombre", type="string", example="Juan Pérez"),
-    *                 @OA\Property(property="email", type="string", example="juan@gmail.com"),
-    *                 @OA\Property(property="telefono", type="string", example="098765432"),
-    *                 @OA\Property(property="cedula", type="string", example="45678901"),
-    *                 @OA\Property(property="latitud", type="number", format="float", example=-34.9011),
-    *                 @OA\Property(property="longitud", type="number", format="float", example=-56.1645),
-    *                 @OA\Property(property="rol", type="string", enum={"cliente", "rematador"}, example="cliente"),
-    *                 @OA\Property(property="matricula", type="string", example="MAT123", description="Solo requerido si el rol es rematador")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(response=201, description="Registro exitoso con Google."),
-    *     @OA\Response(response=422, description="Error de validación."),
-    *     @OA\Response(response=500, description="Error al registrar con Google.")
-    * )
-    */
-    public function registerGoogleUser(Request $request){
-        $request->validate([
-            'google_id' => 'required|string|unique:usuarios,google_id',
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:usuarios,email',
-            'telefono' => 'required|string',
-            'cedula' => 'required|string|unique:usuarios,cedula',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
-            'rol' => 'required|in:cliente,rematador,casa_remate'
+    try {
+        // Intentar descargar imagen si se proporcionó una URL
+        $imagenRuta = null;
+
+        if ($request->has('imagen_url') && !empty($request->imagen_url)) {
+            try {
+                $contenido = file_get_contents($request->imagen_url);
+                $nombreArchivo = 'perfil_' . uniqid() . '.jpg';
+                $ruta = storage_path('app/public/imagenes/' . $nombreArchivo);
+                file_put_contents($ruta, $contenido);
+                $imagenRuta = 'imagenes/' . $nombreArchivo;
+            } catch (\Exception $e) {
+                // Si falla, usamos una imagen por defecto
+                $imagenRuta = 'imagenes/default.jpg';
+            }
+        } else {
+            // Si no vino ninguna URL, también usamos una por defecto
+            $imagenRuta = 'imagenes/default.jpg';
+        }
+
+        // Crear usuario
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'email' => $request->email,
+            'telefono' => $request->telefono,
+            'cedula' => $request->cedula,
+            'google_id' => $request->google_id,
+            'latitud' => $request->latitud,
+            'longitud' => $request->longitud,
+            'imagen' => $imagenRuta,
+            'contrasenia' => Hash::make(uniqid()),
+            'email_verified_at' => now(),
         ]);
 
-        DB::beginTransaction();
+        // Asignar rol
+        $this->asignarRol($usuario, $request->rol, $request->matricula ?? null);
 
+        DB::commit();
+
+        return response()->json([
+            'access_token' => $usuario->createToken('token-google')->plainTextToken,
+            'usuario_id' => $usuario->id,
+            'rol' => $request->rol,
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al registrar con Google.',
+            'details' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+/**
+ * @OA\Post(
+ *     path="/api/register-google-casa-remate",
+ *     summary="Registro de casa de remate con cuenta de Google",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/GoogleRegisterCasaRemateRequest")
+ *     ),
+ *     @OA\Response(response=201, description="Registro exitoso con Google."),
+ *     @OA\Response(response=422, description="Error de validación."),
+ *     @OA\Response(response=500, description="Error al registrar casa de remate.")
+ * )
+ */
+public function registerGoogleCasaRemate(Request $request){
+    $request->validate([
+        'google_id' => 'required|string|unique:usuarios,google_id',
+        'nombre' => 'required|string|max:255',
+        'email' => 'required|email|unique:usuarios,email',
+        'telefono' => 'required|string',
+        'cedula' => 'required|string|unique:usuarios,cedula',
+        'latitud' => 'required|numeric',
+        'longitud' => 'required|numeric',
+        'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
+        'imagen_url' => 'nullable|url',
+    ]);
+
+    $imagenUrl = $request->imagen_url;
+
+    if ($imagenUrl) {
         try {
-            $usuario = Usuario::create([
+            $response = Http::head($imagenUrl);
+            $contentType = $response->header('Content-Type');
+
+            if (!$response->ok() || !str_starts_with($contentType, 'image/')) {
+                $imagenUrl = null;
+            }
+        } catch (\Exception $e) {
+            $imagenUrl = null;
+        }
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $usuario = Usuario::create([
             'nombre' => $request->nombre,
             'email' => $request->email,
             'telefono' => $request->telefono,
@@ -242,168 +311,98 @@ public function register(RegisterUsuarioRequest $request)
             'longitud' => $request->longitud,
             'contrasenia' => Hash::make(uniqid()),
             'email_verified_at' => now(),
-            ]);
+            'imagen' => $imagenUrl ?? Arr::random([
+                'avatars/default1.png',
+                'avatars/default2.png',
+                'avatars/default3.png',
+                'avatars/default4.png',
+            ]),
+        ]);
 
-        $this->asignarRol($usuario, $request->rol, $request->matricula ?? null);
+        CasaRemate::create([
+            'usuario_id' => $usuario->id,
+            'idFiscal' => $request->idFiscal,
+            'activo' => false,
+        ]);
 
         DB::commit();
 
-            return response()->json([
-                'access_token' => $usuario->createToken('token-google')->plainTextToken,
-                'usuario_id' => $usuario->id,
-                'rol' => $request->rol,
-            ], 201);
+        return response()->json([
+            'access_token' => $usuario->createToken('token-google')->plainTextToken,
+            'usuario_id' => $usuario->id,
+            'rol' => 'casa_remate',
+        ], 201);
 
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return response()->json(['error' => 'Error al registrar con Google.', 'details' => $e->getMessage()], 500);
-            }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al registrar casa de remate.',
+            'details' => $e->getMessage()
+        ], 500);
     }
+}
 
-    /**
-    * @OA\Post(
-    *     path="/api/register-google-casa-remate",
-    *     summary="Registro de casa de remate con cuenta de Google",
-    *     tags={"Autenticación"},
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\MediaType(
-    *             mediaType="application/json",
-    *             @OA\Schema(
-    *                 required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "idFiscal"},
-    *                 @OA\Property(property="google_id", type="string", example="123456789012345678901"),
-    *                 @OA\Property(property="nombre", type="string", example="Casa de Subastas Google"),
-    *                 @OA\Property(property="email", type="string", example="casa@subastas.com"),
-    *                 @OA\Property(property="telefono", type="string", example="099123456"),
-    *                 @OA\Property(property="cedula", type="string", example="12345678"),
-    *                 @OA\Property(property="latitud", type="number", format="float", example=-34.901112),
-    *                 @OA\Property(property="longitud", type="number", format="float", example=-56.164532),
-    *                 @OA\Property(property="idFiscal", type="string", example="RUT123456789")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(response=201, description="Registro exitoso con Google."),
-    *     @OA\Response(response=422, description="Error de validación."),
-    *     @OA\Response(response=500, description="Error al registrar casa de remate.")
-    * )
-    */
-    public function registerGoogleCasaRemate(Request $request){
-        $request->validate([
-            'google_id' => 'required|string|unique:usuarios,google_id',
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:usuarios,email',
-            'telefono' => 'required|string',
-            'cedula' => 'required|string|unique:usuarios,cedula',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
-            'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
+/**
+ * @OA\Post(
+ *     path="/api/register-casa-remate",
+ *     summary="Registro de casa de remate",
+ *     tags={"Autenticación"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/RegisterCasaRemateRequest")
+ *     ),
+ *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
+ *     @OA\Response(response=422, description="Error de validación."),
+ *     @OA\Response(response=500, description="Error al registrar casa de remate.")
+ * )
+ */
+ public function registerCasaRemate(RegisterCasaRemateRequest $request)
+{
+    DB::beginTransaction();
+
+    try {
+        $imagen = $request->imagen;
+
+        // Si no viene imagen o está vacía, asignamos una por defecto aleatoria
+        if (!$imagen || !is_string($imagen) || trim($imagen) === '') {
+            $imagen = Arr::random([
+                'avatars/default1.png',
+                'avatars/default2.png',
+                'avatars/default3.png',
+                'avatars/default4.png',
             ]);
+        }
 
-            DB::beginTransaction();
-
-            try {
-                $usuario = Usuario::create([
-                'nombre' => $request->nombre,
-                'email' => $request->email,
-                'telefono' => $request->telefono,
-                'cedula' => $request->cedula,
-                'google_id' => $request->google_id,
-                'latitud' => $request->latitud,
-                'longitud' => $request->longitud,
-                'contrasenia' => Hash::make(uniqid()),
-                'email_verified_at' => now(),
-                ]);
-
-            CasaRemate::create([
-                'usuario_id' => $usuario->id,
-                'idFiscal' => $request->idFiscal,
-                'activo' => false,
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'email' => $request->email,
+            'telefono' => $request->telefono,
+            'cedula' => $request->cedula,
+            'latitud' => $request->latitud,
+            'longitud' => $request->longitud,
+            'contrasenia' => Hash::make($request->contrasenia),
+            'imagen' => $imagen,
         ]);
 
-            DB::commit();
-                return response()->json([
-                'access_token' => $usuario->createToken('token-google')->plainTextToken,
-                'usuario_id' => $usuario->id,
-                'rol' => 'casa_remate',
-                ], 201);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return response()->json(['error' => 'Error al registrar casa de remate.', 'details' => $e->getMessage()], 500);
-            }
+        CasaRemate::create([
+            'usuario_id' => $usuario->id,
+            'idFiscal' => $request->idFiscal,
+            'activo' => false,
+        ]);
+
+        event(new Registered($usuario));
+
+        DB::commit();
+
+        return response()->json(['message' => 'Registro exitoso. Verifica tu correo.'], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al registrar casa de remate.',
+            'details' => $e->getMessage()
+        ], 500);
     }
-
-    /**
-    * @OA\Post(
-    *     path="/api/register-casa-remate",
-    *     summary="Registro de casa de remate",
-    *     tags={"Autenticación"},
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\MediaType(
-    *             mediaType="application/json",
-    *             @OA\Schema(
-    *                 required={"nombre", "email", "telefono", "cedula", "latitud", "longitud", "idFiscal", "contrasenia", "contrasenia_confirmation"},
-    *                 @OA\Property(property="nombre", type="string", example="Casa de Subastas XYZ"),
-    *                 @OA\Property(property="email", type="string", example="casa@subastas.com"),
-    *                 @OA\Property(property="telefono", type="string", example="099123456"),
-    *                 @OA\Property(property="cedula", type="string", example="12345678"),
-    *                 @OA\Property(property="latitud", type="number", format="float", example=-34.901112),
-    *                 @OA\Property(property="longitud", type="number", format="float", example=-56.164532),
-    *                 @OA\Property(property="idFiscal", type="string", example="RUT123456789"),
-    *                 @OA\Property(property="contrasenia", type="string", format="password", example="password123"),
-    *                 @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="password123")
-    *             )
-    *         )
-    *     ),
-    *     @OA\Response(response=201, description="Registro exitoso. Verifica tu correo."),
-    *     @OA\Response(response=422, description="Error de validación."),
-    *     @OA\Response(response=500, description="Error al registrar casa de remate.")
-    * )
-    */
-    public function registerCasaRemate(Request $request){
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:usuarios,email',
-            'telefono' => 'required|string',
-            'cedula' => 'nullable|string|unique:usuarios,cedula',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
-            'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
-            'contrasenia' => 'required|string|min:8|confirmed',
-            'imagen' => 'nullable|string',
-            ]);
-
-            DB::beginTransaction();
-
-            try {
-                $usuario = Usuario::create([
-                'nombre' => $request->nombre,
-                'email' => $request->email,
-                'imagen' => $request->imagen ?? null,
-                'telefono' => $request->telefono,
-                'cedula' => $request->cedula,
-                'latitud' => $request->latitud,
-                'longitud' => $request->longitud,
-                'contrasenia' => Hash::make($request->contrasenia),
-                ]);
-
-                CasaRemate::create([
-                'usuario_id' => $usuario->id,
-                'idFiscal' => $request->idFiscal,
-                'activo' => false,
-                ]);
-
-                event(new Registered($usuario));
-
-                DB::commit();
-
-                return response()->json(['message' => 'Registro exitoso. Verifica tu correo.'], 201);
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    return response()->json(['error' => 'Error al registrar casa de remate.', 'details' => $e->getMessage()], 500);
-                }
-    }
-
+}
     /**
     * @OA\Post(
     *     path="/api/registro/google",
@@ -602,5 +601,7 @@ public function register(RegisterUsuarioRequest $request)
             'rol' => $this->determinarRol($usuario),
         ]);
     }
+
+    
 
 }

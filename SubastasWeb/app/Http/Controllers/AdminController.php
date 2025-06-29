@@ -337,7 +337,7 @@ class AdminController extends Controller {
  */
 public function usuariosPorRol(Request $request){
     $rol = $request->query('rol');
-    $perPage = $request->query('per_page', 10); // por defecto 10
+    $perPage = $request->query('per_page', 10); 
 
     if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
         return response()->json(['error' => 'Rol inválido'], 400);
