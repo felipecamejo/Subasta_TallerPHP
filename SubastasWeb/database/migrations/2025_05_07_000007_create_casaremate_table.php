@@ -9,19 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('casa_remates', function (Blueprint $table) {
-            $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
-            
+            $table->unsignedBigInteger('usuario_id')->primary(); 
             $table->string('idFiscal')->unique();
-            
             $table->boolean('activo')->default(false);
+            $table->string('aprobado_por')->nullable();   
+            $table->timestamp('aprobado_en')->nullable(); 
             
-            $table->string('aprobado_por')->nullable();   // ← nombre o email del admin
-            
-            $table->timestamp('aprobado_en')->nullable(); // ← fecha y hora de aprobación
-            
-            $table->timestamps();
-
             $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+
+            $table->unsignedBigInteger('vendedor_id')->nullable()->after('id'); // o la posición que quieras
+            $table->foreign('vendedor_id')->references('id')->on('vendedores')->onDelete('cascade');
+
+            $table->timestamps();
         });
     }
 

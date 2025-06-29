@@ -54,7 +54,6 @@ class ClienteSeeder extends Seeder
 
         Cliente::create([
             'usuario_id' => $clienteUsuario->id,
-            'calificacion' => 3,
         ]);
     }
 }

@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clientes', function (Blueprint $table) {
+        Schema::create('rematadores', function (Blueprint $table) {
             $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
-            $table->float('calificacion')->nullable();
+            $table->string('matricula');
+            
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade'); // FOREIGN KEY
+        
             $table->timestamps();
-
-            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
         });
     }
 
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clientes');
+        Schema::dropIfExists('rematadores');
     }
 };

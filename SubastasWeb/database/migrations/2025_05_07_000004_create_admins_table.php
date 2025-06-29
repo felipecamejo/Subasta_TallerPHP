@@ -10,7 +10,9 @@ class CreateAdminsTable extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+            
             $table->timestamps();
         });
     }

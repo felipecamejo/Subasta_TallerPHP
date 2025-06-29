@@ -65,4 +65,10 @@ class Usuario extends Authenticatable implements MustVerifyEmail
         if ($this->casaRemate()->exists()) return 'casa_remate';
         return 'desconocido';
     }
+
+    public function notificaciones() {
+        return $this->belongsToMany(Notificacion::class, 'notificacion_usuario', 'usuario_id', 'notificacion_id')
+            ->withPivot('leido')
+            ->withTimestamps();
+    }
 }
