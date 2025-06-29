@@ -210,22 +210,12 @@ export class CrearSubastaModalComponent implements AfterViewInit, OnDestroy, OnI
         return;
       }
 
-      // SOLUCIÓN SIMPLE: Convertir fecha local a UTC manualmente
-      const fechaLocal = this.form.value.fecha;
-      const fechaUTC = new Date(fechaLocal.getTime() - (fechaLocal.getTimezoneOffset() * 60000));
-
-      console.log('=== DEBUG SIMPLE ===');
-      console.log('Fecha seleccionada (local):', fechaLocal.toString());
-      console.log('Fecha a enviar (UTC):', fechaUTC.toISOString());
-      console.log('Offset timezone (min):', fechaLocal.getTimezoneOffset());
-      console.log('===================');
-
       // Preparar los datos para la API
       const subastaData = {
         nombre: this.form.value.nombre,
         duracionMinutos: this.form.value.duracionMinutos,
         activa: this.form.value.activa,
-        fecha: fechaUTC, // Enviar fecha ya convertida a UTC
+        fecha: this.form.value.fecha,
         casa_remate_id: parseInt(casaRemateId),
         rematador_id: this.form.value.rematador_id,
         latitud: this.form.value.latitud,

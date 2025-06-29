@@ -15,7 +15,6 @@ use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\PujaRedisController;
-use App\Http\Controllers\RedisTestController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
@@ -27,9 +26,6 @@ use App\Http\Controllers\PaypalController;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\PasswordReset;
-
-// Redis test route
-Route::get('/redis-test', [RedisTestController::class, 'testRedis']);
 
 Route::get('/debug-log', function () {
     Log::info(' Probando log en Laravel desde /debug-log');
@@ -186,10 +182,3 @@ Route::get('/lotes', [LoteController::class, 'index']);
 //});
 
 Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);
-
-// Rutas de prueba para Redis
-Route::get('/redis/test', [RedisTestController::class, 'testConnection']);
-Route::get('/redis/keys', [RedisTestController::class, 'getAllKeys']);
-Route::get('/redis/flush', [RedisTestController::class, 'flushAll']);
-Route::get('/redis/key/{key}', [RedisTestController::class, 'getValueByKey']);
-Route::post('/redis/key/{key}', [RedisTestController::class, 'setValueByKey']);

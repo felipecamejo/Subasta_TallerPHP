@@ -39,9 +39,9 @@
                 ->withTimestamps();
         }
 
-        public function valoracion(): MorphOne
+        public function valoracion()
         {
-            return $this->morphOne(Valoracion::class, 'valorable');
+            return $this->hasOne(Valoracion::class, 'casa_remate_id', 'usuario_id');
         }
 
     }

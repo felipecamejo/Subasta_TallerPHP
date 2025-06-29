@@ -41,7 +41,7 @@ export class WebsocketService {
   public connectionStatus$ = this.connectionStatus.asObservable();
 
   constructor() {
-    this.socket = io('http://localhost:3000'); // Puerto correcto según websocket-server
+    this.socket = io('http://localhost:3001'); // Puerto correcto según websocket-server
     this.setupConnectionEvents();
   }
   private setupConnectionEvents() {
