@@ -6,8 +6,8 @@ use App\Models\Puja;
 use App\Models\Lote;
 use App\Models\Cliente;
 use App\Services\PujaWebSocketService;
+use App\Services\SimpleRedisClient;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -19,6 +19,12 @@ use Carbon\Carbon;
  */
 class PujaRedisController extends Controller
 {
+    private $redis;
+
+    public function __construct()
+    {
+        $this->redis = new SimpleRedisClient();
+    }
     /**
      * @OA\Post(
      *     path="/api/pujas-redis/{loteId}/pujar",
@@ -141,7 +147,7 @@ class PujaRedisController extends Controller
         $historialKey = "lote:$loteId:historial";
         $timestamp = Carbon::now()->timestamp;
 
-        $resultado = Redis::eval(
+        $resultado = $this->redis->eval(
             $luaScript,
             2, // número de KEYS
             $loteKey,
@@ -218,7 +224,7 @@ class PujaRedisController extends Controller
         try {
             $loteKey = "lote:$loteId:puja";
             
-            $pujaData = Redis::hmget($loteKey, ['monto', 'cliente_id', 'timestamp']);
+            $pujaData = $this->redis->hmget($loteKey, ['monto', 'cliente_id', 'timestamp']);
             
             if ($pujaData[0]) {
                 $cliente = Cliente::with('usuario')->find($pujaData[1]);
@@ -267,7 +273,7 @@ class PujaRedisController extends Controller
             $historialKey = "lote:$loteId:historial";
             
             // Obtener últimas 50 pujas ordenadas por timestamp (desc)
-            $historial = Redis::zrevrange($historialKey, 0, 49, 'WITHSCORES');
+            $historial = $this->redis->zrevrange($historialKey, 0, 49, true);
             
             $pujas = [];
             for ($i = 0; $i < count($historial); $i += 2) {
@@ -320,9 +326,9 @@ class PujaRedisController extends Controller
             $visualizacionesKey = "lote:$loteId:viendo";
             
             // Obtener datos actuales
-            $pujaActual = Redis::hmget($loteKey, ['monto', 'cliente_id']);
-            $totalPujas = Redis::zcard($historialKey);
-            $usuariosViendo = Redis::scard($visualizacionesKey);
+            $pujaActual = $this->redis->hmget($loteKey, ['monto', 'cliente_id']);
+            $totalPujas = $this->redis->zcard($historialKey);
+            $usuariosViendo = $this->redis->scard($visualizacionesKey);
             
             return response()->json([
                 'lote_id' => $loteId,
@@ -348,8 +354,8 @@ class PujaRedisController extends Controller
             $visualizacionesKey = "lote:$loteId:viendo";
             
             // Agregar usuario al set con expiración de 30 segundos
-            Redis::sadd($visualizacionesKey, $usuarioId);
-            Redis::expire($visualizacionesKey, 30);
+            $this->redis->sadd($visualizacionesKey, $usuarioId);
+            $this->redis->expire($visualizacionesKey, 30);
             
             return response()->json(['message' => 'Visualización registrada']);
             

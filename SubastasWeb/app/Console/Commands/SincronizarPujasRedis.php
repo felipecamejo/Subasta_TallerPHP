@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Redis;
+use App\Services\SimpleRedisClient;
 use App\Models\Puja;
 use App\Models\Lote;
 use App\Models\Cliente;
@@ -13,6 +13,14 @@ class SincronizarPujasRedis extends Command
 {
     protected $signature = 'redis:sincronizar-pujas {--lote=}';
     protected $description = 'Sincronizar pujas de Redis con PostgreSQL';
+
+    private $redis;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->redis = new \App\Services\SimpleRedisClient();
+    }
 
     public function handle()
     {
@@ -30,7 +38,7 @@ class SincronizarPujasRedis extends Command
         $this->info("Sincronizando lote $loteId...");
         
         $historialKey = "lote:$loteId:historial";
-        $historial = Redis::zrange($historialKey, 0, -1, 'WITHSCORES');
+        $historial = $this->redis->zrange($historialKey, 0, -1, true);
         
         $contador = 0;
         for ($i = 0; $i < count($historial); $i += 2) {
@@ -71,7 +79,7 @@ class SincronizarPujasRedis extends Command
     {
         $this->info("Buscando lotes con pujas en Redis...");
         
-        $keys = Redis::keys("lote:*:historial");
+        $keys = $this->redis->keys("lote:*:historial");
         
         foreach ($keys as $key) {
             if (preg_match('/lote:(\d+):historial/', $key, $matches)) {
