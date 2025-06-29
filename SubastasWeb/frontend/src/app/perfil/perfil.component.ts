@@ -91,7 +91,7 @@ export class PerfilComponent implements OnInit {
       console.log('No hay valoración disponible');
       return 0;
     }
-    const valoracionTotal = this.cliente.valoracion.valoracion_total || 0;
+    const valoracionTotal = this.cliente.valoracion.total_puntaje || 0;
     const cantidadOpiniones = this.cliente.valoracion.cantidad_opiniones || 1;
     const promedio = valoracionTotal / cantidadOpiniones;
     console.log(`Calculando promedio: ${valoracionTotal} / ${cantidadOpiniones} = ${promedio}`);

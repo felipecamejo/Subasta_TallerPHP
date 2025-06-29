@@ -1,7 +1,10 @@
 export interface valoracionDto {
     id: number | null;
-    valoracion_total: number;
+    total_puntaje: number;
     cantidad_opiniones: number;
-    valorable_type: string; 
     valorable_id: number;
+    created_at?: string;
+    updated_at?: string;
+    promedio?: number; // Calculado
+    estrellas?: number; // Calculado
 }

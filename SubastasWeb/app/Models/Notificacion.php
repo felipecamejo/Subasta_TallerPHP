@@ -6,6 +6,7 @@
     use App\Models\Cliente;
     use App\Models\Rematador;
     use App\Models\CasaRemate;
+    use App\Models\Usuario;
 
     class Notificacion extends Model{
 
@@ -26,20 +27,9 @@
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
 
-        public function clientes() {
-            return $this->belongsToMany(Cliente::class, 'notificacion_clientes', 'notificacion_id', 'cliente_id')
-                ->withPivot('leido')
-                ->withTimestamps();
-        }
 
-        public function rematadores() {
-            return $this->belongsToMany(Rematador::class, 'notificacion_rematadores', 'notificacion_id', 'rematador_id')
-                ->withPivot('leido')
-                ->withTimestamps();
-        }
-
-        public function casaRemates() {
-            return $this->belongsToMany(CasaRemate::class, 'notificaciones_casaremates', 'notificacion_id', 'casa_remate_id')
+        public function usuarios() {
+            return $this->belongsToMany(Usuario::class, 'notificacion_usuario', 'notificacion_id', 'usuario_id')
                 ->withPivot('leido')
                 ->withTimestamps();
         }

@@ -278,7 +278,7 @@ class CasaRemateController extends Controller
 
         // Obtener o crear la valoración
         $valoracion = $casa->valoracion ?? $casa->valoracion()->create([
-            'valoracion_total' => 0,
+            'total_puntaje' => 0,
             'cantidad_opiniones' => 0,
         ]);
 

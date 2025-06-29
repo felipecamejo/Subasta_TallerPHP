@@ -532,11 +532,8 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   formatearFechaSubasta(fecha: Date | string): string {
     if (!fecha) return 'Fecha no disponible';
     
-    // Convierte la fecha a la zona horaria del usuario
-    const fechaLocal = this.timezoneService.convertToUserTimezone(new Date(fecha));
-    
-    // Formato: "24 Jun 2025, 15:30"
-    return this.timezoneService.formatDate(fechaLocal, 'datetime');
+    // Usar directamente formatDate que maneja todo el flujo: Backend → UTC → Zona Usuario
+    return this.timezoneService.formatDate(fecha, 'datetime');
   }
   
   /**
