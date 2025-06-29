@@ -118,4 +118,23 @@ registerCasaRemate(formData: FormData): Observable<any> {
   return this.http.post(`${environment.apiUrl}/api/register-casa-remate`, formData);
 }
 
+registrarConGoogle(data: any): Observable<any> {
+    const rol = data.rol;
+    const url = rol === 'casa_remate'
+      ? `${environment.apiUrl}/api/register-google-casa-remate`
+      : `${environment.apiUrl}/api/register-google-user`;
+
+    
+    const payload = {
+      ...data,
+      ...(rol !== 'rematador' && { matricula: undefined }),
+      ...(rol !== 'casa_remate' && { idFiscal: undefined }),
+      ...(rol === 'casa_remate' && { cedula: null })
+    };
+
+    return this.http.post(url, payload);
+  }
 }
+
+
+

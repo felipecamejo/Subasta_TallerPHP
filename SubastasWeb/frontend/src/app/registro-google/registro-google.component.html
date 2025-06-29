@@ -5,6 +5,10 @@
     <fieldset class="mb-3">
       <legend>Información personal</legend>
 
+      <div *ngIf="form.get('imagen')?.value" class="mb-3">
+        <img [src]="form.get('imagen')?.value" alt="Avatar de Google" class="img-thumbnail" style="max-width: 150px;">
+      </div>
+
       <!-- Nombre -->
       <div class="mb-2">
         <label for="nombre">Nombre:</label>
@@ -19,11 +23,13 @@
                [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched">
       </div>
 
-      <!-- Cédula -->
-      <div class="mb-2">
-        <label for="cedula">Cédula:</label>
-        <input type="text" id="cedula" class="form-control" formControlName="cedula"
-               [class.is-invalid]="form.get('cedula')?.invalid && form.get('cedula')?.touched">
+     <div *ngIf="form.get('rol')?.value !== 'casa_remate'" class="mb-2">
+         <label for="cedula">Cédula:</label>
+              <input type="text" id="cedula" class="form-control" formControlName="cedula"
+                [class.is-invalid]="form.get('cedula')?.invalid && form.get('cedula')?.touched">
+         <div *ngIf="form.get('cedula')?.invalid && form.get('cedula')?.touched" class="text-danger">
+          La cédula es obligatoria.
+       </div>
       </div>
 
       <!-- Teléfono -->
