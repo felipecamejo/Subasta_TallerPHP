@@ -27,7 +27,7 @@ class ClienteController extends Controller
     public function index()
     {
         try {
-            $clientes = Cliente::with(['usuario'])->get();
+            $clientes = Cliente::with(['usuario', 'valoracion'])->get();
             return response()->json($clientes, 200);
         } catch (\Throwable $e) {
             return response()->json([
@@ -127,7 +127,7 @@ class ClienteController extends Controller
             'usuario_id' => $usuario->id,
         ]);
 
-        $cliente->load(['usuario']);
+        $cliente->load(['usuario', 'valoracion']);
         return response()->json($cliente, 201);
     }
 
@@ -155,7 +155,7 @@ class ClienteController extends Controller
     */
     public function show($usuario_id)
     {
-        $cliente = Cliente::with(['usuario', 'pujas' => function($query) {
+        $cliente = Cliente::with(['usuario', 'valoracion', 'pujas' => function($query) {
             $query->with(['lote', 'factura']);
         }, 'notificaciones'])->find($usuario_id);
         
@@ -175,8 +175,35 @@ class ClienteController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+     * @OA\Put(
+     *     path="/api/clientes/{usuario_id}",
+     *     summary="Actualizar un cliente",
+     *     tags={"Cliente"},
+     *     @OA\Parameter(
+     *         name="usuario_id",
+     *         in="path",
+     *         description="ID del usuario asociado al cliente a actualizar",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"nombre", "cedula", "email", "contrasenia"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="cedula", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="telefono", type="string"),
+     *             @OA\Property(property="imagen", type="string"),
+     *             @OA\Property(property="calificacion", type="number"),
+     *             @OA\Property(property="latitud", type="number"),
+     *             @OA\Property(property="longitud", type="number"),
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Cliente actualizado correctamente"),
+     *     @OA\Response(response=404, description="Cliente no encontrado")
+     * )
+    */
     public function update(Request $request, string $usuario_id)
     {
        $cliente = Cliente::find($usuario_id);
@@ -210,7 +237,7 @@ class ClienteController extends Controller
         ]);
 
         // Actualizar cliente (ya no hay campo calificacion)
-        $cliente->load(['usuario']);
+        $cliente->load(['usuario', 'valoracion']);
         return response()->json($cliente);
     }
 
@@ -252,32 +279,5 @@ class ClienteController extends Controller
         }
 
         return response()->json(['message' => 'Cliente eliminado con éxito'], 200);
-    }
-
-    /**
-     * Buscar el email de un usuario por su id
-     * @OA\Get(
-     *     path="/api/usuarioEmail/{id}",
-     *     summary="Buscar email de usuario por id",
-     *     tags={"Cliente"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID de usuario a buscar",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(response=200, description="Email encontrado"),
-     *     @OA\Response(response=404, description="Usuario no encontrado")
-     * )
-     */
-    public function buscarUsuarioPorId($id)
-    {
-        $usuario = Usuario::find($id);
-        if (!$usuario) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
-        }
-        // Devolver el email como string plano, sin comillas extra ni JSON
-        return response($usuario->email, 200)->header('Content-Type', 'text/plain');
     }
 }

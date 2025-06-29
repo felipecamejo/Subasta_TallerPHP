@@ -1141,7 +1141,6 @@
                     {
                         "name": "usuario_id",
                         "in": "path",
-                        "description": "ID del usuario asociado a la casa de remate a actualizar",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1153,33 +1152,10 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "nombre",
-                                    "cedula",
-                                    "email",
-                                    "contrasenia"
-                                ],
                                 "properties": {
-                                    "nombre": {
-                                        "type": "string"
-                                    },
-                                    "email": {
-                                        "type": "string"
-                                    },
-                                    "telefono": {
-                                        "type": "string"
-                                    },
-                                    "imagen": {
-                                        "type": "string"
-                                    },
-                                    "latitud": {
-                                        "type": "number"
-                                    },
-                                    "longitud": {
-                                        "type": "number"
-                                    },
                                     "idFiscal": {
-                                        "type": "number"
+                                        "type": "string",
+                                        "maxLength": 20
                                     }
                                 },
                                 "type": "object"
@@ -1189,10 +1165,13 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Casa Remate actualizado correctamente"
+                        "description": "Casa de remate actualizada"
                     },
                     "404": {
-                        "description": "Casa Remate no encontrado"
+                        "description": "Casa de remate no encontrada"
+                    },
+                    "422": {
+                        "description": "Error de validación"
                     }
                 }
             },
@@ -1795,12 +1774,26 @@
                                         "type": "integer",
                                         "example": 1
                                     },
+                                    "usuario_valorable_id": {
+                                        "description": "ID del usuario/casa de remate a calificar (opcional)",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
                                     "calificacion": {
                                         "description": "Calificación de 1 a 5 estrellas (opcional)",
                                         "type": "integer",
                                         "maximum": 5,
                                         "minimum": 1,
                                         "example": 4
+                                    },
+                                    "tipo_valorable": {
+                                        "description": "Tipo de entidad a valorar (opcional)",
+                                        "type": "string",
+                                        "enum": [
+                                            "cliente",
+                                            "casa_remate"
+                                        ],
+                                        "example": "cliente"
                                     }
                                 },
                                 "type": "object"
@@ -2144,6 +2137,74 @@
                     }
                 }
             },
+            "put": {
+                "tags": [
+                    "Cliente"
+                ],
+                "summary": "Actualizar un cliente",
+                "operationId": "c9f27624ed5819a0ce609517bdc49cef",
+                "parameters": [
+                    {
+                        "name": "usuario_id",
+                        "in": "path",
+                        "description": "ID del usuario asociado al cliente a actualizar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "cedula",
+                                    "email",
+                                    "contrasenia"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "cedula": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    },
+                                    "imagen": {
+                                        "type": "string"
+                                    },
+                                    "calificacion": {
+                                        "type": "number"
+                                    },
+                                    "latitud": {
+                                        "type": "number"
+                                    },
+                                    "longitud": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cliente actualizado correctamente"
+                    },
+                    "404": {
+                        "description": "Cliente no encontrado"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "Cliente"
@@ -2167,35 +2228,6 @@
                     },
                     "404": {
                         "description": "Cliente no encontrado"
-                    }
-                }
-            }
-        },
-        "/api/usuarioEmail/{id}": {
-            "get": {
-                "tags": [
-                    "Cliente"
-                ],
-                "summary": "Buscar email de usuario por id",
-                "description": "Buscar el email de un usuario por su id",
-                "operationId": "ec13d48e0742a773fb451a16457c0bc1",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de usuario a buscar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Email encontrado"
-                    },
-                    "404": {
-                        "description": "Usuario no encontrado"
                     }
                 }
             }
@@ -2489,38 +2521,19 @@
                             "schema": {
                                 "required": [
                                     "valorBase",
-                                    "pujaMinima",
-                                    "subasta_id",
-                                    "umbral"
+                                    "pujaMinima"
                                 ],
                                 "properties": {
                                     "valorBase": {
-                                        "description": "Valor base del lote",
                                         "type": "number",
-                                        "format": "float",
-                                        "example": 100
+                                        "format": "float"
                                     },
                                     "pujaMinima": {
-                                        "description": "Incremento mínimo para pujas",
                                         "type": "number",
-                                        "format": "float",
-                                        "example": 10
+                                        "format": "float"
                                     },
                                     "subasta_id": {
-                                        "description": "ID de la subasta",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "umbral": {
-                                        "description": "Monto mínimo para validar el lote",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 50
-                                    },
-                                    "pago": {
-                                        "description": "Estado del pago",
-                                        "type": "boolean",
-                                        "example": false
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -2539,88 +2552,6 @@
             }
         },
         "/api/lotes/{id}": {
-            "get": {
-                "tags": [
-                    "Lotes"
-                ],
-                "summary": "Obtener un lote por ID",
-                "operationId": "b5d35a1061c5511e387a1b1088288029",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del lote",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lote encontrado"
-                    },
-                    "404": {
-                        "description": "Lote no encontrado"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "Lotes"
-                ],
-                "summary": "Actualizar un lote",
-                "operationId": "54c5500056ebc432f7d61280e691ef6b",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del lote",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "valorBase": {
-                                        "type": "number",
-                                        "format": "float"
-                                    },
-                                    "pujaMinima": {
-                                        "type": "number",
-                                        "format": "float"
-                                    },
-                                    "subasta_id": {
-                                        "type": "integer"
-                                    },
-                                    "umbral": {
-                                        "type": "number",
-                                        "format": "float"
-                                    },
-                                    "pago": {
-                                        "type": "boolean"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Lote actualizado exitosamente"
-                    },
-                    "404": {
-                        "description": "Lote no encontrado"
-                    }
-                }
-            },
             "delete": {
                 "tags": [
                     "Lotes"

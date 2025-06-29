@@ -12,24 +12,25 @@ return new class extends Migration {
     {
         Schema::create('casa_remate_rematador', function (Blueprint $table) {
 
-            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente');
-
+            // Foreign keys
             $table->foreignId('casa_remate_id')
                   ->references('usuario_id')->on('casa_remates')
                   ->onDelete('cascade');
 
             $table->unsignedBigInteger('rematador_id');
-
             $table->foreign('rematador_id')
                   ->references('usuario_id')
                   ->on('rematadores')
                   ->onDelete('cascade');
 
-            
+            // Estado de la solicitud
+            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente');
 
-            $table->unique(['casa_remate_id', 'rematador_id']);
-        
+            // Fechas
             $table->timestamps();
+
+            // Restricción única para evitar duplicados
+            $table->unique(['casa_remate_id', 'rematador_id']);
         });
     }
 

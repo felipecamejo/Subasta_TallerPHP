@@ -27,15 +27,13 @@ class LoteController extends Controller{
     */
     public function index(){
         try {
-            $lotes = Lote::with([
-                'pujas.cliente.usuario', 
-                'articulos.categoria', 
-                'articulos.vendedor.usuario',
-                'subasta.casaRemate.usuario',
-                'subasta.rematador.usuario'
-            ])->get();
+            $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->get();
 
-            return response()->json($lotes);
+            $dtos = $lote->map(function ($lote) {
+                return $lote;
+            });
+
+            return response()->json($dtos);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => $e->getMessage(),
@@ -52,12 +50,10 @@ class LoteController extends Controller{
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"valorBase", "pujaMinima", "subasta_id", "umbral"},
-     *             @OA\Property(property="valorBase", type="float", description="Valor base del lote", example=100.00),
-     *             @OA\Property(property="pujaMinima", type="float", description="Incremento mínimo para pujas", example=10.00),
-     *             @OA\Property(property="subasta_id", type="integer", description="ID de la subasta", example=1),
-     *             @OA\Property(property="umbral", type="float", description="Monto mínimo para validar el lote", example=50.00),
-     *             @OA\Property(property="pago", type="boolean", description="Estado del pago", example=false)
+     *             required={"valorBase", "pujaMinima"},
+     *             @OA\Property(property="valorBase", type="float"),
+     *             @OA\Property(property="pujaMinima", type="float"),
+     *             @OA\Property(property="subasta_id", type="integer"),
      *         )
      *     ),
      *     @OA\Response(
@@ -72,142 +68,23 @@ class LoteController extends Controller{
     */
     public function store(Request $request){
         $request->validate([
-            'valorBase' => 'required|numeric|min:0.01',
-            'pujaMinima' => 'required|numeric|min:0.01',
-            'subasta_id' => 'required|exists:subastas,id',
-            'umbral' => 'required|numeric|min:0',
-            'pago' => 'boolean'
+            'valorBase' => 'required|numeric',
+            'pujaMinima' => 'required|numeric',
+            'subasta_id' => 'nullable|exists:subastas,id',
+            'umbral' => 'nullable|numeric|min:0', 
         ]);
         
         $lote = Lote::create([
             'valorBase' => $request->valorBase,
             'pujaMinima' => $request->pujaMinima,
             'subasta_id' => $request->subasta_id,
-            'umbral' => $request->umbral,
-            'pago' => $request->pago ?? false
+            'umbral' => $request->umbral ?? 0, 
+            'pago' => false, 
         ]);
         
-        $lote = Lote::with(['pujas.cliente.usuario', 'articulos.categoria', 'subasta.casaRemate.usuario'])->find($lote->id);
+        $lote = Lote::with(['pujas', 'articulos.categoria', 'subasta'])->find($lote->id);
         
         return response()->json($lote, 201);
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/lotes/{id}",
-     *     summary="Obtener un lote por ID",
-     *     tags={"Lotes"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del lote",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lote encontrado"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Lote no encontrado"
-     *     )
-     * )
-     */
-    public function show(string $id){
-        try {
-            $lote = Lote::with([
-                'pujas.cliente.usuario', 
-                'articulos.categoria', 
-                'articulos.vendedor.usuario',
-                'subasta.casaRemate.usuario',
-                'subasta.rematador.usuario'
-            ])->find($id);
-
-            if (!$lote) {
-                return response()->json(['error' => "Lote no encontrado. ID: $id"], 404);
-            }
-
-            return response()->json($lote);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/lotes/{id}",
-     *     summary="Actualizar un lote",
-     *     tags={"Lotes"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del lote",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="valorBase", type="float"),
-     *             @OA\Property(property="pujaMinima", type="float"),
-     *             @OA\Property(property="subasta_id", type="integer"),
-     *             @OA\Property(property="umbral", type="float"),
-     *             @OA\Property(property="pago", type="boolean")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lote actualizado exitosamente"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Lote no encontrado"
-     *     )
-     * )
-     */
-    public function update(Request $request, string $id){
-        try {
-            $lote = Lote::find($id);
-
-            if (!$lote) {
-                return response()->json(['error' => "Lote no encontrado. ID: $id"], 404);
-            }
-
-            $request->validate([
-                'valorBase' => 'sometimes|numeric|min:0.01',
-                'pujaMinima' => 'sometimes|numeric|min:0.01',
-                'subasta_id' => 'sometimes|exists:subastas,id',
-                'umbral' => 'sometimes|numeric|min:0',
-                'pago' => 'sometimes|boolean'
-            ]);
-
-            $lote->update($request->only([
-                'valorBase', 
-                'pujaMinima', 
-                'subasta_id', 
-                'umbral', 
-                'pago'
-            ]));
-
-            $lote = Lote::with([
-                'pujas.cliente.usuario', 
-                'articulos.categoria', 
-                'articulos.vendedor.usuario',
-                'subasta.casaRemate.usuario',
-                'subasta.rematador.usuario'
-            ])->find($lote->id);
-
-            return response()->json($lote);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
     }
 
     /**

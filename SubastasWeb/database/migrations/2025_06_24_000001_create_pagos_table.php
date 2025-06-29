@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notificaciones', function (Blueprint $table) {
+        Schema::create('pagos', function (Blueprint $table) {
             $table->id();
-            $table->string('titulo');
-            $table->string('mensaje');
-            $table->boolean('es_mensaje_chat')->default(false);
-            $table->string('chat_id')->nullable()->after('es_mensaje_chat');
-            $table->timestamp('fecha_hora')->useCurrent();
+            $table->foreignId('factura_id')->constrained('facturas');
+            $table->string('transaction_id');
+            $table->decimal('amount', 10, 2);
+            $table->string('status');
+            $table->string('payment_method');
+            $table->text('payment_details')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notificaciones');
+        Schema::dropIfExists('pagos');
     }
 };

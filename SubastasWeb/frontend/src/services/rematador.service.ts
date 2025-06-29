@@ -34,8 +34,4 @@ export class RematadorService {
   listarRematadores(): Observable<{rematadores: rematadorDto[]}> {
     return this.http.get<{rematadores: rematadorDto[]}>(`${this.urlService.baseUrl}${this.endpoint}/listar`);
   }
-
-  obtenerRematadores(): Observable<rematadorDto[]> {
-    return this.http.get<rematadorDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
-  }
 }

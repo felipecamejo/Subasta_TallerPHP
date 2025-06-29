@@ -1,203 +1,76 @@
 <div class="estadisticas-page">
-  <p-toast></p-toast>
-  
-  <!-- Header -->
-  <div class="header-section">
-    <h1>Panel de Estadísticas</h1>
-    <h2 *ngIf="casaRemate">{{ casaRemate.usuario?.nombre }}</h2>
+  <h1>Subastas</h1>
+
+  <div class="filters">
+    <p-dropdown placeholder="CATEGORIAS"></p-dropdown>
+    <p-dropdown placeholder="PRECIO"></p-dropdown>
+    <button pButton label="Mas Antiguo" class="p-button-outlined"></button>
+    <p-dropdown placeholder="ESTADO DEL PRODUCTO"></p-dropdown>
   </div>
 
-  <!-- Filtros -->
-  <div class="filters-section">
-    <h3>Filtros de Análisis</h3>
-    <div class="filters-grid">
-      <div class="filter-item">
-        <label>Categoría:</label>
-        <p-dropdown 
-          [options]="categorias" 
-          [(ngModel)]="selectedCategoria"
-          optionLabel="nombre"
-          placeholder="Seleccionar categoría"
-          [showClear]="true">
-        </p-dropdown>
+  <div class="stats-cards">
+    <div class="card dark">
+      <i class="pi pi-shopping-bag"></i>
+      <div class="info">
+        <div class="title">Ganancias</div>
+        <div class="subtitle">731 Orders</div>
+        <div class="amount">$9,328.55</div>
+        <div class="details">+15.6% <span class="light">+1.4k this week</span></div>
       </div>
-      
-      <div class="filter-item">
-        <label>Estado de Subasta:</label>
-        <p-dropdown 
-          [options]="estadosOptions" 
-          [(ngModel)]="selectedEstado"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Seleccionar estado">
-        </p-dropdown>
+    </div>
+
+    <div class="card">
+      <i class="pi pi-user"></i>
+      <div class="info">
+        <div class="title">Subastas Totales</div>
+        <div class="subtitle">Avg. time: 4:30m</div>
+        <div class="amount">12,302</div>
+        <div class="details">+12.7% <span class="light">+1.2k this week</span></div>
       </div>
-      
-      <div class="filter-item">
-        <label>Rango de Fechas:</label>
-        <p-calendar 
-          [(ngModel)]="rangoFechas" 
-          selectionMode="range" 
-          [showIcon]="true"
-          placeholder="Seleccionar rango">
-        </p-calendar>
-      </div>
-      
-      <div class="filter-actions">
-        <button pButton 
-                label="Aplicar Filtros" 
-                (click)="aplicarFiltros()"
-                class="p-button-success">
-        </button>
-        <button pButton 
-                label="Limpiar" 
-                (click)="limpiarFiltros()"
-                class="p-button-outlined">
-        </button>
+    </div>
+
+    <div class="card">
+      <div class="info">
+        <div class="title">Top Categories</div>
+        <ul class="categories">
+          <li><span class="dot black"></span> Electronics</li>
+          <li><span class="dot gray"></span> Laptops</li>
+          <li><span class="dot lightgray"></span> Phones</li>
+        </ul>
       </div>
     </div>
   </div>
 
-  <!-- Indicador de carga -->
-  <div *ngIf="cargandoDatos" class="loading-indicator">
-    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-    <span>Cargando estadísticas...</span>
-  </div>
-
-  <div *ngIf="!cargandoDatos">
-    <!-- Tarjetas de estadísticas principales -->
-    <div class="stats-cards">
-      <div class="stat-card primary">
-        <div class="stat-icon">
-          <i class="pi pi-chart-line"></i>
-        </div>
-        <div class="stat-info">
-          <div class="stat-title">Total Subastas</div>
-          <div class="stat-value">{{ estadisticas.totalSubastas }}</div>
-          <div class="stat-details">
-            <span class="stat-highlight">{{ estadisticas.subastasMes }}</span> este mes
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card success">
-        <div class="stat-icon">
-          <i class="pi pi-dollar"></i>
-        </div>
-        <div class="stat-info">
-          <div class="stat-title">Ventas Totales</div>
-          <div class="stat-value">${{ estadisticas.totalVentas | number:'1.2-2' }}</div>
-          <div class="stat-details">
-            <span class="stat-highlight">${{ estadisticas.ventasMes | number:'1.2-2' }}</span> este mes
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card info">
-        <div class="stat-icon">
-          <i class="pi pi-box"></i>
-        </div>
-        <div class="stat-info">
-          <div class="stat-title">Lotes Totales</div>
-          <div class="stat-value">{{ estadisticas.totalLotes }}</div>
-          <div class="stat-details">
-            <span class="stat-highlight">{{ estadisticas.lotesPagados }}</span> vendidos
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card warning">
-        <div class="stat-icon">
-          <i class="pi pi-users"></i>
-        </div>
-        <div class="stat-info">
-          <div class="stat-title">Participación</div>
-          <div class="stat-value">{{ estadisticas.participacionTotal }}</div>
-          <div class="stat-details">Pujas totales</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="charts-section">
-      <div class="charts-grid">
-        <!-- Gráfico de Ventas por Categoría -->
-        <div class="chart-container">
-          <h3>Ventas por Categoría</h3>
-          <p-chart type="doughnut" 
-                   [data]="chartVentasPorCategoria" 
-                   [options]="chartOptions"
-                   width="100%"
-                   height="300px">
-          </p-chart>
-        </div>
-
-        <!-- Gráfico de Subastas por Mes -->
-        <div class="chart-container">
-          <h3>Subastas por Mes</h3>
-          <p-chart type="line" 
-                   [data]="chartSubastasPorMes" 
-                   [options]="chartOptions"
-                   width="100%"
-                   height="300px">
-          </p-chart>
-        </div>
-
-        <!-- Gráfico de Estado de Lotes -->
-        <div class="chart-container">
-          <h3>Estado de Lotes</h3>
-          <p-chart type="pie" 
-                   [data]="chartLotesPorEstado" 
-                   [options]="chartOptions"
-                   width="100%"
-                   height="300px">
-          </p-chart>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabla detallada de subastas -->
-    <div class="table-section">
-      <h3>Detalle de Subastas</h3>
-      <p-table [value]="subastas" 
-               [paginator]="true" 
-               [rows]="10" 
-               [rowsPerPageOptions]="[5, 10, 20]"
-               [showCurrentPageReport]="true"
-               currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} subastas">
-        
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Nombre</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-            <th>Lotes</th>
-            <th>Participación</th>
-            <th>Ventas</th>
-          </tr>
-        </ng-template>
-        
-        <ng-template pTemplate="body" let-subasta>
-          <tr>
-            <td>{{ subasta.nombre }}</td>
-            <td>{{ subasta.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>
-              <span [class]="subasta.activa ? 'badge badge-success' : 'badge badge-danger'">
-                {{ subasta.activa ? 'Activa' : 'Finalizada' }}
-              </span>
-            </td>
-            <td>{{ subasta.lotes?.length || 0 }}</td>
-            <td>{{ getParticipacionSubasta(subasta) }}</td>
-            <td>${{ getVentasSubasta(subasta) | number:'1.2-2' }}</td>
-          </tr>
-        </ng-template>
-        
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="6" class="text-center">No hay subastas para mostrar</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  </div>
+  <p-table [value]="subastas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
+    <ng-template pTemplate="header">
+      <tr>
+        <th><p-checkbox binary="true"></p-checkbox></th>
+        <th>Invoice</th>
+        <th>Customer</th>
+        <th>Email</th>
+        <th>Invoice date</th>
+        <th>Due date</th>
+        <th>Status</th>
+        <th>Amount</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-subasta>
+      <tr>
+        <td><p-checkbox binary="true" [(ngModel)]="subasta.selected"></p-checkbox></td>
+        <td><a href="#">{{ subasta.invoice }}</a></td>
+        <td>{{ subasta.customer }}</td>
+        <td>{{ subasta.email }}</td>
+        <td>{{ subasta.invoiceDate }}</td>
+        <td>{{ subasta.dueDate }}</td>
+        <td>{{ subasta.status }}</td>
+        <td>{{ subasta.amount }}</td>
+        <td class="actions">
+          <button pButton icon="pi pi-download" class="p-button-text p-button-sm"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm"></button>
+          <button pButton icon="pi pi-ellipsis-v" class="p-button-text p-button-sm"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </div>

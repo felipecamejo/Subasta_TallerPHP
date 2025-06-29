@@ -18,10 +18,6 @@ return new class extends Migration
             $table->string('condicionesDePago');
             $table->string('entrega');
             $table->foreignId('vendedor_id')->constrained('vendedores')->cascadeOnDelete();
-            
-            $table->unsignedBigInteger('puja_id')->nullable()->after('id'); 
-            
-
             $table->timestamps();
 
         });

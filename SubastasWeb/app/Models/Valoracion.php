@@ -26,7 +26,7 @@ class Valoracion extends Model
      */
     public function valorable(): MorphTo
     {
-        return $this->morphTo('valorable');
+        return $this->morphTo();
     }
 
     /**
