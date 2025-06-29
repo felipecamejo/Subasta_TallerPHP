@@ -89,23 +89,15 @@ class SubastaController extends Controller
             'videoId'         => 'nullable|string|max:255',
         ]);
 
-        // Convertir fecha de zona horaria del usuario a UTC
+        // Usar la fecha tal como viene del frontend (UTC-3)
+        // No hacer ninguna conversión de zona horaria
         $fecha = $request->fecha;
-        if ($request->has('timezone')) {
-            try {
-                $fechaLocal = \Carbon\Carbon::parse($fecha, $request->timezone);
-                $fecha = $fechaLocal->utc()->format('Y-m-d H:i:s');
-            } catch (\Exception $e) {
-                // Si hay error, usar la fecha original
-                \Log::warning('Error al convertir zona horaria: ' . $e->getMessage());
-            }
-        }
 
         $subasta = Subasta::create([
             'nombre' => $request->nombre,
             'activa' => $request->activa,
             'duracionMinutos' => $request->duracionMinutos,
-            'fecha' => $fecha, // Fecha convertida a UTC
+            'fecha' => $fecha, // Fecha guardada tal como viene (UTC-3)
             'casa_remate_id' => $request->casa_remate_id,
             'rematador_id' => $request->rematador_id,
             'latitud' => $request->latitud,

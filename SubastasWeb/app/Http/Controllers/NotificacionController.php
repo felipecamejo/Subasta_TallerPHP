@@ -21,55 +21,37 @@ class NotificacionController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/notificaciones",
-     *     summary="Obtener notificaciones del usuario autenticado",
+     *     path="/api/notificaciones/{usuarioId}",
+     *     summary="Obtener notificaciones de un usuario por su ID",
      *     tags={"Notificaciones"},
+     *     @OA\Parameter(
+     *         name="usuarioId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Lista de notificaciones",
      *         @OA\JsonContent(type="array", @OA\Items(type="object"))
      *     ),
-     *     @OA\Response(response=401, description="No autorizado"),
+     *     @OA\Response(response=404, description="Usuario no encontrado"),
      *     @OA\Response(response=500, description="Error del servidor")
      * )
      */
-  public function index(Request $request)
-{
-    try {
-        $usuario = Auth::user();
-        $cliente = Cliente::where('usuario_id', $usuario->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-        $casa = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
-        $admin = \App\Models\Admin::where('usuario_id', $usuario->id)->first();
-
-        // Si no tiene ningún tipo válido
-        if (!$cliente && !$rematador && !$casa && !$admin) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
-        }
-
-        // Solo cliente y rematador reciben notificaciones
-        if ($cliente) {
-            $notificaciones = $cliente->notificaciones()
+    public function index(Request $request, $usuarioId)
+    {
+        try {
+            $usuario = Usuario::find($usuarioId);
+            if (!$usuario) {
+                return response()->json(['error' => 'Usuario no encontrado'], 404);
+            }
+            $notificaciones = $usuario->notificaciones()
                 ->orderBy('fecha_hora', 'desc')
                 ->get()
-                ->map(fn($n) => $this->formatNotification($n, $cliente->usuario));
-        } elseif ($rematador) {
-            $notificaciones = $rematador->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(fn($n) => $this->formatNotification($n, $rematador->usuario));
-        } elseif ($casa) {
-            $notificaciones = $casa->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(fn($n) => $this->formatNotification($n, $casa->usuario));
-        } else {
-            // Admins no reciben notificaciones por ahora
-            return response()->json([]);
-        }
-
-        return response()->json($notificaciones);
-    } catch (\Throwable $e) {
+                ->map(fn($n) => $this->formatNotification($n, $usuario));
+            return response()->json($notificaciones);
+        }catch (\Throwable $e) {
         return response()->json([
             'error' => 'Error al obtener notificaciones',
             'message' => $e->getMessage()

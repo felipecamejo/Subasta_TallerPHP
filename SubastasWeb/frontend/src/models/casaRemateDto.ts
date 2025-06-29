@@ -11,7 +11,8 @@ export interface casaRemateDto {
     vendedor?: vendedorDto;        // Vendedor asociado (opcional)
     rematadores: rematadorDto[];   // Lista de rematadores
     subastas: Pick<subastaDto, 'id' | 'duracionMinutos' | 'fecha' | 'nombre' | 'activa'>[]; // Subastas resumidas
-    valoracion: Pick<valoracionDto, 'id' | 'valoracion_total' | 'cantidad_opiniones' | 'valorable_type' | 'valorable_id'> | null;
+    valoracion: Pick<valoracionDto, 'id' | 'total_puntaje' | 'cantidad_opiniones' | 'valorable_id'> | null;
+
 }
 
 // Para crear/actualizar una casa de remate

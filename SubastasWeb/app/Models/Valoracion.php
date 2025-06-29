@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Valoracion extends Model
 {
@@ -12,21 +12,21 @@ class Valoracion extends Model
     protected $fillable = [
         'total_puntaje',
         'cantidad_opiniones',
-        'valorable_type',
         'valorable_id'
     ];
 
     protected $casts = [
-        'valoracion_total' => 'integer',
+        'total_puntaje' => 'integer',
         'cantidad_opiniones' => 'integer'
     ];
 
     /**
-     * Relación polimórfica - puede pertenecer a Cliente o CasaRemate
+     * Relación directa con la entidad valorable (por ejemplo, CasaRemate)
+     * Asumiendo que valorable_id se refiere a casa_remate_id
      */
-    public function valorable(): MorphTo
+    public function casaRemate(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(CasaRemate::class, 'valorable_id', 'usuario_id');
     }
 
     /**
@@ -38,7 +38,7 @@ class Valoracion extends Model
             return 0.0;
         }
         
-        return round($this->valoracion_total / $this->cantidad_opiniones, 1);
+        return round($this->total_puntaje / $this->cantidad_opiniones, 1);
     }
 
     /**
@@ -46,7 +46,7 @@ class Valoracion extends Model
      */
     public function agregarValoracion(int $nuevaValoracion): void
     {
-        $this->valoracion_total += $nuevaValoracion;
+        $this->total_puntaje += $nuevaValoracion;
         $this->cantidad_opiniones += 1;
         $this->save();
     }

@@ -119,32 +119,41 @@ export class NotificacionService {
     if (rol === 'casa_remate' && usuarioId) {
       return this.obtenerNotificacionesPublico(Number(usuarioId));
     }
-    
-    // Para otros roles, usar endpoint autenticado
-    return this.http.get<any>(`${this.baseUrl}/notificaciones`).pipe(
-      map(notificaciones => {
-        if (Array.isArray(notificaciones)) {
-          return notificaciones.map((notif: any) => ({
-            id: notif.id,
-            titulo: notif.titulo,
-            mensaje: notif.mensaje,
-            fechaHora: notif.fechaHora,
-            leido: notif.leido,
-            esMensajeChat: notif.esMensajeChat,
-            chatId: notif.chatId,
-            usuario: {
-              id: notif.usuario?.id || null,
-              nombre: notif.usuario?.nombre || null
-            }
-          }));
-        }
-        return [];
-      }),
-      catchError(error => {
-        console.error('Error al obtener notificaciones:', error);
-        return of([]);
-      })
-    );
+    // Para otros roles, usar endpoint con usuarioId
+    if (usuarioId) {
+      return this.http.get<any>(`${this.baseUrl}/notificaciones/${usuarioId}`).pipe(
+        map(notificaciones => {
+          if (Array.isArray(notificaciones)) {
+            return notificaciones.map((notif: any) => ({
+              id: notif.id,
+              titulo: notif.titulo,
+              mensaje: notif.mensaje,
+              fechaHora: notif.fechaHora,
+              leido: notif.leido,
+              esMensajeChat: notif.esMensajeChat,
+              chatId: notif.chatId,
+              usuario: {
+                id: notif.usuario?.id || null,
+                nombre: notif.usuario?.nombre || null
+              }
+            }));
+          }
+          if (notificaciones && notificaciones.error) {
+            console.warn('No se pudieron cargar notificaciones:', notificaciones.message || notificaciones.error);
+          }
+          return [];
+        }),
+        catchError(error => {
+          if (error && error.error && error.error.message) {
+            console.error('Error al obtener notificaciones:', error.error.message);
+          } else {
+            console.error('Error al obtener notificaciones:', error);
+          }
+          return of([]);
+        })
+      );
+    }
+    return of([]);
   }
 
   marcarLeidaYActualizar(id: number): void {

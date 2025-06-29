@@ -14,6 +14,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RematadorController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PujaController;
+use App\Http\Controllers\PujaRedisController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ChatController;
@@ -114,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('rematadores', RematadorController::class);
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
+    Route::get('/lotes/{loteId}/estadisticas', [PujaController::class, 'estadisticasLote']);
     Route::apiResource('vendedores', VendedorController::class);
     
 
@@ -152,4 +154,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/paypal/webhook', [PaypalController::class, 'webhook']);
     Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal.success');
     Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal.cancel');
-});
+    
+    // 🚀 Rutas de Pujas con Redis (Alta Concurrencia)
+    Route::prefix('pujas-redis')->group(function () {
+        Route::post('/{loteId}/pujar', [PujaRedisController::class, 'realizarPuja']);
+        Route::get('/{loteId}/actual', [PujaRedisController::class, 'obtenerPujaActual']);
+        Route::get('/{loteId}/historial', [PujaRedisController::class, 'obtenerHistorialPujas']);
+        Route::get('/{loteId}/estadisticas', [PujaRedisController::class, 'obtenerEstadisticas']);
+        Route::post('/{loteId}/visualizacion', [PujaRedisController::class, 'marcarVisualizacion']);
+    });
+
+//});
+
+Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);
+
+Route::get('notificaciones/{usuarioId}', [NotificacionController::class, 'index']);

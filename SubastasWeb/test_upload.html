@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload Base64</title>
+</head>
+<body>
+    <h1>Prueba de subida de imagen</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <br><br>
+    <button onclick="testUpload()">Probar subida</button>
+    <br><br>
+    <div id="result"></div>
+    <br>
+    <img id="preview" style="max-width: 200px; display: none;">
+
+    <script>
+        function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Selecciona un archivo primero');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                
+                // Mostrar previsualización
+                document.getElementById('preview').src = base64;
+                document.getElementById('preview').style.display = 'block';
+                
+                // Datos de prueba (usuario ID 103)
+                const data = {
+                    nombre: 'Usuario Test',
+                    imagen: base64
+                };
+                
+                // Hacer petición al endpoint
+                fetch('http://localhost:8000/api/clientes/103', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = 
+                        '<h3>Resultado:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                })
+                .catch(error => {
+                    document.getElementById('result').innerHTML = 
+                        '<h3>Error:</h3><pre>' + error + '</pre>';
+                    console.error('Error:', error);
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

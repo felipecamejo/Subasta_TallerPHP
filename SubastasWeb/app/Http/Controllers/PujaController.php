@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Puja;
 use App\Models\Lote;
 use App\Models\Cliente;
+use App\Jobs\ProcesarPuja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -123,39 +127,87 @@ class PujaController extends Controller
      */
     public function store(Request $request)
     {
-        // Log de datos recibidos
-        \Log::info('=== INICIO CREACION PUJA ===');
-        \Log::info('Datos recibidos:', $request->all());
+        Log::info('=== INICIO CREACION PUJA (COLA) ===');
+        Log::info('Datos recibidos:', $request->all());
 
         try {
-            $request->validate( [
+            // Validación de datos
+            $request->validate([
                 'fechaHora' => 'required|date',
-                'monto' => 'required|numeric',
+                'monto' => 'required|numeric|min:1',
                 'cliente_id' => 'nullable|exists:usuarios,id',
                 'lote_id' => 'required|exists:lotes,id',
             ]);
-            
-            \Log::info('Validación pasada exitosamente');
 
-            // Si se proporciona un cliente_id, asegurar que existe un registro de cliente
-            if ($request->cliente_id) {
-                \Log::info('Verificando/creando cliente para usuario_id: ' . $request->cliente_id);
-                $this->ensureClienteExists($request->cliente_id);
-                \Log::info('Cliente verificado/creado exitosamente');
+            Log::info('Validación pasada exitosamente');
+
+            // Rate limiting por usuario para evitar spam de pujas
+            $userId = $request->cliente_id ?? 'anonymous';
+            $rateLimitKey = "puja_rate_limit:{$userId}";
+            
+            if (RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+                $seconds = RateLimiter::availableIn($rateLimitKey);
+                return response()->json([
+                    'error' => 'Demasiadas pujas en poco tiempo',
+                    'retry_after' => $seconds
+                ], 429);
+            }
+            
+            RateLimiter::hit($rateLimitKey, 60); // 10 pujas por minuto máximo
+
+            // Verificar que el lote existe y está en subasta activa
+            $lote = Lote::with('subasta')->find($request->lote_id);
+            if (!$lote || !$lote->subasta) {
+                return response()->json([
+                    'error' => 'Lote no encontrado o sin subasta asociada'
+                ], 404);
             }
 
-            \Log::info('Intentando crear puja con datos:', [
+            // Verificar que la subasta está activa
+            if (!$lote->subasta->activa) {
+                return response()->json([
+                    'error' => 'La subasta no está activa en este momento'
+                ], 400);
+            }
+
+            // Verificar monto mínimo
+            $ultimaPuja = $this->obtenerUltimaPujaRedis($request->lote_id);
+            $montoMinimo = $ultimaPuja ? $ultimaPuja + $lote->pujaMinima : $lote->valorBase;
+            
+            if ($request->monto < $montoMinimo) {
+                return response()->json([
+                    'error' => 'El monto debe ser mayor a ' . $montoMinimo,
+                    'monto_minimo' => $montoMinimo,
+                    'ultima_puja' => $ultimaPuja
+                ], 400);
+            }
+
+            // Si se proporciona un cliente_id, asegurar que existe
+            if ($request->cliente_id) {
+                $this->ensureClienteExists($request->cliente_id);
+            }
+
+            // Preparar datos para la cola
+            $pujaData = [
                 'fechaHora' => $request->fechaHora,
                 'monto' => $request->monto,
                 'cliente_id' => $request->cliente_id,
                 'lote_id' => $request->lote_id,
-            ]);
-            $puja = Puja::create([
-                'fechaHora' => $request->fechaHora,
-                'monto' => $request->monto,
-                'cliente_id' => $request->cliente_id,
+            ];
+
+            // Despachar job a la cola específica del lote (FIFO por lote)
+            ProcesarPuja::dispatch($pujaData, $request->lote_id);
+
+            Log::info("📋 Puja enviada a cola para lote {$request->lote_id}");
+
+            // Respuesta inmediata al cliente
+            return response()->json([
+                'message' => 'Puja recibida y será procesada',
                 'lote_id' => $request->lote_id,
-            ]);
+                'monto' => $request->monto,
+                'status' => 'queued',
+                'estimated_processing_time' => '1-3 segundos'
+            ], 202); // 202 Accepted
 
             \Log::info('Puja creada con ID: ' . $puja->id);
 
@@ -175,20 +227,18 @@ class PujaController extends Controller
             \Log::info('=== PUJA CREADA EXITOSAMENTE ===');
             return response()->json($puja, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Error de validación:', $e->errors());
+            Log::error('Error de validación:', $e->errors());
             return response()->json([
                 'error' => 'Error de validación',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Throwable $e) {
-            \Log::error('=== ERROR CREANDO PUJA ===');
-            \Log::error('Error creating puja: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            Log::error('=== ERROR PROCESANDO SOLICITUD PUJA ===');
+            Log::error('Error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
-                'error' => 'Error al crear la puja',
-                'message' => config('app.debug') ? $e->getMessage() : 'Error interno del servidor',
-                'details' => config('app.debug') ? $e->getTraceAsString() : null
+                'error' => 'Error interno del servidor',
+                'message' => config('app.debug') ? $e->getMessage() : 'Error procesando la puja'
             ], 500);
         }
     }
@@ -236,10 +286,7 @@ class PujaController extends Controller
                 return response()->json(['error' => 'Puja no encontrada'], 404);
             }
 
-            $visited = []; 
-            $dto = $puja; 
-
-            return response()->json($dto);
+            return response()->json($puja);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al obtener la puja',
@@ -333,10 +380,7 @@ class PujaController extends Controller
 
             $puja->load(['cliente', 'lote', 'factura']);
 
-            $visited = []; 
-            $dto = $puja;
-
-            return response()->json($dto);
+            return response()->json($puja);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al actualizar la puja',
@@ -416,7 +460,7 @@ class PujaController extends Controller
             $subasta = $lote ? $lote->subasta : null;
             
             if (!$subasta) {
-                \Log::error('No se pudo encontrar la subasta para la puja: ' . $puja->id);
+                Log::error('No se pudo encontrar la subasta para la puja: ' . $puja->id);
                 return;
             }
             
@@ -441,7 +485,54 @@ class PujaController extends Controller
             
         } catch (\Exception $e) {
             // Log error but don't fail the puja creation
-            \Log::error('Error notificando WebSocket: ' . $e->getMessage());
+            Log::error('Error notificando WebSocket: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtener la última puja de un lote desde Redis (cache rápido)
+     */
+    private function obtenerUltimaPujaRedis(int $loteId): ?float
+    {
+        try {
+            $stats = Redis::hGetAll("lote_stats_{$loteId}");
+            if (isset($stats['ultima_puja'])) {
+                return (float) $stats['ultima_puja'];
+            }
+            
+            // Fallback: buscar en base de datos
+            $ultimaPuja = Puja::where('lote_id', $loteId)
+                             ->orderBy('fechaHora', 'desc')
+                             ->first();
+            
+            return $ultimaPuja ? $ultimaPuja->monto : null;
+        } catch (\Exception $e) {
+            Log::error("Error obteniendo última puja para lote {$loteId}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Obtener estadísticas de pujas por lote desde Redis
+     */
+    public function estadisticasLote($loteId)
+    {
+        try {
+            $cacheKey = "ultima_puja_lote_{$loteId}";
+            $ultimaPuja = Redis::get($cacheKey);
+            
+            $stats = [
+                'lote_id' => $loteId,
+                'ultima_puja' => $ultimaPuja ? json_decode($ultimaPuja, true) : null,
+                'total_pujas_bd' => Puja::where('lote_id', $loteId)->count(),
+                'monto_maximo' => Puja::where('lote_id', $loteId)->max('monto'),
+                'timestamp' => now()->toISOString()
+            ];
+
+            return response()->json($stats);
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo estadísticas: ' . $e->getMessage());
+            return response()->json(['error' => 'Error obteniendo estadísticas'], 500);
         }
     }
 
@@ -451,26 +542,26 @@ class PujaController extends Controller
     private function ensureClienteExists($usuarioId)
     {
         try {
-            \Log::info('Buscando cliente con usuario_id: ' . $usuarioId);
+            Log::info('Buscando cliente con usuario_id: ' . $usuarioId);
             $cliente = \App\Models\Cliente::where('usuario_id', $usuarioId)->first();
             
             if (!$cliente) {
-                \Log::info('Cliente no encontrado, creando nuevo registro');
+                Log::info('Cliente no encontrado, creando nuevo registro');
                 // Crear el registro de cliente si no existe
                 $cliente = \App\Models\Cliente::create([
                     'usuario_id' => $usuarioId,
                     'calificacion' => null
                 ]);
                 
-                \Log::info('Cliente creado automáticamente para usuario_id: ' . $usuarioId . ' con ID: ' . $cliente->usuario_id);
+                Log::info('Cliente creado automáticamente para usuario_id: ' . $usuarioId . ' con ID: ' . $cliente->usuario_id);
             } else {
-                \Log::info('Cliente encontrado: ' . $cliente->usuario_id);
+                Log::info('Cliente encontrado: ' . $cliente->usuario_id);
             }
             
             return $cliente;
         } catch (\Exception $e) {
-            \Log::error('Error en ensureClienteExists: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error en ensureClienteExists: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }
