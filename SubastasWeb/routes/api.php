@@ -122,6 +122,7 @@ Route::get('/lotes', [LoteController::class, 'index']);
     Route::apiResource('rematadores', RematadorController::class)->except(['index']);
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
+    Route::get('/lotes/{loteId}/estadisticas', [PujaController::class, 'estadisticasLote']);
     Route::apiResource('vendedores', VendedorController::class);
     
 

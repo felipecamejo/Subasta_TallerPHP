@@ -554,7 +554,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (this.pujaActual === 0) {
       this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
     }
-    this.pujaRapida = Number(this.pujaActual) + 1;
+    this.pujaRapida = Number(this.pujaActual) + this.lotes[loteIndex].pujaMinima;
     this.pujaComun = null;
   }// Métodos de timer
   /**

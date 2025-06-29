@@ -72,6 +72,24 @@ return [
             'after_commit' => false,
         ],
 
+        'redis_pujas' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => 'pujas',
+            'retry_after' => 30,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'redis_notifications' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => 'notifications',
+            'retry_after' => 60,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
     ],
 
     /*
