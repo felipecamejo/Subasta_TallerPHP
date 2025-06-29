@@ -14,15 +14,16 @@ return new class extends Migration
         Schema::create('usuarios', function (Blueprint $table) {
             $table->id();
             
-            $table->string('nombre');  // Nombre del usuario
-            $table->string('cedula')->unique();  // Cédula del usuario
-            $table->string('email'); // Correo electrónico del usuario
-            $table->string('telefono'); // Teléfono del usuario
-            $table->string('imagen')->nullable(); // Imagen del usuario 
+            $table->string('nombre');  
+            $table->string('cedula'); 
+            $table->string('email'); 
+            $table->string('telefono'); 
+            $table->string('imagen')->nullable(); 
             $table->decimal('latitud', 10, 7)->nullable();
             $table->decimal('longitud', 10, 7)->nullable();
-
             $table->string('contrasenia');
+            $table->string('google_id')->nullable()->unique()->after('email');
+            $table->timestamp('email_verified_at')->nullable()->after('email');
 
             $table->timestamps();
         });

@@ -66,5 +66,10 @@ login() {
     return this.form.get('password');
   }
 
- 
+  loginConGoogle() {
+    // Aquí va la lógica para login con Google
+    console.log('Login con Google');
+    // Si tienes un servicio de autenticación, llama aquí al método correspondiente
+  }
+  
 }

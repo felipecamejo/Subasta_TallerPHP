@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rematadores', function (Blueprint $table) {
+        Schema::create('clientes', function (Blueprint $table) {
             $table->unsignedBigInteger('usuario_id')->primary(); // PRIMARY KEY
-            $table->string('matricula');
-            $table->timestamps();
 
-            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade'); // FOREIGN KEY
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+            
+            $table->timestamps();
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rematadores');
+        Schema::dropIfExists('clientes');
     }
 };

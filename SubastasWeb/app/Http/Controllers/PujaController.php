@@ -72,7 +72,7 @@ class PujaController extends Controller
     public function index()
     {
         try {
-            $pujas = Puja::with(['cliente.valoracion', 'cliente.usuario', 'lote', 'factura'])->get();
+            $pujas = Puja::with(['cliente.usuario', 'lote', 'factura'])->get();
             return response()->json($pujas);
         } catch (\Throwable $e) {
             return response()->json([
@@ -159,7 +159,7 @@ class PujaController extends Controller
 
             \Log::info('Puja creada con ID: ' . $puja->id);
 
-            $puja->load(['cliente.usuario', 'cliente.valoracion', 'lote', 'factura']);
+            $puja->load(['cliente.usuario', 'lote', 'factura']);
             \Log::info('Relaciones cargadas exitosamente');
 
             // Notificar al WebSocket sobre la nueva puja (no fallar si esto falla)

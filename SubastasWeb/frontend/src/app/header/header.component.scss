@@ -41,9 +41,16 @@
         text-decoration: none;
         font-weight: 500;
         transition: color 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
 
         &:hover {
           color: #2196f3;
+        }
+        
+        i {
+          font-size: 1rem;
         }
       }
     }
@@ -81,21 +88,22 @@
       }
     }
 
-    .social-icons {
-      display: flex;
-      gap: 1rem;
+    .logout-button {
+      color: #dc3545 !important;
+      border-color: transparent !important;
+      
+      &:hover {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+        border-color: transparent !important;
+      }
+      
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+      }
     }
 
     app-notificaciones {
       margin: 0;
-    }
-  }
-}
-
-@media (max-width: 992px) {
-  .header {
-    .social-icons {
-      display: none;
     }
   }
 }

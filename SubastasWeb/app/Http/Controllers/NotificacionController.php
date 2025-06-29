@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notificacion;
-use App\Models\Cliente;
-use App\Models\Rematador;
 use App\Models\Usuario;
-use App\Models\CasaRemate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use OpenApi\Annotations as OA;
@@ -33,54 +30,30 @@ class NotificacionController extends Controller
      *     @OA\Response(response=500, description="Error del servidor")
      * )
      */
-  public function index(Request $request)
-{
-    try {
-        $usuario = Auth::user();
-        $cliente = Cliente::where('usuario_id', $usuario->id)->first();
-        $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-        $casa = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
-        $admin = \App\Models\Admin::where('usuario_id', $usuario->id)->first();
-
-        // Si no tiene ningún tipo válido
-        if (!$cliente && !$rematador && !$casa && !$admin) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
+    public function index(Request $request)
+    {
+        try {
+            $usuario = Auth::user();
+            if (!$usuario) {
+                return response()->json([], 200);
+            }
+            $notificaciones = $usuario->notificaciones()
+                ->orderBy('fecha_hora', 'desc')
+                ->get()
+                ->map(fn($n) => $this->formatNotification($n, $usuario));
+            return response()->json($notificaciones);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error al obtener notificaciones',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        // Solo cliente y rematador reciben notificaciones
-        if ($cliente) {
-            $notificaciones = $cliente->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(fn($n) => $this->formatNotification($n, $cliente->usuario));
-        } elseif ($rematador) {
-            $notificaciones = $rematador->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(fn($n) => $this->formatNotification($n, $rematador->usuario));
-        } elseif ($casa) {
-            $notificaciones = $casa->notificaciones()
-                ->orderBy('fecha_hora', 'desc')
-                ->get()
-                ->map(fn($n) => $this->formatNotification($n, $casa->usuario));
-        } else {
-            // Admins no reciben notificaciones por ahora
-            return response()->json([]);
-        }
-
-        return response()->json($notificaciones);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'error' => 'Error al obtener notificaciones',
-            'message' => $e->getMessage()
-        ], 500);
     }
-}
 
     /**
      * Formatea una notificación para la respuesta de la API
      */
-    private function formatNotification($notificacion, $usuario) 
+    private function formatNotification($notificacion, $usuario)
     {
         return [
             'id' => $notificacion->id,
@@ -117,38 +90,15 @@ class NotificacionController extends Controller
     {
         try {
             $usuario = Auth::user();
-            $cliente = Cliente::where('usuario_id', $usuario->id)->first();
-            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-            $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
-            
-            if (!$cliente && !$rematador && !$casaRemate) {
+            if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
-
-            $notificacion = null;
-            if ($cliente) {
-                $notificacion = $cliente->notificaciones()->find($id);
-                if ($notificacion) {
-                    $cliente->notificaciones()->updateExistingPivot($id, ['leido' => true]);
-                }
-            } else if ($rematador) {
-                $notificacion = $rematador->notificaciones()->find($id);
-                if ($notificacion) {
-                    $rematador->notificaciones()->updateExistingPivot($id, ['leido' => true]);
-                }
-            } else if ($casaRemate) {
-                $notificacion = $casaRemate->notificaciones()->find($id);
-                if ($notificacion) {
-                    $casaRemate->notificaciones()->updateExistingPivot($id, ['leido' => true]);
-                }
+            $notificacion = $usuario->notificaciones()->find($id);
+            if ($notificacion) {
+                $usuario->notificaciones()->updateExistingPivot($id, ['leido' => true]);
+                return response()->json(['mensaje' => 'Notificación marcada como leída']);
             }
-            
-            if (!$notificacion) {
-                return response()->json(['error' => 'Notificación no encontrada'], 404);
-            }
-
-            return response()->json(['mensaje' => 'Notificación marcada como leída']);
-
+            return response()->json(['error' => 'Notificación no encontrada'], 404);
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al marcar notificación como leída',
@@ -171,33 +121,14 @@ class NotificacionController extends Controller
     {
         try {
             $usuario = Auth::user();
-            $cliente = Cliente::where('usuario_id', $usuario->id)->first();
-            $rematador = Rematador::where('usuario_id', $usuario->id)->first();
-            $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuario->id)->first();
-            
-            if (!$cliente && !$rematador && !$casaRemate) {
+            if (!$usuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
-
-            if ($cliente) {
-                $cliente->notificaciones()->updateExistingPivot(
-                    $cliente->notificaciones()->pluck('notificaciones.id'),
-                    ['leido' => true]
-                );
-            } else if ($rematador) {
-                $rematador->notificaciones()->updateExistingPivot(
-                    $rematador->notificaciones()->pluck('notificaciones.id'),
-                    ['leido' => true]
-                );
-            } else if ($casaRemate) {
-                $casaRemate->notificaciones()->updateExistingPivot(
-                    $casaRemate->notificaciones()->pluck('notificaciones.id'),
-                    ['leido' => true]
-                );
-            }
-
+            $usuario->notificaciones()->updateExistingPivot(
+                $usuario->notificaciones()->pluck('notificaciones.id'),
+                ['leido' => true]
+            );
             return response()->json(['mensaje' => 'Todas las notificaciones marcadas como leídas']);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al marcar notificaciones como leídas',
@@ -215,14 +146,7 @@ class NotificacionController extends Controller
      * @param bool $esMensajeChat Si la notificación corresponde a un mensaje de chat
      * @return Notificacion
      */
-    public static function createNotificacion(
-        array $usuarioIds,
-        string $titulo,
-        string $mensaje,
-        bool $esMensajeChat = false,
-        string $chatId = null
-    ): Notificacion 
-    {
+    public static function createNotificacion(array $usuarioIds, string $titulo, string $mensaje, bool $esMensajeChat = false, string $chatId = null): Notificacion {
         try {
             $notificacion = Notificacion::create([
                 'titulo' => $titulo,
@@ -231,26 +155,8 @@ class NotificacionController extends Controller
                 'chat_id' => $chatId,
                 'fecha_hora' => now()
             ]);
-
-            // Clasificar usuarios por tipo y asociar la notificación
-            foreach ($usuarioIds as $usuarioId) {
-                $cliente = Cliente::where('usuario_id', $usuarioId)->first();
-                $rematador = Rematador::where('usuario_id', $usuarioId)->first();
-                $casaRemate = \App\Models\CasaRemate::where('usuario_id', $usuarioId)->first();
-
-                if ($cliente) {
-                    $notificacion->clientes()->attach($cliente->usuario_id, ['leido' => false]);
-                }
-                if ($rematador) {
-                    $notificacion->rematadores()->attach($rematador->usuario_id, ['leido' => false]);
-                }
-                if ($casaRemate) {
-                    $notificacion->casaRemates()->attach($casaRemate->usuario_id, ['leido' => false]);
-                }
-            }
-
+            $notificacion->usuarios()->attach($usuarioIds, ['leido' => false]);
             return $notificacion;
-
         } catch (\Throwable $e) {
             \Log::error('Error al crear notificación: ' . $e->getMessage());
             throw $e;
@@ -402,7 +308,6 @@ class NotificacionController extends Controller
             // Crear notificación para usuario 1
             $titulo1 = "Chat privado con {$validated['usuario2Nombre']}";
             $mensaje1 = "Tienes una nueva conversación privada con {$validated['usuario2Nombre']}. Haz clic para abrir el chat.";
-            
             $notificacion1 = Notificacion::create([
                 'titulo' => $titulo1,
                 'mensaje' => $mensaje1,
@@ -410,11 +315,11 @@ class NotificacionController extends Controller
                 'chat_id' => $chatId,
                 'fecha_hora' => now()
             ]);
+            $notificacion1->usuarios()->attach($validated['usuario1Id'], ['leido' => false]);
 
             // Crear notificación para usuario 2
             $titulo2 = "Chat privado con {$validated['usuario1Nombre']}";
             $mensaje2 = "Tienes una nueva conversación privada con {$validated['usuario1Nombre']}. Haz clic para abrir el chat.";
-            
             $notificacion2 = Notificacion::create([
                 'titulo' => $titulo2,
                 'mensaje' => $mensaje2,
@@ -422,29 +327,7 @@ class NotificacionController extends Controller
                 'chat_id' => $chatId,
                 'fecha_hora' => now()
             ]);
-
-            // Asociar notificaciones a usuarios (buscar si son clientes o rematadores)
-            // Usuario 1 recibe notificacion1
-            $cliente1 = Cliente::where('usuario_id', $validated['usuario1Id'])->first();
-            $rematador1 = Rematador::where('usuario_id', $validated['usuario1Id'])->first();
-
-            if ($cliente1) {
-                $notificacion1->clientes()->attach($cliente1->id, ['leido' => false]);
-            }
-            if ($rematador1) {
-                $notificacion1->rematadores()->attach($rematador1->id, ['leido' => false]);
-            }
-
-            // Usuario 2 recibe notificacion2
-            $cliente2 = Cliente::where('usuario_id', $validated['usuario2Id'])->first();
-            $rematador2 = Rematador::where('usuario_id', $validated['usuario2Id'])->first();
-
-            if ($cliente2) {
-                $notificacion2->clientes()->attach($cliente2->id, ['leido' => false]);
-            }
-            if ($rematador2) {
-                $notificacion2->rematadores()->attach($rematador2->id, ['leido' => false]);
-            }
+            $notificacion2->usuarios()->attach($validated['usuario2Id'], ['leido' => false]);
 
             return response()->json([
                 'chatId' => $chatId,
@@ -477,17 +360,13 @@ class NotificacionController extends Controller
     public function obtenerNotificacionesPublico($usuarioId)
     {
         try {
-            $cliente = Cliente::where('usuario_id', $usuarioId)->first();
-            $rematador = Rematador::where('usuario_id', $usuarioId)->first();
-            $casaRemate = CasaRemate::where('usuario_id', $usuarioId)->first();
-            
+            $usuario = Usuario::find($usuarioId);
             $notificaciones = [];
-            
-            if ($cliente) {
-                $notificaciones = $cliente->notificaciones()
+            if ($usuario) {
+                $notificaciones = $usuario->notificaciones()
                     ->orderBy('fecha_hora', 'desc')
                     ->get()
-                    ->map(function ($notificacion) use ($cliente) {
+                    ->map(function ($notificacion) use ($usuario) {
                         return [
                             'id' => $notificacion->id,
                             'titulo' => $notificacion->titulo,
@@ -497,53 +376,13 @@ class NotificacionController extends Controller
                             'esMensajeChat' => $notificacion->es_mensaje_chat,
                             'chatId' => $notificacion->chat_id,
                             'usuario' => [
-                                'id' => $cliente->usuario->id,
-                                'nombre' => $cliente->usuario->nombre
-                            ]
-                        ];
-                    });
-            } elseif ($rematador) {
-                $notificaciones = $rematador->notificaciones()
-                    ->orderBy('fecha_hora', 'desc')
-                    ->get()
-                    ->map(function ($notificacion) use ($rematador) {
-                        return [
-                            'id' => $notificacion->id,
-                            'titulo' => $notificacion->titulo,
-                            'mensaje' => $notificacion->mensaje,
-                            'fechaHora' => $notificacion->fecha_hora,
-                            'leido' => $notificacion->pivot->leido,
-                            'esMensajeChat' => $notificacion->es_mensaje_chat,
-                            'chatId' => $notificacion->chat_id,
-                            'usuario' => [
-                                'id' => $rematador->usuario->id,
-                                'nombre' => $rematador->usuario->nombre
-                            ]
-                        ];
-                    });
-            } elseif ($casaRemate) {
-                $notificaciones = $casaRemate->notificaciones()
-                    ->orderBy('fecha_hora', 'desc')
-                    ->get()
-                    ->map(function ($notificacion) use ($casaRemate) {
-                        return [
-                            'id' => $notificacion->id,
-                            'titulo' => $notificacion->titulo,
-                            'mensaje' => $notificacion->mensaje,
-                            'fechaHora' => $notificacion->fecha_hora,
-                            'leido' => $notificacion->pivot->leido,
-                            'esMensajeChat' => $notificacion->es_mensaje_chat,
-                            'chatId' => $notificacion->chat_id,
-                            'usuario' => [
-                                'id' => $casaRemate->usuario->id,
-                                'nombre' => $casaRemate->usuario->nombre
+                                'id' => $usuario->id,
+                                'nombre' => $usuario->nombre
                             ]
                         ];
                     });
             }
-
             return response()->json($notificaciones);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Error al obtener notificaciones',

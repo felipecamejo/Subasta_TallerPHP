@@ -30,14 +30,9 @@
             return $this->hasMany(Puja::class, 'cliente_id', 'usuario_id');
         }
 
-        public function notificaciones() {
-            return $this->belongsToMany(Notificacion::class, 'notificacion_clientes', 'cliente_id', 'notificacion_id');
-        }
-
-    
-        public function valoracion(): MorphOne
+        public function valoracion()
         {
-            return $this->morphOne(Valoracion::class, 'valorable');
+            return $this->hasOne(Valoracion::class, 'cliente_id', 'usuario_id');
         }
 
 }
