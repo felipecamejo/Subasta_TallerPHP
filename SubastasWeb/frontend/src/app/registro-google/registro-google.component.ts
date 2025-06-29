@@ -1,8 +1,6 @@
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AuthService } from '../../services/auth.service';
-
-import { environment } from '../../environments/environment';
 import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import {
   FormGroup,
@@ -130,6 +128,7 @@ if (rol === 'casa_remate') {
 if (rol === 'casa_remate') {
   cedula?.clearValidators();
   cedula?.setValue(null);
+  cedula?.updateValueAndValidity();
 }
   
 }
@@ -148,6 +147,7 @@ enviar() {
   }
 
   console.log('Formulario válido.');
+  console.log(this.form.value)
 
   this.authService.registrarConGoogle(this.form.value).subscribe({
     next: (res: any) => {

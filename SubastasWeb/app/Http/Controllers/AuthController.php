@@ -276,7 +276,7 @@ public function registerGoogleCasaRemate(Request $request){
         'nombre' => 'required|string|max:255',
         'email' => 'required|email|unique:usuarios,email',
         'telefono' => 'required|string',
-        'cedula' => 'required|string|unique:usuarios,cedula',
+        
         'latitud' => 'required|numeric',
         'longitud' => 'required|numeric',
         'idFiscal' => 'required|string|unique:casa_remates,idFiscal',

@@ -3,6 +3,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from './../environments/environment';
+import { RegistroGoogleDto } from './../models/registro-google.dto';
+
+
 
 export interface AuthData {
   token: string;
@@ -118,22 +121,24 @@ registerCasaRemate(formData: FormData): Observable<any> {
   return this.http.post(`${environment.apiUrl}/api/register-casa-remate`, formData);
 }
 
-registrarConGoogle(data: any): Observable<any> {
-    const rol = data.rol;
-    const url = rol === 'casa_remate'
+registrarConGoogle(data: RegistroGoogleDto): Observable<any> {
+  const url =
+    data.rol === 'casa_remate'
       ? `${environment.apiUrl}/api/register-google-casa-remate`
       : `${environment.apiUrl}/api/register-google-user`;
 
-    
-    const payload = {
-      ...data,
-      ...(rol !== 'rematador' && { matricula: undefined }),
-      ...(rol !== 'casa_remate' && { idFiscal: undefined }),
-      ...(rol === 'casa_remate' && { cedula: null })
-    };
+  
+  const payload = {
+  ...(data.rol !== 'rematador' && { matricula: undefined }),
+  ...(data.rol !== 'casa_remate' && { idFiscal: undefined }),
+  ...(data.rol === 'casa_remate' && { cedula: null }),
+  ...data 
+  
+};
+if (payload.cedula === '') payload.cedula = null;
 
-    return this.http.post(url, payload);
-  }
+  return this.http.post(url, payload);
+}
 }
 
 
