@@ -123,6 +123,7 @@ Route::get('/lotes', [LoteController::class, 'index']);
     Route::apiResource('rematadores', RematadorController::class)->except(['index']);
     Route::apiResource('facturas', FacturaController::class);
     Route::apiResource('pujas', PujaController::class);
+    Route::get('/lotes/{loteId}/estadisticas', [PujaController::class, 'estadisticasLote']);
     Route::apiResource('vendedores', VendedorController::class);
     
 
@@ -182,3 +183,5 @@ Route::get('/lotes', [LoteController::class, 'index']);
 //});
 
 Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);
+
+Route::get('notificaciones/{usuarioId}', [NotificacionController::class, 'index']);

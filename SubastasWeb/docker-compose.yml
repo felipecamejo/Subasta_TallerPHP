@@ -7,23 +7,19 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
+      - ./storage:/var/www/storage
+      - ./bootstrap/cache:/var/www/bootstrap/cache
     networks:
       - laravel
     depends_on:
       - db
       - redis
-
-  composer:
-    image: composer:latest
-    container_name: composer_install
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-    command: install
-    depends_on:
-      - app
-    networks:
-      - laravel
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=laravel
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
 
   db:
     image: postgres:15
@@ -51,7 +47,7 @@ services:
     image: nginx:alpine
     container_name: nginx_laravel
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - .:/var/www
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
@@ -68,7 +64,23 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
-    command: php artisan queue:work
+    command: php artisan queue:work redis --queue=default,lote_1_pujas,lote_2_pujas,lote_3_pujas,lote_4_pujas,lote_5_pujas --sleep=1 --tries=3 --timeout=30
+    depends_on:
+      - app
+      - redis
+      - db
+    networks:
+      - laravel
+
+  queue_pujas:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: laravel_queue_pujas
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    command: php artisan queue:work redis --queue=lote_6_pujas,lote_7_pujas,lote_8_pujas,lote_9_pujas,lote_10_pujas --sleep=1 --tries=3 --timeout=30
     depends_on:
       - app
       - redis
@@ -85,9 +97,44 @@ services:
       - /app/node_modules
     ports:
       - "4200:4200"
-    command: sh -c "npm install && npm run start"
+    command: sh -c "npm install && npm run start -- --host 0.0.0.0"
     networks:
       - laravel
+    environment:
+      - NODE_ENV=development
+
+  websocket:
+    image: node:18-alpine
+    container_name: websocket_server
+    working_dir: /app
+    volumes:
+      - ./websocket-server:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    command: sh -c "npm install && npm start"
+    networks:
+      - laravel
+    depends_on:
+      - redis
+
+  socket-redis:
+    image: node:18-alpine
+    container_name: socket_redis_server
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "cp socket-redis-package.json package.json && npm install ioredis socket.io && node socket-server.js"
+    networks:
+      - laravel
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
 volumes:
   pgdata:

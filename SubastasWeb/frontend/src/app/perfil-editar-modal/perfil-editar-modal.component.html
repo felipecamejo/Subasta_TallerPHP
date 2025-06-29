@@ -1,0 +1,198 @@
+<p-dialog
+  header="Editar Perfil"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '800px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [(visible)]="visible"
+  (onShow)="onVisibleChange()"
+  styleClass="perfil-editar-modal">
+  
+  <div class="modal-content">
+    <!-- Mensaje de error -->
+    <p-message 
+      *ngIf="error" 
+      severity="error" 
+      [text]="error"
+      [closable]="true"
+      (onClose)="error = ''">
+    </p-message>
+
+    <form [formGroup]="form" (ngSubmit)="onGuardar()" class="perfil-form">
+      
+      <!-- Información personal -->
+      <div class="form-section">
+        <h3>Información Personal</h3>
+        <div class="form-grid">
+          
+          <!-- Nombre -->
+          <div class="form-field">
+            <label for="nombre">Nombre *</label>
+            <input 
+              pInputText 
+              id="nombre" 
+              formControlName="nombre" 
+              placeholder="Ingrese su nombre"
+              [class.ng-invalid]="nombreInvalido"
+              [class.ng-dirty]="form.get('nombre')?.touched">
+            <small *ngIf="nombreInvalido" class="p-error">
+              El nombre es requerido
+            </small>
+          </div>
+
+          <!-- Cédula -->
+          <div class="form-field">
+            <label for="cedula">Cédula * (solo números, máximo 8 dígitos)</label>
+            <input 
+              pInputText 
+              id="cedula" 
+              formControlName="cedula" 
+              placeholder="Ej: 12345678"
+              maxlength="8"
+              (input)="onCedulaInput($event)"
+              [class.ng-invalid]="cedulaInvalida"
+              [class.ng-dirty]="form.get('cedula')?.touched">
+            <small *ngIf="cedulaInvalida" class="p-error">
+              {{ cedulaErrorMessage }}
+            </small>
+          </div>
+
+          <!-- Email -->
+          <div class="form-field">
+            <label for="email">Email *</label>
+            <input 
+              pInputText 
+              id="email" 
+              type="email"
+              formControlName="email" 
+              placeholder="Ingrese su email"
+              [class.ng-invalid]="emailInvalido"
+              [class.ng-dirty]="form.get('email')?.touched">
+            <small *ngIf="emailInvalido" class="p-error">
+              El email es requerido y debe ser válido
+            </small>
+          </div>
+
+          <!-- Teléfono -->
+          <div class="form-field">
+            <label for="telefono">Teléfono</label>
+            <input 
+              pInputText 
+              id="telefono" 
+              formControlName="telefono" 
+              placeholder="Ingrese su teléfono">
+          </div>
+
+          <!-- Matrícula (solo para rematadores) -->
+          <div class="form-field" *ngIf="rematador">
+            <label for="matricula">Matrícula *</label>
+            <input 
+              pInputText 
+              id="matricula" 
+              formControlName="matricula" 
+              placeholder="Ingrese su matrícula"
+              [class.ng-invalid]="matriculaInvalida"
+              [class.ng-dirty]="form.get('matricula')?.touched">
+            <small *ngIf="matriculaInvalida" class="p-error">
+              La matrícula es requerida
+            </small>
+          </div>
+
+          <!-- Imagen de perfil -->
+          <div class="form-field imagen-field">
+            <label>Imagen de Perfil</label>
+            
+            <!-- Previsualización de la imagen -->
+            <div class="imagen-preview-container">
+              <img [src]="getImagenPreview()" alt="Vista previa" class="imagen-preview">
+            </div>
+            
+            <!-- Input oculto para archivos -->
+            <input 
+              #fileInput
+              type="file" 
+              accept="image/*" 
+              (change)="onFileSelected($event)"
+              style="display: none;">
+            
+            <!-- Botones de acción -->
+            <div class="imagen-botones">
+              <button 
+                type="button" 
+                pButton 
+                icon="pi pi-upload" 
+                label="Seleccionar Imagen"
+                class="p-button-outlined p-button-sm"
+                (click)="seleccionarImagen()">
+              </button>
+              <button 
+                type="button" 
+                pButton 
+                icon="pi pi-times" 
+                label="Usar por defecto"
+                class="p-button-outlined p-button-sm p-button-secondary"
+                (click)="limpiarImagen()">
+              </button>
+            </div>
+            
+            <small class="p-help">
+              Seleccione una imagen desde su computadora (máximo 5MB)
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="form-section">
+        <h3>Ubicación</h3>
+        <div class="ubicacion-container">
+          <div class="coordenadas-info">
+            <div class="coordenada">
+              <label>Latitud:</label>
+              <span>{{ form.get('latitud')?.value || 'No seleccionada' }}</span>
+            </div>
+            <div class="coordenada">
+              <label>Longitud:</label>
+              <span>{{ form.get('longitud')?.value || 'No seleccionada' }}</span>
+            </div>
+          </div>
+          
+          <div class="map-container">
+            <div id="map-perfil-editar" class="map"></div>
+          </div>
+          
+          <small class="p-help">
+            Haga clic en el mapa para seleccionar su ubicación
+          </small>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Footer del modal -->
+  <ng-template pTemplate="footer">
+    <div class="modal-footer">
+      <button 
+        pButton 
+        type="button" 
+        label="Cancelar" 
+        icon="pi pi-times"
+        class="p-button-outlined"
+        (click)="onCancelar()"
+        [disabled]="cargando">
+      </button>
+      <button 
+        pButton 
+        type="button" 
+        label="Guardar" 
+        icon="pi pi-check"
+        class="p-button-success"
+        (click)="onGuardar()"
+        [loading]="cargando"
+        [disabled]="form.invalid">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

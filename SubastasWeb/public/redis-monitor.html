@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Redis - Sistema de Pujas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Monitor Redis - Sistema de Pujas en Tiempo Real</h1>
+    
+    <div class="container">
+        <!-- Panel de Control -->
+        <div class="card">
+            <h2>📤 Crear Puja</h2>
+            <div id="status" class="status disconnected">WebSocket Desconectado</div>
+            
+            <form id="pujaForm">
+                <div class="form-group">
+                    <label for="loteId">Lote ID:</label>
+                    <select id="loteId">
+                        <option value="1">Lote 1</option>
+                        <option value="2">Lote 2</option>
+                        <option value="3">Lote 3</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monto">Monto de la Puja ($):</label>
+                    <input type="number" id="monto" value="1000" step="50" min="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clienteId">Cliente ID:</label>
+                    <select id="clienteId">
+                        <option value="1">Cliente 1</option>
+                        <option value="2">Cliente 2</option>
+                        <option value="3">Cliente 3</option>
+                    </select>
+                </div>
+                
+                <button type="submit">🚀 Enviar Puja</button>
+            </form>
+            
+            <hr>
+            <h3>📊 Estadísticas del Lote</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalPujas">0</div>
+                    <div>Total Pujas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="ultimaPuja">-</div>
+                    <div>Última Puja</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="montoMaximo">-</div>
+                    <div>Monto Máximo</div>
+                </div>
+            </div>
+            
+            <button onclick="cargarEstadisticas()">🔄 Actualizar Estadísticas</button>
+        </div>
+        
+        <!-- Monitor de Eventos -->
+        <div class="card">
+            <h2>📱 Monitor de Eventos Redis</h2>
+            <div class="log" id="eventLog"></div>
+            <button onclick="limpiarLog()">🧹 Limpiar Log</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script>
+        // Configuración
+        const API_BASE = 'http://localhost:8080/api';
+        const SOCKET_URL = 'http://localhost:3000';
+        
+        // Elementos del DOM
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('eventLog');
+        const pujaForm = document.getElementById('pujaForm');
+        const loteSelect = document.getElementById('loteId');
+        
+        // Socket.io connection
+        const socket = io(SOCKET_URL, {
+            transports: ['websocket', 'polling'],
+            upgrade: true,
+            rememberUpgrade: true,
+            forceNew: true
+        });
+        
+        // Estado de conexión
+        socket.on('connect', () => {
+            log('🟢 CONECTADO al WebSocket Redis', 'success');
+            statusEl.textContent = 'WebSocket Conectado ✅';
+            statusEl.className = 'status connected';
+        });
+        
+        socket.on('disconnect', (reason) => {
+            log('🔴 DESCONECTADO del WebSocket', 'error');
+            log(`   Razón: ${reason}`, 'error');
+            statusEl.textContent = 'WebSocket Desconectado ❌';
+            statusEl.className = 'status disconnected';
+        });
+        
+        socket.on('connect_error', (error) => {
+            log('❌ ERROR DE CONEXIÓN WebSocket', 'error');
+            log(`   Error: ${error.message}`, 'error');
+            statusEl.textContent = 'Error de Conexión ❌';
+            statusEl.className = 'status disconnected';
+        });
+        
+        // Escuchar eventos de pujas
+        socket.on('nueva_puja', (data) => {
+            log(`💰 NUEVA PUJA RECIBIDA:`, 'success');
+            log(`   Lote: ${data.puja?.lote_id}`, 'info');
+            log(`   Monto: $${data.puja?.monto}`, 'info');
+            log(`   Cliente: ${data.puja?.cliente?.usuario?.nombre}`, 'info');
+            log(`   Timestamp: ${new Date(data.timestamp).toLocaleTimeString()}`, 'info');
+            log('---', 'info');
+            
+            // Actualizar estadísticas si es del lote actual
+            if (data.puja?.lote_id == loteSelect.value) {
+                setTimeout(cargarEstadisticas, 500);
+            }
+        });
+        
+        // Escuchar eventos específicos de lotes
+        for (let i = 1; i <= 3; i++) {
+            socket.on(`puja_lote_${i}`, (data) => {
+                log(`🎯 PUJA ESPECÍFICA LOTE ${i}:`, 'warning');
+                log(`   Monto: $${data.puja?.monto}`, 'info');
+            });
+        }
+        
+        // Función para logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                success: '#00ff00',
+                error: '#ff0000',
+                warning: '#ffaa00',
+                info: '#00aaff'
+            };
+            
+            logEl.innerHTML += `<div style="color: ${colors[type]}">[${timestamp}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        // Manejar envío de pujas
+        pujaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const pujaData = {
+                fechaHora: new Date().toISOString(),
+                monto: parseInt(document.getElementById('monto').value),
+                cliente_id: parseInt(document.getElementById('clienteId').value),
+                lote_id: parseInt(document.getElementById('loteId').value)
+            };
+            
+            log(`📤 ENVIANDO PUJA:`, 'warning');
+            log(`   ${JSON.stringify(pujaData, null, 2)}`, 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/pujas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(pujaData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ PUJA ENVIADA A COLA REDIS`, 'success');
+                    log(`   Job ID: ${result.job_id}`, 'info');
+                    log(`   Status: ${result.status}`, 'info');
+                    
+                    // Incrementar el monto para la próxima puja
+                    document.getElementById('monto').value = parseInt(document.getElementById('monto').value) + 50;
+                } else {
+                    log(`❌ ERROR: ${result.error}`, 'error');
+                    if (result.errors) {
+                        log(`   Detalles: ${JSON.stringify(result.errors)}`, 'error');
+                    }
+                }
+            } catch (error) {
+                log(`💥 ERROR DE RED: ${error.message}`, 'error');
+            }
+        });
+        
+        // Cargar estadísticas
+        async function cargarEstadisticas() {
+            const loteId = document.getElementById('loteId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/lotes/${loteId}/estadisticas`);
+                const stats = await response.json();
+                
+                document.getElementById('totalPujas').textContent = stats.total_pujas_bd || 0;
+                document.getElementById('ultimaPuja').textContent = stats.ultima_puja?.monto ? `$${stats.ultima_puja.monto}` : '-';
+                document.getElementById('montoMaximo').textContent = stats.monto_maximo ? `$${stats.monto_maximo}` : '-';
+                
+                log(`📊 ESTADÍSTICAS ACTUALIZADAS - Lote ${loteId}`, 'info');
+            } catch (error) {
+                log(`❌ Error cargando estadísticas: ${error.message}`, 'error');
+            }
+        }
+        
+        // Limpiar log
+        function limpiarLog() {
+            logEl.innerHTML = '';
+            log('🧹 Log limpiado', 'info');
+        }
+        
+        // Cargar estadísticas al cambiar lote
+        loteSelect.addEventListener('change', cargarEstadisticas);
+        
+        // Cargar estadísticas iniciales
+        setTimeout(cargarEstadisticas, 1000);
+        
+        // Log inicial
+        log('🚀 Monitor Redis iniciado', 'success');
+        log('👀 Esperando eventos de pujas...', 'info');
+    </script>
+</body>
+</html>

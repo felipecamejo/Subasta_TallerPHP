@@ -157,7 +157,7 @@ export class CasaRemateEditarModalComponent implements AfterViewInit, OnDestroy 
         email: this.casaRemateData.usuario?.email || '',
         telefono: this.casaRemateData.usuario?.telefono || '',
         imagen: this.casaRemateData.usuario?.imagen || '',
-        calificacion: this.casaRemateData.valoracion?.valoracion_total || 0,
+        calificacion: this.casaRemateData.valoracion?.total_puntaje || 0,
         latitud: this.casaRemateData.usuario?.latitud || null,
         longitud: this.casaRemateData.usuario?.longitud || null,
         idFiscal: this.casaRemateData.idFiscal || null

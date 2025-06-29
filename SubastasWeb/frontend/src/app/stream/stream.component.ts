@@ -561,7 +561,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (this.pujaActual === 0) {
       this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
     }
-    this.pujaRapida = Number(this.pujaActual) + 1;
+    this.pujaRapida = Number(this.pujaActual) + this.lotes[loteIndex].pujaMinima;
     this.pujaComun = null;
   }// Métodos de timer
   /**
@@ -773,7 +773,11 @@ export class StreamComponent implements OnInit, OnDestroy {
                   id: puja.cliente_id!,
                   nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
                   email: this.clienteMail || '',
-                  imagen: ''
+                  imagen: '',
+                  telefono: undefined,
+                  cedula: undefined,
+                  latitud: undefined,
+                  longitud: undefined
                 }
               }
             };
@@ -1645,7 +1649,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.timerInitialized = true;
 
       const ahora = new Date();
-      const fechaSubasta = this.parsearFechaSubasta(this.timezoneService.convertToUserTimezone(new Date(this.subasta.fecha)));
+      const fechaSubasta = this.parsearFechaSubasta(new Date(this.subasta.fecha));
       const tiempoRestanteMs = fechaSubasta!.getTime() + this.subasta.duracionMinutos! * 60000 - ahora.getTime();
       const tiempoRestanteSegundos = Math.max(0, Math.ceil(tiempoRestanteMs / 1000));
 
