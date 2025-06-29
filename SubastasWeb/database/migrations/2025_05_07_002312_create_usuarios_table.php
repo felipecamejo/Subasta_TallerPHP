@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             
             $table->string('nombre');  // Nombre del usuario
-            $table->string('cedula')->nullable()->unique(); // Cédula del usuario
+            $table->string('cedula')->unique();  // Cédula del usuario
             $table->string('email'); // Correo electrónico del usuario
             $table->string('telefono'); // Teléfono del usuario
             $table->string('imagen')->nullable(); // Imagen del usuario 
