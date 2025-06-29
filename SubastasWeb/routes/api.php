@@ -182,3 +182,5 @@ Route::get('/lotes', [LoteController::class, 'index']);
 //});
 
 Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);
+
+Route::get('notificaciones/{usuarioId}', [NotificacionController::class, 'index']);
