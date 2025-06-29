@@ -755,7 +755,11 @@ export class StreamComponent implements OnInit, OnDestroy {
                   id: puja.cliente_id!,
                   nombre: localStorage.getItem('usuario_nombre') || 'Usuario',
                   email: this.clienteMail || '',
-                  imagen: ''
+                  imagen: '',
+                  telefono: undefined,
+                  cedula: undefined,
+                  latitud: undefined,
+                  longitud: undefined
                 }
               }
             };

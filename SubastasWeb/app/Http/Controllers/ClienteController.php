@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Usuario;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 
 
@@ -198,13 +199,25 @@ class ClienteController extends Controller
             'longitud' => 'nullable|numeric',
         ]);
 
+        // Procesar imagen si se envió una
+        $imagenPath = $usuario->imagen; // Mantener la imagen actual por defecto
+        if (array_key_exists('imagen', $validated)) {
+            if (empty($validated['imagen'])) {
+                // Si se envía imagen vacía, usar imagen por defecto
+                $imagenPath = null;
+            } else {
+                // Si es una imagen Base64, procesarla
+                $imagenPath = $this->procesarImagenBase64($validated['imagen'], $usuario_id);
+            }
+        }
+
         // Actualizar usuario
         $usuario->update([
             'nombre' => $validated['nombre'] ?? $usuario->nombre,
             'cedula' => $validated['cedula'] ?? $usuario->cedula,
             'email' => $validated['email'] ?? $usuario->email,
             'telefono' => $validated['telefono'] ?? $usuario->telefono,
-            'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
+            'imagen' => $imagenPath,
             'latitud' => $validated['latitud'] ?? $usuario->latitud,
             'longitud' => $validated['longitud'] ?? $usuario->longitud,
         ]);
@@ -212,6 +225,67 @@ class ClienteController extends Controller
         // Actualizar cliente (ya no hay campo calificacion)
         $cliente->load(['usuario', 'valoracion']);
         return response()->json($cliente);
+    }
+
+    /**
+     * Procesa una imagen en formato Base64 y la guarda como archivo
+     */
+    private function procesarImagenBase64($imagenBase64, $usuarioId)
+    {
+        try {
+            // Verificar si es realmente una imagen Base64
+            if (strpos($imagenBase64, 'data:image/') !== 0) {
+                // Si no es Base64, asumir que es una URL y mantenerla
+                return $imagenBase64;
+            }
+
+            // Extraer el tipo de imagen y los datos
+            $data = explode(',', $imagenBase64);
+            if (count($data) !== 2) {
+                throw new \Exception('Formato de imagen Base64 inválido');
+            }
+
+            $header = $data[0];
+            $imageData = base64_decode($data[1]);
+
+            if ($imageData === false) {
+                throw new \Exception('Error al decodificar imagen Base64');
+            }
+
+            // Extraer extensión del header
+            preg_match('/data:image\/([a-zA-Z0-9]+);/', $header, $matches);
+            if (!isset($matches[1])) {
+                throw new \Exception('Tipo de imagen no válido');
+            }
+            
+            $extension = $matches[1];
+            if (!in_array($extension, ['jpeg', 'jpg', 'png', 'gif', 'webp'])) {
+                throw new \Exception('Tipo de imagen no soportado');
+            }
+
+            // Crear directorio si no existe
+            $uploadDir = public_path('uploads/avatars');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            // Generar nombre único para el archivo
+            $fileName = 'avatar_' . $usuarioId . '_' . time() . '.' . $extension;
+            $filePath = $uploadDir . '/' . $fileName;
+
+            // Guardar archivo
+            if (file_put_contents($filePath, $imageData) === false) {
+                throw new \Exception('Error al guardar la imagen');
+            }
+
+            // Retornar la URL relativa
+            return '/uploads/avatars/' . $fileName;
+
+        } catch (\Exception $e) {
+            // En caso de error, mantener la imagen actual o usar null
+            Log::error('Error procesando imagen Base64: ' . $e->getMessage());
+            return null;
+        }
     }
 
 

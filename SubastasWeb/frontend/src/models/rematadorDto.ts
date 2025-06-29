@@ -7,7 +7,7 @@ export interface rematadorDto{
     matricula: string;
 
     // Relaciones
-    usuario: Pick<usuarioDto, 'id' | 'nombre' | 'imagen' | 'email'>;
+    usuario: Pick<usuarioDto, 'id' | 'nombre' | 'imagen' | 'email' | 'telefono' | 'cedula' | 'latitud' | 'longitud'>;
     subasta: Pick<subastaDto, 'id' | 'fecha' | 'nombre'>[];
     casasRemate: Pick<casaRemateDto, 'usuario_id' | 'usuario'>[];
 

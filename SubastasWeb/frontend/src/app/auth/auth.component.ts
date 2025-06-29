@@ -70,7 +70,7 @@ export class AuthComponent {
             'Te damos la bienvenida al sistema',
             usuarioId,
             false,
-            0 //  Pasamos 0 en lugar de null para evitar error de tipo
+            '' //  Pasamos string vacío para el chatId
           ).subscribe({
             next: () => console.log('Notificación enviada'),
             error: (err) => console.error('Error al enviar notificación', err)
