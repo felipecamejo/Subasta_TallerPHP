@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { UrlService } from './url.service';
 import { pujaDto } from '../models/pujaDto';
 
-// ✅ Interfaz simplificada para Redis (sin Predis)
+// ✅ Nueva interfaz para Redis (más simple)
 interface PujaRedisRequest {
   cliente_id: number | null;
   monto: number;

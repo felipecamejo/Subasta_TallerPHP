@@ -2,19 +2,11 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
 
 class PujaWebSocketService
 {
-    private static $redis;
-
-    private static function getRedis()
-    {
-        if (!self::$redis) {
-            self::$redis = new SimpleRedisClient();
-        }
-        return self::$redis;
-    }
     /**
      * Notificar nueva puja a todos los usuarios conectados
      */
@@ -29,9 +21,8 @@ class PujaWebSocketService
             ];
 
             // Publicar en canal Redis para WebSocket
-            $redis = self::getRedis();
-            $redis->publish("lote:$loteId", json_encode($mensaje));
-            $redis->publish("subastas:general", json_encode($mensaje));
+            Redis::publish("lote:$loteId", json_encode($mensaje));
+            Redis::publish("subastas:general", json_encode($mensaje));
             
             Log::info("Puja notificada vía WebSocket", $mensaje);
             
@@ -53,8 +44,7 @@ class PujaWebSocketService
                 'timestamp' => time()
             ];
 
-            $redis = self::getRedis();
-            $redis->publish("lote:$loteId:stats", json_encode($mensaje));
+            Redis::publish("lote:$loteId:stats", json_encode($mensaje));
             
         } catch (\Exception $e) {
             Log::error("Error notificando estadísticas: " . $e->getMessage());
@@ -74,9 +64,8 @@ class PujaWebSocketService
                 'timestamp' => time()
             ];
 
-            $redis = self::getRedis();
-            $redis->publish("lote:$loteId", json_encode($mensaje));
-            $redis->publish("subastas:general", json_encode($mensaje));
+            Redis::publish("lote:$loteId", json_encode($mensaje));
+            Redis::publish("subastas:general", json_encode($mensaje));
             
         } catch (\Exception $e) {
             Log::error("Error notificando fin de subasta: " . $e->getMessage());

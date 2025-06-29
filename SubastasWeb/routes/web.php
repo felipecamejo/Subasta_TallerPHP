@@ -67,6 +67,3 @@ Route::get('/auth/callback/google', [SocialAuthController::class, 'handleGoogleC
 Route::get('/login', function () {
     return response()->json(['message' => 'No autenticado. Ruta login dummy para testing.'], 401);
 })->name('login');
-
-// Cargar rutas de prueba
-require __DIR__.'/test.php';
