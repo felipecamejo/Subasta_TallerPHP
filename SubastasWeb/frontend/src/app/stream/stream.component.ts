@@ -91,6 +91,17 @@ export class StreamComponent implements OnInit, OnDestroy {
   private timerInitialized: boolean = false;  private websocketSubscriptions: Subscription[] = [];
   boton: boolean = false;
 
+  // Getter para pujaActual que asegura que nunca sea undefined
+  get pujaActualSegura(): number {
+    if (this.pujaActual === undefined || this.pujaActual === null || isNaN(this.pujaActual)) {
+      const loteActual = this.lotes[this.indexLotes];
+      const pujaMinima = loteActual ? Number(loteActual.pujaMinima) || 0 : 0;
+      console.warn(`⚠️ pujaActual inválida (${this.pujaActual}), usando puja mínima: ${pujaMinima}`);
+      return pujaMinima;
+    }
+    return this.pujaActual;
+  }
+
   pujaActual: number = 0;
   pujaRapida: number | null = null;
   pujaComun: number | null = null;
@@ -560,12 +571,22 @@ export class StreamComponent implements OnInit, OnDestroy {
     
     this.pujas = (this.lotes[loteIndex]?.pujas as pujaDto[]) || [];
     
-    this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
-    if (this.pujaActual === 0) {
-      this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
+    // Calcular puja actual con validación robusta
+    let pujaMaxima = 0;
+    if (this.pujas.length > 0) {
+      const montos = this.pujas.map(p => this.validarNumero(p.monto, 0, 'cargarPujas-monto')).filter(m => m > 0);
+      pujaMaxima = montos.length > 0 ? Math.max(...montos) : 0;
     }
-    this.pujaRapida = Number(this.pujaActual) + this.lotes[loteIndex].pujaMinima;
+    
+    const pujaMinima = this.validarNumero(this.lotes[loteIndex].pujaMinima, 0, 'cargarPujas-pujaMinima');
+    this.pujaActual = pujaMaxima > 0 ? pujaMaxima : pujaMinima;
+    
+    // Calcular puja rápida con validación
+    const incremento = pujaMinima || 1;
+    this.pujaRapida = this.validarNumero(this.pujaActual, 0, 'cargarPujas-pujaActual') + incremento;
     this.pujaComun = null;
+    
+    console.log(`📊 PUJAS CARGADAS: Lote ${loteIndex} - Puja actual: $${this.pujaActual} - Puja rápida: $${this.pujaRapida}`);
   }// Métodos de timer
   /**
    * Inicializa el estado del timer basado en WebSocket.
@@ -659,8 +680,9 @@ export class StreamComponent implements OnInit, OnDestroy {
     }
 
     // VALIDACIÓN 6: Superar puja actual
-    if (monto <= this.pujaActual) {
-      return { valida: false, error: `El monto debe ser mayor a la puja actual de $${this.pujaActual}` };
+    const pujaActualSegura = this.pujaActualSegura;
+    if (monto <= pujaActualSegura) {
+      return { valida: false, error: `El monto debe ser mayor a la puja actual de $${pujaActualSegura}` };
     }
 
     return { valida: true };
@@ -699,7 +721,11 @@ export class StreamComponent implements OnInit, OnDestroy {
   } 
   
   crearPujaRapida(): void {
-    this.pujaRapida = this.pujaActual + 1;
+    // Asegurar que pujaActual sea un número válido usando el getter seguro
+    const pujaActualSegura = this.pujaActualSegura;
+    this.pujaRapida = pujaActualSegura + 1;
+
+    console.log(`🚀 CREANDO PUJA RÁPIDA: pujaActual = ${this.pujaActual}, pujaActualSegura = ${pujaActualSegura}, pujaRapida = ${this.pujaRapida}`);
 
     const validacion = this.validarPuja(this.pujaRapida);
     
@@ -895,16 +921,19 @@ export class StreamComponent implements OnInit, OnDestroy {
           next: (data) => {
             console.log(`💰 NUEVA PUJA REDIS CREADA: Lote ${loteId} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
             
-            // Update UI with the new bid
-            this.pujaActual = data.monto;
-            this.pujaRapida = data.monto + 1;
+            // Update UI with the new bid - con validación robusta
+            const nuevoMonto = this.validarNumero(data.monto, Number(puja.monto), 'enviarPujaRedis-nuevoMonto');
+            this.pujaActual = nuevoMonto;
+            this.pujaRapida = nuevoMonto + 1;
+            console.log(`✅ PUJA ACTUALIZADA: pujaActual = $${this.pujaActual}, pujaRapida = $${this.pujaRapida}`);
             this.pujaComun = null;
 
             // Create the bid object for local display
+            const montoValidado = this.validarNumero(data.monto, Number(puja.monto), 'enviarPujaRedis-nuevaPuja');
             const nuevaPuja: pujaDto = {
               id: data.id || Date.now(), // Use timestamp as fallback ID
               fechaHora: new Date(data.fechaHora || Date.now()),
-              monto: data.monto,
+              monto: montoValidado,
               lote: this.lotes[this.indexLotes],
               factura: null as any,
               cliente: {
@@ -917,6 +946,8 @@ export class StreamComponent implements OnInit, OnDestroy {
               }
             };
             this.pujas.push(nuevaPuja);
+            
+            console.log(`📝 NUEVA PUJA AGREGADA: ID: ${nuevaPuja.id}, Monto: ${nuevaPuja.monto}, Total pujas: ${this.pujas.length}`);
 
             // Send WebSocket notification
             this.sendWebSocketBidRedis(puja, loteId);
@@ -989,8 +1020,11 @@ export class StreamComponent implements OnInit, OnDestroy {
             }
             
             // Reset input values on error
-            this.pujaRapida = this.pujaActual + 1;
+            const pujaActualSegura = this.pujaActualSegura;
+            this.pujaRapida = pujaActualSegura + 1;
             this.pujaComun = null;
+            
+            console.log(`❌ ERROR - VALORES RESETEADOS: pujaActual = ${this.pujaActual}, pujaActualSegura = ${pujaActualSegura}, pujaRapida = ${this.pujaRapida}`);
           }
         });
       },
@@ -1101,12 +1135,27 @@ export class StreamComponent implements OnInit, OnDestroy {
           if (pujasBackend.length > this.pujas.length) {
             this.pujas = pujasBackend;
             
-            // Recalcular puja actual
-            this.pujaActual = Number(this.pujas.length > 0 ? Math.max(...this.pujas.map(p => p.monto)) : 0);
-            if (this.pujaActual === 0) {
-              this.pujaActual = Number(this.lotes[loteIndex].pujaMinima);
+            // Recalcular puja actual con validación robusta
+            let pujaMaxima = 0;
+            if (this.pujas.length > 0) {
+              const montos = this.pujas.map(p => Number(p.monto)).filter(m => !isNaN(m) && m > 0);
+              pujaMaxima = montos.length > 0 ? Math.max(...montos) : 0;
             }
+            
+            this.pujaActual = pujaMaxima > 0 ? pujaMaxima : Number(this.lotes[loteIndex].pujaMinima) || 0;
             this.pujaRapida = Number(this.pujaActual) + 1;
+            
+            // Validación adicional para asegurar que pujaActual nunca sea undefined/NaN
+            if (isNaN(this.pujaActual) || this.pujaActual === undefined || this.pujaActual === null) {
+              this.pujaActual = Number(this.lotes[loteIndex].pujaMinima) || 0;
+              console.warn(`⚠️ pujaActual corregida a puja mínima: ${this.pujaActual}`);
+            }
+            if (isNaN(this.pujaRapida) || this.pujaRapida === undefined || this.pujaRapida === null) {
+              this.pujaRapida = this.pujaActual + 1;
+              console.warn(`⚠️ pujaRapida corregida: ${this.pujaRapida}`);
+            }
+            
+            console.log(`🔄 DATOS ACTUALIZADOS: Lote ${loteIndex} - Puja actual: $${this.pujaActual} - Puja rápida: $${this.pujaRapida}`);
           }
         }
         
@@ -1189,9 +1238,12 @@ export class StreamComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (bidData.bidAmount > this.pujaActual) {
+    const pujaActualSegura = this.pujaActualSegura;
+    if (bidData.bidAmount > pujaActualSegura) {
       this.pujaActual = bidData.bidAmount;
       this.pujaRapida = bidData.bidAmount + 1;
+      
+      console.log(`🌐 WEBSOCKET PUJA RECIBIDA: ${bidData.bidAmount} > ${pujaActualSegura}, actualizando UI`);
 
       const nuevaPuja: pujaDto = {
         id: bidData.pujaId || Date.now(), // Usar ID real si está disponible
@@ -1674,6 +1726,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       const tiempoRestante = Math.max(0, duracionTotalSegundos - tiempoTranscurridoSegundos);
       console.log('[manejarSubastaActiva] tiempoTranscurridoMs:', tiempoTranscurridoMs, 'tiempoTranscurridoSegundos:', tiempoTranscurridoSegundos, 'duracionTotalSegundos:', duracionTotalSegundos, 'tiempoRestante:', tiempoRestante);
       if (tiempoRestante > 0) {
+       
         this.timerState.timer = this.formatearTiempo(tiempoRestante);
         this.timerState.tiempoRestanteSegundos = tiempoRestante;
         this.timerState.timerActivo = true;
@@ -1852,5 +1905,20 @@ export class StreamComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Función utilitaria para validar y corregir valores numéricos
+   * Asegura que el valor sea un número válido mayor o igual a 0
+   */
+  private validarNumero(valor: any, valorPorDefecto: number = 0, contexto: string = ''): number {
+    const numero = Number(valor);
+    if (isNaN(numero) || numero === undefined || numero === null || numero < 0) {
+      if (contexto) {
+        console.warn(`⚠️ [${contexto}] Valor inválido (${valor}), usando valor por defecto: ${valorPorDefecto}`);
+      }
+      return valorPorDefecto;
+    }
+    return numero;
   }
 }

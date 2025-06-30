@@ -73,10 +73,12 @@ main {
     display: flex;
     align-items: center;   
     gap: 1.7vw;
+    flex-wrap: wrap; // Permitir que los elementos se envuelvan si es necesario
     
     @media (max-width: 768px) {
         flex-wrap: wrap;
         gap: 2vw;
+        justify-content: space-between; // Distribuir mejor el espacio
     }
     
     @media (max-width: 480px) {
@@ -89,6 +91,7 @@ main {
         display: flex;
         align-items: center;
         gap: 0.5vw;
+        flex-shrink: 0; // Evitar que se comprima
         
         @media (max-width: 768px) {
             gap: 8px;
@@ -96,6 +99,7 @@ main {
         
         @media (max-width: 480px) {
             gap: 6px;
+            width: 100%; // Ocupar todo el ancho en móvil
         }
     }
 }
@@ -103,9 +107,13 @@ main {
 .titulo {
     margin: 0%;
     font-size: 2.25rem;
+    flex: 1; // Permitir que el título use el espacio disponible
+    min-width: 0; // Permitir que se comprima si es necesario
     
     @media (max-width: 768px) {
         font-size: 1.8rem;
+        flex: none; // En móvil no comprimir
+        width: 100%; // Ocupar todo el ancho disponible
     }
     
     @media (max-width: 480px) {
@@ -167,10 +175,11 @@ main {
 }
 
 .timer-input {
-	width: 16vw;
+	width: auto;
 	min-width: 180px;
+	max-width: 400px; // Límite máximo para evitar que sea demasiado ancho
 	height: 38px;
-	padding: 5px 8px;
+	padding: 5px 12px; // Aumentar padding horizontal para mejor legibilidad
 	background: #f8f9fa;
 	color: #495057;
 	border-color: #007bff;
@@ -182,14 +191,14 @@ main {
 	text-align: center;
 	box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	// Remover overflow y text-overflow para mostrar todo el contenido
 	
 	&.sin-iniciar {
 		background: #fff3cd;
 		border-color: #ffc107;
 		color: #856404;
 		font-size: 1.2rem;
+		min-width: 200px; // Más espacio para textos como "Inicia: dd/mm/yyyy, hh:mm"
 	}
 	
 	&.activo {
@@ -197,6 +206,7 @@ main {
 		border-color: #28a745;
 		color: #155724;
 		font-size: 1.6rem;
+		min-width: 160px; // Espacio para "HH:MM:SS"
 	}
 	
 	&.finalizada {
@@ -204,15 +214,18 @@ main {
 		border-color: #dc3545;
 		color: #721c24;
 		font-size: 1.6rem;
+		min-width: 140px; // Espacio para "Finalizada"
 	}
 	
 	@media (max-width: 768px) {
-	    width: 200px;
-	    font-size: 1.1rem;
 	    min-width: 150px;
+	    max-width: 300px;
+	    font-size: 1.1rem;
+	    padding: 5px 10px;
 	    
 	    &.sin-iniciar {
 	        font-size: 1rem;
+	        min-width: 180px;
 	    }
 	    
 	    &.activo, &.finalizada {
@@ -221,13 +234,15 @@ main {
 	}
 	
 	@media (max-width: 480px) {
-	    width: 180px;
+	    min-width: 120px;
+	    max-width: 250px;
 	    font-size: 0.9rem;
 	    height: 35px;
-	    min-width: 120px;
+	    padding: 5px 8px;
 	    
 	    &.sin-iniciar {
 	        font-size: 0.8rem;
+	        min-width: 140px;
 	    }
 	    
 	    &.activo, &.finalizada {
