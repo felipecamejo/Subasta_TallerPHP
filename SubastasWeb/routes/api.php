@@ -84,7 +84,7 @@ Route::get('/chat/{chatId}/estado', [ChatController::class, 'verificarEstadoChat
 
 Route::apiResource('casa-remates', CasaRemateController::class);
 
-// 🛡️ Rutas protegidas por Sanctum
+//  Rutas protegidas por Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
