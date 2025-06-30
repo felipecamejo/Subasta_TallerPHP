@@ -86,14 +86,6 @@
           </td>
           <td>{{ subasta.rematador?.usuario?.nombre || 'Sin asignar' }}</td>
           <td>{{ subasta.lotes?.length || 0 }}</td>
-          <td>
-            <button pButton 
-                    type="button" 
-                    icon="pi pi-eye" 
-                    class="p-button-rounded p-button-text p-button-sm"
-                    pTooltip="Ver detalles">
-            </button>
-          </td>
         </tr>
       </ng-template>
 
@@ -153,14 +145,6 @@
           </td>
           <td>{{ lote.articulos?.length || 0 }}</td>
           <td>{{ lote.pujas?.length || 0 }}</td>
-          <td>
-            <button pButton 
-                    type="button" 
-                    icon="pi pi-eye" 
-                    class="p-button-rounded p-button-text p-button-sm"
-                    pTooltip="Ver detalles">
-            </button>
-          </td>
         </tr>
       </ng-template>
 

@@ -64,20 +64,26 @@ class ArticuloController extends Controller{
     */
     public function store(Request $request){
         $request->validate([
+            'nombre' => 'required|string|max:255',
             'imagenes' => 'required|string', 
             'especificacion' => 'required|string', 
             'disponibilidad' => 'required|boolean', 
-            'condicion' => 'required|string', 
-            'vendedor_id' => 'nullable|exists:vendedores,id',
-            'lote_id' => 'nullable|exists:lotes,id',
+            'condicion' => 'required|string',
+            'estado' => 'nullable|string',
+            'vendedor_id' => 'required|exists:vendedores,id',
+            'categoria_id' => 'required|exists:categorias,id',
+            'lote_id' => 'required|exists:lotes,id',
         ]);
 
         $articulo = Articulo::create([
+            'nombre' => $request->nombre,
             'imagenes' => $request->imagenes,
             'especificacion' => $request->especificacion,
             'disponibilidad' => $request->disponibilidad,
             'condicion' => $request->condicion,
+            'estado' => $request->estado ?? 'activo',
             'vendedor_id' => $request->vendedor_id,
+            'categoria_id' => $request->categoria_id,
             'lote_id' => $request->lote_id,
         ]);
 

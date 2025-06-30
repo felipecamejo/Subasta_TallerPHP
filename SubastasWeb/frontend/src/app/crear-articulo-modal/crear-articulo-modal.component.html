@@ -27,6 +27,20 @@
     <div class="responsive-grid-articulo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
       
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="nombre" style="font-weight: bold; color: #495057;">Nombre del Artículo *</label>
+        <input 
+          id="nombre"
+          type="text" 
+          pInputText 
+          formControlName="nombre" 
+          placeholder="Ingrese el nombre del artículo"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" style="color: #dc3545;">
+          El nombre es obligatorio
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         <label for="imagenes" style="font-weight: bold; color: #495057;">URL de Imágenes *</label>
         <input 
           id="imagenes"
@@ -56,42 +70,67 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label for="vendedor" style="font-weight: bold; color: #495057;">ID del Vendedor *</label>
+        <label for="vendedor_nombre" style="font-weight: bold; color: #495057;">Vendedor *</label>
         <input 
-          id="vendedor"
-          type="number" 
+          id="vendedor_nombre"
+          type="text" 
           pInputText 
-          formControlName="vendedor_id" 
-          placeholder="Ingrese el ID del vendedor"
-          min="1"
+          formControlName="vendedor_nombre" 
+          placeholder="Escriba el nombre del vendedor (se creará automáticamente si no existe)"
           style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
-        <small *ngIf="form.get('vendedor_id')?.invalid && form.get('vendedor_id')?.touched" style="color: #dc3545;">
+        <small *ngIf="form.get('vendedor_nombre')?.invalid && form.get('vendedor_nombre')?.touched" style="color: #dc3545;">
           El vendedor es obligatorio
         </small>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label for="lote" style="font-weight: bold; color: #495057;">ID del Lote *</label>
+        <label for="categoria_nombre" style="font-weight: bold; color: #495057;">Categoría *</label>
         <input 
-          id="lote"
-          type="number" 
+          id="categoria_nombre"
+          type="text" 
           pInputText 
-          formControlName="lote_id" 
-          placeholder="Ingrese el ID del lote"
-          min="1"
+          formControlName="categoria_nombre" 
+          placeholder="Escriba el nombre de la categoría (se creará automáticamente si no existe)"
           style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
-        <small *ngIf="form.get('lote_id')?.invalid && form.get('lote_id')?.touched" style="color: #dc3545;">
-          El lote es obligatorio
+        <small *ngIf="form.get('categoria_nombre')?.invalid && form.get('categoria_nombre')?.touched" style="color: #dc3545;">
+          La categoría es obligatoria
         </small>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <p-checkbox 
-          formControlName="disponibilidad" 
-          label="Artículo disponible" 
-          [binary]="true">
-        </p-checkbox>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="subasta_id" style="font-weight: bold; color: #495057;">Subasta *</label>
+        <p-dropdown 
+          id="subasta_id"
+          formControlName="subasta_id" 
+          [options]="subastas"
+          placeholder="Seleccione una subasta"
+          optionLabel="nombre"
+          optionValue="id"
+          [style]="{ width: '100%' }" />
+        <small *ngIf="form.get('subasta_id')?.invalid && form.get('subasta_id')?.touched" style="color: #dc3545;">
+          La subasta es obligatoria
+        </small>
       </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="lote_id" style="font-weight: bold; color: #495057;">Lote *</label>
+        <p-dropdown 
+          id="lote_id"
+          formControlName="lote_id" 
+          [options]="lotes"
+          placeholder="Primero seleccione una subasta"
+          optionLabel="descripcionLote"
+          optionValue="id"
+          [disabled]="!form.get('subasta_id')?.value"
+          [style]="{ width: '100%' }" />
+        <small *ngIf="form.get('lote_id')?.invalid && form.get('lote_id')?.touched" style="color: #dc3545;">
+          El lote es obligatorio
+        </small>
+        <small *ngIf="form.get('subasta_id')?.value && lotes.length === 0" style="color: #f39c12;">
+          No hay lotes disponibles para esta subasta
+        </small>
+      </div>
+
     </div>
 
     <!-- ESPECIFICACIONES -->
@@ -124,7 +163,8 @@
         label="Crear Artículo" 
         icon="pi pi-check" 
         type="submit"
-        [disabled]="form.invalid"
+        [loading]="loading"
+        [disabled]="form.invalid || loading"
         [style]="{ 'min-width': '120px' }">
       </p-button>
     </div>
