@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('especificacion');
             $table->boolean('disponibilidad');
             $table->string('condicion'); 
-            $table->enum('estado', ['EXCELENTE', 'USADO']);
+            $table->enum('estado', ['EXCELENTE', 'USADO'])->nullable();
             
             $table->foreignId('vendedor_id')->nullable()->constrained('vendedores')->onDelete('cascade');
             $table->foreignId('lote_id')->nullable()->constrained('lotes')->onDelete('cascade');

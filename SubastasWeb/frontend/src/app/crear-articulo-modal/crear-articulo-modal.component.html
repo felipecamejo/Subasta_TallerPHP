@@ -55,17 +55,32 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label for="condicion" style="font-weight: bold; color: #495057;">Condición *</label>
-        <p-dropdown 
+        <label for="estado" style="font-weight: bold; color: #495057;">Estado Físico *</label>
+        <select 
+          id="estado"
+          formControlName="estado" 
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
+          <option value="" disabled>Seleccione el estado</option>
+          <option *ngFor="let estado of estadosOptions" [value]="estado.value">
+            {{ estado.label }}
+          </option>
+        </select>
+        <small *ngIf="form.get('estado')?.invalid && form.get('estado')?.touched" style="color: #dc3545;">
+          El estado es obligatorio
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="condicion" style="font-weight: bold; color: #495057;">Condición (opcional)</label>
+        <input 
           id="condicion"
+          type="text" 
+          pInputText 
           formControlName="condicion" 
-          [options]="condicionesOptions"
-          placeholder="Seleccione la condición"
-          optionLabel="label"
-          optionValue="value"
-          [style]="{ width: '100%' }" />
-        <small *ngIf="form.get('condicion')?.invalid && form.get('condicion')?.touched" style="color: #dc3545;">
-          La condición es obligatoria
+          placeholder="Detalles adicionales sobre la condición del artículo"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small style="color: #6c757d; font-size: 0.8rem;">
+          Campo opcional para agregar detalles específicos sobre la condición
         </small>
       </div>
 
@@ -84,29 +99,39 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <label for="categoria_nombre" style="font-weight: bold; color: #495057;">Categoría *</label>
-        <input 
-          id="categoria_nombre"
-          type="text" 
-          pInputText 
-          formControlName="categoria_nombre" 
-          placeholder="Escriba el nombre de la categoría (se creará automáticamente si no existe)"
-          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
-        <small *ngIf="form.get('categoria_nombre')?.invalid && form.get('categoria_nombre')?.touched" style="color: #dc3545;">
+        <label for="categoria_id" style="font-weight: bold; color: #495057;">Categoría *</label>
+        <!-- Debug: mostrar cantidad de categorías -->
+        <small style="color: #6c757d; font-size: 0.8rem;">
+          {{ categoriasLoading ? 'Cargando...' : categorias.length + ' categorías cargadas' }}
+        </small>
+        <select 
+          id="categoria_id"
+          formControlName="categoria_id" 
+          [disabled]="categoriasLoading"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
+          <option [value]="null" disabled>
+            {{ categoriasLoading ? 'Cargando categorías...' : 'Seleccione una categoría' }}
+          </option>
+          <option *ngFor="let categoria of categorias" [value]="categoria.id">
+            {{ categoria.nombre }}
+          </option>
+        </select>
+        <small *ngIf="form.get('categoria_id')?.invalid && form.get('categoria_id')?.touched" style="color: #dc3545;">
           La categoría es obligatoria
         </small>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         <label for="subasta_id" style="font-weight: bold; color: #495057;">Subasta *</label>
-        <p-dropdown 
+        <select 
           id="subasta_id"
           formControlName="subasta_id" 
-          [options]="subastas"
-          placeholder="Seleccione una subasta"
-          optionLabel="nombre"
-          optionValue="id"
-          [style]="{ width: '100%' }" />
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
+          <option value="" disabled>Seleccione una subasta</option>
+          <option *ngFor="let subasta of subastas" [value]="subasta.id">
+            {{ subasta.nombre }}
+          </option>
+        </select>
         <small *ngIf="form.get('subasta_id')?.invalid && form.get('subasta_id')?.touched" style="color: #dc3545;">
           La subasta es obligatoria
         </small>
@@ -114,15 +139,18 @@
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         <label for="lote_id" style="font-weight: bold; color: #495057;">Lote *</label>
-        <p-dropdown 
+        <select 
           id="lote_id"
           formControlName="lote_id" 
-          [options]="lotes"
-          placeholder="Primero seleccione una subasta"
-          optionLabel="descripcionLote"
-          optionValue="id"
           [disabled]="!form.get('subasta_id')?.value"
-          [style]="{ width: '100%' }" />
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
+          <option value="" disabled>
+            {{ form.get('subasta_id')?.value ? 'Seleccione un lote' : 'Primero seleccione una subasta' }}
+          </option>
+          <option *ngFor="let lote of lotes" [value]="lote.id">
+            {{ lote.descripcionLote }}
+          </option>
+        </select>
         <small *ngIf="form.get('lote_id')?.invalid && form.get('lote_id')?.touched" style="color: #dc3545;">
           El lote es obligatorio
         </small>

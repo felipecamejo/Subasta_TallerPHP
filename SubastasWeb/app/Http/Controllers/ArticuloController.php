@@ -68,8 +68,8 @@ class ArticuloController extends Controller{
             'imagenes' => 'required|string', 
             'especificacion' => 'required|string', 
             'disponibilidad' => 'required|boolean', 
-            'condicion' => 'required|string',
-            'estado' => 'nullable|string',
+            'condicion' => 'nullable|string', // Campo opcional para detalles
+            'estado' => 'required|string|in:EXCELENTE,USADO', // Campo requerido del select
             'vendedor_id' => 'required|exists:vendedores,id',
             'categoria_id' => 'required|exists:categorias,id',
             'lote_id' => 'required|exists:lotes,id',
@@ -80,8 +80,8 @@ class ArticuloController extends Controller{
             'imagenes' => $request->imagenes,
             'especificacion' => $request->especificacion,
             'disponibilidad' => $request->disponibilidad,
-            'condicion' => $request->condicion,
-            'estado' => $request->estado ?? 'activo',
+            'condicion' => $request->condicion ?? '', // Campo opcional
+            'estado' => $request->estado, // Campo requerido desde el frontend
             'vendedor_id' => $request->vendedor_id,
             'categoria_id' => $request->categoria_id,
             'lote_id' => $request->lote_id,

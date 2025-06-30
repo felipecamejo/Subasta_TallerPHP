@@ -45,13 +45,14 @@ export class CrearArticuloModalComponent implements OnInit {
   visible: boolean = false;
   form: FormGroup;
   loading: boolean = false;
+  categoriasLoading: boolean = false;
 
   // Datos para los dropdowns
   subastas: subastaDto[] = [];
   lotes: (Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos' | 'umbral'| 'pago'> & { descripcionLote?: string })[] = [];
   categorias: categoriaDto[] = [];
   
-  condicionesOptions = [
+  estadosOptions = [
     { label: 'Excelente', value: estadoEnum.EXCELENTE },
     { label: 'Usado', value: estadoEnum.USADO },
   ];
@@ -70,9 +71,10 @@ export class CrearArticuloModalComponent implements OnInit {
       imagenes: ['', Validators.required],
       especificacion: ['', Validators.required],
       disponibilidad: [true],
-      condicion: ['', Validators.required],
+      estado: ['', Validators.required], // Estado físico: EXCELENTE/USADO
+      condicion: [''], // Campo opcional para detalles adicionales
       vendedor_nombre: ['', Validators.required], // Campo de texto para vendedor
-      categoria_nombre: ['', Validators.required], // Campo de texto para categoría  
+      categoria_id: [null, Validators.required], // Dropdown para categoría  
       subasta_id: [null, Validators.required], // Dropdown para subasta
       lote_id: [null, Validators.required] // Dropdown para lote (se filtra por subasta)
     });
@@ -114,12 +116,17 @@ export class CrearArticuloModalComponent implements OnInit {
    * Cargar todas las categorías disponibles
    */
   private cargarCategorias(): void {
+    console.log('🔄 Cargando categorías...');
+    this.categoriasLoading = true;
     this.categoriaService.getCategorias().subscribe({
       next: (categorias) => {
+        console.log('✅ Categorías cargadas:', categorias);
         this.categorias = categorias;
+        this.categoriasLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar categorías:', error);
+        console.error('❌ Error al cargar categorías:', error);
+        this.categoriasLoading = false;
         this.messageService.add({
           severity: 'error', 
           summary: 'Error', 
@@ -195,49 +202,14 @@ export class CrearArticuloModalComponent implements OnInit {
     });
   }
 
-  /**
-   * Buscar o crear categoría por nombre
-   */
-  private async buscarOCrearCategoria(nombre: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-      // Buscar en las categorías ya cargadas
-      const categoriaExistente = this.categorias.find(c => 
-        c.nombre.toLowerCase().trim() === nombre.toLowerCase().trim()
-      );
-      
-      if (categoriaExistente && categoriaExistente.id) {
-        resolve(categoriaExistente.id);
-      } else {
-        // Crear nueva categoría
-        this.categoriaService.crearCategoria({ 
-          nombre: nombre.trim(),
-          categoria_padre_id: null 
-        }).subscribe({
-          next: (nuevaCategoria) => {
-            if (nuevaCategoria.id) {
-              this.messageService.add({
-                severity: 'success', 
-                summary: 'Categoría creada', 
-                detail: `Categoría "${nombre}" creada exitosamente`
-              });
-              // Agregar a la lista local
-              this.categorias.push(nuevaCategoria);
-              resolve(nuevaCategoria.id);
-            } else {
-              reject('Error: Categoría creada sin ID');
-            }
-          },
-          error: (error) => {
-            console.error('Error al crear categoría:', error);
-            reject(error);
-          }
-        });
-      }
-    });
-  }
-
   abrir() {
+    console.log('🔓 Abriendo modal...');
     this.visible = true;
+    
+    // Recargar categorías cada vez que se abre el modal
+    this.cargarCategorias();
+    this.cargarSubastas();
+    
     // Pre-llenar el lote_id si está disponible
     if (this.loteId) {
       this.form.patchValue({ lote_id: this.loteId });
@@ -260,21 +232,23 @@ export class CrearArticuloModalComponent implements OnInit {
         // Buscar o crear vendedor
         const vendedorId = await this.buscarOCrearVendedor(formData.vendedor_nombre);
         
-        // Buscar o crear categoría
-        const categoriaId = await this.buscarOCrearCategoria(formData.categoria_nombre);
+        // Usar directamente el ID de categoría seleccionado
+        const categoriaId = formData.categoria_id;
         
         // Preparar datos del artículo
         const articuloData = {
           nombre: formData.nombre,
-          estado: 'activo', // Estado por defecto
+          estado: formData.estado, // Estado físico seleccionado (EXCELENTE/USADO)
           imagenes: formData.imagenes,
           especificacion: formData.especificacion,
           disponibilidad: formData.disponibilidad,
-          condicion: formData.condicion,
+          condicion: formData.condicion || '', // Campo opcional para detalles
           vendedor_id: vendedorId,
           categoria_id: categoriaId,
           lote_id: formData.lote_id
         };
+        
+        console.log('📦 Datos del artículo a enviar:', articuloData);
         
         // Crear el artículo
         this.articuloService.crearArticulo(articuloData).subscribe({
