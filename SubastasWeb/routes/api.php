@@ -178,6 +178,8 @@ Route::get('/lotes', [LoteController::class, 'index']);
         Route::get('/{loteId}/historial', [PujaRedisController::class, 'obtenerHistorialPujas']);
         Route::get('/{loteId}/estadisticas', [PujaRedisController::class, 'obtenerEstadisticas']);
         Route::post('/{loteId}/visualizacion', [PujaRedisController::class, 'marcarVisualizacion']);
+        Route::get('/debug/cliente/{usuarioId}', [PujaRedisController::class, 'debugCliente']); // 🔧 DEBUG
+        Route::get('/debug-usuario/{usuarioId}', [PujaRedisController::class, 'debugUsuarioDirecto']); // 🔧 DEBUG TEMPORAL
     });
 
 //});

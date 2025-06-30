@@ -38,18 +38,21 @@
                  class="rectangle mb-4 cursor-pointer hover:shadow-lg transition-shadow" 
                  (click)="irASubasta(subasta)">
                 <img [src]="getImagenSubasta(subasta)" class="w-full" alt="Imagen de subasta">
-                <span class="subasta-nombre">{{ getNombreSubasta(subasta) }}</span>
                 
-                <!-- Información de fecha y hora -->
-                <div class="subasta-fecha">
-                    <i class="pi pi-calendar fecha-icono"></i>
-                    <span class="fecha-texto">{{ formatearFechaSubasta(subasta.fecha) }}</span>
-                </div>
-                
-                <!-- Estado y tiempo restante -->
-                <div class="tiempo-restante" [ngClass]="getEstadoSubasta(subasta)">
-                    <i class="pi" [ngClass]="getIconoEstado(subasta)"></i>
-                    <span>{{ getTiempoRestanteSubasta(subasta) }}</span>
+                <div class="subasta-info">
+                    <span class="subasta-nombre">{{ getNombreSubasta(subasta) }}</span>
+                    
+                    <!-- Información de fecha y hora -->
+                    <div class="subasta-fecha">
+                        <i class="pi pi-calendar fecha-icono"></i>
+                        <span class="fecha-texto">{{ formatearFechaSubasta(subasta.fecha) }}</span>
+                    </div>
+                    
+                    <!-- Estado y tiempo restante -->
+                    <div class="tiempo-restante" [ngClass]="getEstadoSubasta(subasta)">
+                        <i class="pi" [ngClass]="getIconoEstado(subasta)"></i>
+                        <span>{{ getTiempoRestanteSubasta(subasta) }}</span>
+                    </div>
                 </div>
             </div>
         </article>

@@ -86,10 +86,20 @@ export class CrearArticuloModalComponent implements OnInit {
     
     // Escuchar cambios en la subasta seleccionada para filtrar lotes
     this.form.get('subasta_id')?.valueChanges.subscribe(subastaId => {
+      console.log('🔄 Cambio en subasta seleccionada:', subastaId);
       if (subastaId) {
-        this.cargarLotesPorSubasta(subastaId);
+        // Convertir a número si es string
+        const subastaIdNum = typeof subastaId === 'string' ? parseInt(subastaId, 10) : subastaId;
+        this.cargarLotesPorSubasta(subastaIdNum);
         this.form.patchValue({ lote_id: null }); // Limpiar lote seleccionado
+      } else {
+        this.lotes = []; // Limpiar lotes si no hay subasta seleccionada
       }
+    });
+
+    // Escuchar cambios en el lote seleccionado para debug
+    this.form.get('lote_id')?.valueChanges.subscribe(loteId => {
+      console.log('🎯 Cambio en lote seleccionado:', loteId, typeof loteId);
     });
   }
 
@@ -140,15 +150,26 @@ export class CrearArticuloModalComponent implements OnInit {
    * Cargar lotes filtrados por subasta
    */
   private cargarLotesPorSubasta(subastaId: number): void {
+    console.log('📦 Cargando lotes para subasta:', subastaId);
+    
     this.subastaService.getSubasta(subastaId).subscribe({
       next: (subasta) => {
-        this.lotes = (subasta.lotes || []).map(lote => ({
-          ...lote,
-          descripcionLote: `Lote #${lote.id} - Base: $${lote.valorBase} - Mín: $${lote.pujaMinima}`
-        }));
+        console.log('📋 Subasta obtenida:', subasta);
+        
+        if (subasta && subasta.lotes) {
+          this.lotes = subasta.lotes.map(lote => ({
+            ...lote,
+            descripcionLote: `Lote #${lote.id} - Base: $${lote.valorBase} - Mín: $${lote.pujaMinima}`
+          }));
+          console.log('✅ Lotes cargados:', this.lotes);
+        } else {
+          console.log('⚠️ No se encontraron lotes para la subasta');
+          this.lotes = [];
+        }
       },
       error: (error) => {
-        console.error('Error al cargar lotes:', error);
+        console.error('❌ Error al cargar lotes:', error);
+        this.lotes = [];
         this.messageService.add({
           severity: 'error', 
           summary: 'Error', 
@@ -163,20 +184,34 @@ export class CrearArticuloModalComponent implements OnInit {
    */
   private async buscarOCrearVendedor(nombre: string): Promise<number> {
     return new Promise((resolve, reject) => {
+      console.log('🔍 Buscando vendedor:', nombre);
+      
       // Primero intentar buscar vendedores existentes
       this.vendedorService.getVendedores().subscribe({
         next: (vendedores) => {
+          console.log('📋 Vendedores obtenidos:', vendedores);
+          
+          // Validar que vendedores sea un array
+          if (!Array.isArray(vendedores)) {
+            console.error('❌ La respuesta de vendedores no es un array:', vendedores);
+            reject('Error: Respuesta de vendedores inválida');
+            return;
+          }
+          
           const vendedorExistente = vendedores.find(v => 
-            v.nombre.toLowerCase().trim() === nombre.toLowerCase().trim()
+            v?.nombre && v.nombre.toLowerCase().trim() === nombre.toLowerCase().trim()
           );
           
           if (vendedorExistente && vendedorExistente.id) {
+            console.log('✅ Vendedor existente encontrado:', vendedorExistente);
             resolve(vendedorExistente.id);
           } else {
+            console.log('➕ Creando nuevo vendedor:', nombre);
             // Crear nuevo vendedor
             this.vendedorService.crearVendedor({ nombre: nombre.trim() }).subscribe({
               next: (nuevoVendedor) => {
-                if (nuevoVendedor.id) {
+                console.log('✅ Nuevo vendedor creado:', nuevoVendedor);
+                if (nuevoVendedor?.id) {
                   this.messageService.add({
                     severity: 'success', 
                     summary: 'Vendedor creado', 
@@ -184,19 +219,40 @@ export class CrearArticuloModalComponent implements OnInit {
                   });
                   resolve(nuevoVendedor.id);
                 } else {
+                  console.error('❌ Vendedor creado sin ID:', nuevoVendedor);
                   reject('Error: Vendedor creado sin ID');
                 }
               },
               error: (error) => {
-                console.error('Error al crear vendedor:', error);
+                console.error('❌ Error al crear vendedor:', error);
                 reject(error);
               }
             });
           }
         },
         error: (error) => {
-          console.error('Error al buscar vendedores:', error);
-          reject(error);
+          console.error('❌ Error al buscar vendedores:', error);
+          // Intentar crear directamente si falla la búsqueda
+          console.log('⚠️ Intentando crear vendedor directamente...');
+          this.vendedorService.crearVendedor({ nombre: nombre.trim() }).subscribe({
+            next: (nuevoVendedor) => {
+              console.log('✅ Vendedor creado tras error de búsqueda:', nuevoVendedor);
+              if (nuevoVendedor?.id) {
+                this.messageService.add({
+                  severity: 'success', 
+                  summary: 'Vendedor creado', 
+                  detail: `Vendedor "${nombre}" creado exitosamente`
+                });
+                resolve(nuevoVendedor.id);
+              } else {
+                reject('Error: Vendedor creado sin ID');
+              }
+            },
+            error: (createError) => {
+              console.error('❌ Error al crear vendedor tras fallo de búsqueda:', createError);
+              reject(createError);
+            }
+          });
         }
       });
     });
@@ -223,17 +279,47 @@ export class CrearArticuloModalComponent implements OnInit {
   }
 
   async onSubmit() {
+    console.log('🚀 Iniciando envío del formulario...');
+    console.log('📋 Valores del formulario:', this.form.value);
+    console.log('🔍 Estado de validación del formulario:', this.form.valid);
+    console.log('🎯 Estado específico del lote_id:', {
+      value: this.form.get('lote_id')?.value,
+      valid: this.form.get('lote_id')?.valid,
+      errors: this.form.get('lote_id')?.errors
+    });
+    
     if (this.form.valid) {
       this.loading = true;
       
       try {
         const formData = this.form.value;
         
+        // Validar que todos los campos requeridos estén presentes
+        if (!formData.lote_id || formData.lote_id === null) {
+          console.error('❌ Error: Lote no seleccionado. Valor actual:', formData.lote_id);
+          this.messageService.add({
+            severity: 'error', 
+            summary: 'Error', 
+            detail: 'Debe seleccionar un lote'
+          });
+          this.loading = false;
+          return;
+        }
+        
+        console.log('🔍 Buscando/creando vendedor:', formData.vendedor_nombre);
         // Buscar o crear vendedor
         const vendedorId = await this.buscarOCrearVendedor(formData.vendedor_nombre);
+        console.log('✅ Vendedor ID obtenido:', vendedorId);
         
         // Usar directamente el ID de categoría seleccionado
-        const categoriaId = formData.categoria_id;
+        const categoriaId = typeof formData.categoria_id === 'string' ? 
+          parseInt(formData.categoria_id, 10) : formData.categoria_id;
+        
+        // Convertir lote_id a número
+        const loteId = typeof formData.lote_id === 'string' ? 
+          parseInt(formData.lote_id, 10) : formData.lote_id;
+        
+        console.log('🔢 IDs convertidos - Vendedor:', vendedorId, 'Categoría:', categoriaId, 'Lote:', loteId);
         
         // Preparar datos del artículo
         const articuloData = {
@@ -245,7 +331,7 @@ export class CrearArticuloModalComponent implements OnInit {
           condicion: formData.condicion || '', // Campo opcional para detalles
           vendedor_id: vendedorId,
           categoria_id: categoriaId,
-          lote_id: formData.lote_id
+          lote_id: loteId
         };
         
         console.log('📦 Datos del artículo a enviar:', articuloData);
@@ -253,6 +339,7 @@ export class CrearArticuloModalComponent implements OnInit {
         // Crear el artículo
         this.articuloService.crearArticulo(articuloData).subscribe({
           next: (nuevoArticulo) => {
+            console.log('✅ Artículo creado exitosamente:', nuevoArticulo);
             this.messageService.add({
               severity: 'success', 
               summary: 'Éxito', 
@@ -262,11 +349,11 @@ export class CrearArticuloModalComponent implements OnInit {
             this.cerrar();
           },
           error: (error) => {
-            console.error('Error al crear artículo:', error);
+            console.error('❌ Error al crear artículo:', error);
             this.messageService.add({
               severity: 'error', 
               summary: 'Error', 
-              detail: 'No se pudo crear el artículo'
+              detail: error?.error?.message || 'No se pudo crear el artículo'
             });
           },
           complete: () => {
@@ -275,7 +362,7 @@ export class CrearArticuloModalComponent implements OnInit {
         });
         
       } catch (error) {
-        console.error('Error en el proceso de creación:', error);
+        console.error('❌ Error en el proceso de creación:', error);
         this.messageService.add({
           severity: 'error', 
           summary: 'Error', 
@@ -284,10 +371,37 @@ export class CrearArticuloModalComponent implements OnInit {
         this.loading = false;
       }
     } else {
+      console.log('❌ Formulario inválido. Errores:');
+      
       // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.form.controls).forEach(key => {
-        this.form.get(key)?.markAsTouched();
+        const control = this.form.get(key);
+        control?.markAsTouched();
+        if (control?.invalid) {
+          console.log(`  - ${key}:`, control.errors);
+        }
+      });
+      
+      this.messageService.add({
+        severity: 'warn', 
+        summary: 'Formulario incompleto', 
+        detail: 'Por favor complete todos los campos requeridos'
       });
     }
+  }
+
+  /**
+   * Manejar cambio en la selección de subasta
+   */
+  onSubastaChange(event: any): void {
+    // Este método ya no es necesario ya que el reactive form maneja el cambio automáticamente
+    // La lógica se ejecuta en el valueChanges del ngOnInit
+  }
+
+  /**
+   * Manejar cambio en la selección de lote
+   */
+  onLoteChange(event: any): void {
+    // Este método ya no es necesario ya que el reactive form maneja el cambio automáticamente
   }
 }

@@ -44,7 +44,7 @@
                 <div class="w-full flex padrePujas">
                     <div class="botones-puja">
                         <p-button label="Puja Rápida" severity="secondary" class="puja-btn" [disabled]="!this.timerState.timerActivo" (click)="crearPujaRapida()"/>
-                        <input type="number" class="text-input" [disabled]="!this.timerState.timerActivo" [value]="pujaActual+1"  pInputText readonly/>
+                        <input type="number" class="text-input" [disabled]="!this.timerState.timerActivo" [value]="this.pujaActual + (+this.lotes[this.indexLotes].pujaMinima || 1)"  pInputText readonly/>
                     </div>
                 </div>
 

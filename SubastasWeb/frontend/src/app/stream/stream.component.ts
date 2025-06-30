@@ -498,15 +498,29 @@ export class StreamComponent implements OnInit, OnDestroy {
     // Enviar cambio vía WebSocket inmediatamente
     this.sendLoteChangeToWebSocket();
     
-    // Actualizar el backend de forma asíncrona
-    this.subastaService.updateSubasta(this.subasta).subscribe({
-      next: () => {
+    // Actualizar el backend con un payload específico que incluya loteIndex
+    const updatePayload = {
+      id: this.subasta.id,
+      loteIndex: this.indexLotes,
+      // Incluir otros campos esenciales para evitar problemas
+      nombre: this.subasta.nombre,
+      activa: this.subasta.activa,
+      duracionMinutos: this.subasta.duracionMinutos,
+      fecha: this.subasta.fecha
+    };
+    
+    console.log('🔄 Actualizando loteIndex en backend (anteriorLote):', updatePayload);
+    
+    this.subastaService.updateSubasta(updatePayload as any).subscribe({
+      next: (response) => {
+        console.log('✅ LoteIndex actualizado exitosamente (anteriorLote):', response);
         // Desmarcar navegación después de éxito
         setTimeout(() => {
           this.rematadorNavigating = false;
         }, 1000);
       },
       error: (err) => {
+        console.error('❌ Error actualizando loteIndex (anteriorLote):', err);
         // NO revertir el cambio - mantener el control del rematador
         // Desmarcar navegación incluso en caso de error
         setTimeout(() => {
@@ -547,15 +561,29 @@ export class StreamComponent implements OnInit, OnDestroy {
     // Enviar cambio vía WebSocket inmediatamente
     this.sendLoteChangeToWebSocket();
     
-    // Actualizar el backend de forma asíncrona
-    this.subastaService.updateSubasta(this.subasta).subscribe({
-      next: () => {
+    // Actualizar el backend con un payload específico que incluya loteIndex
+    const updatePayload = {
+      id: this.subasta.id,
+      loteIndex: this.indexLotes,
+      // Incluir otros campos esenciales para evitar problemas
+      nombre: this.subasta.nombre,
+      activa: this.subasta.activa,
+      duracionMinutos: this.subasta.duracionMinutos,
+      fecha: this.subasta.fecha
+    };
+    
+    console.log('🔄 Actualizando loteIndex en backend (siguienteLote):', updatePayload);
+    
+    this.subastaService.updateSubasta(updatePayload as any).subscribe({
+      next: (response) => {
+        console.log('✅ LoteIndex actualizado exitosamente (siguienteLote):', response);
         // Desmarcar navegación después de éxito
         setTimeout(() => {
           this.rematadorNavigating = false;
         }, 1000);
       },
       error: (err) => {
+        console.error('❌ Error actualizando loteIndex (siguienteLote):', err);
         // NO revertir el cambio - mantener el control del rematador
         // Desmarcar navegación incluso en caso de error
         setTimeout(() => {
@@ -564,6 +592,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       }
     });
   }
+
   cargarPujas(loteIndex: number): void {
     if (loteIndex < 0 || loteIndex >= this.lotes.length) {
       return;
@@ -578,12 +607,18 @@ export class StreamComponent implements OnInit, OnDestroy {
       pujaMaxima = montos.length > 0 ? Math.max(...montos) : 0;
     }
     
-    const pujaMinima = this.validarNumero(this.lotes[loteIndex].pujaMinima, 0, 'cargarPujas-pujaMinima');
-    this.pujaActual = pujaMaxima > 0 ? pujaMaxima : pujaMinima;
+    // pujaActual = la última puja realizada (o valor base si no hay pujas)
+    if (pujaMaxima > 0) {
+      this.pujaActual = pujaMaxima;
+    } else {
+      // Si no hay pujas, usar el valor base del lote
+      const valorBase = Number(this.lotes[loteIndex].valorBase) || 0;
+      this.pujaActual = valorBase;
+    }
     
-    // Calcular puja rápida con validación
-    const incremento = pujaMinima || 1;
-    this.pujaRapida = this.validarNumero(this.pujaActual, 0, 'cargarPujas-pujaActual') + incremento;
+    // pujaRapida = pujaActual + pujaMinima (el siguiente monto mínimo válido)
+    const pujaMinima = this.validarNumero(this.lotes[loteIndex].pujaMinima, 0, 'cargarPujas-pujaMinima');
+    this.pujaRapida = this.pujaActual + pujaMinima;
     this.pujaComun = null;
     
     console.log(`📊 PUJAS CARGADAS: Lote ${loteIndex} - Puja actual: $${this.pujaActual} - Puja rápida: $${this.pujaRapida}`);
@@ -626,7 +661,6 @@ export class StreamComponent implements OnInit, OnDestroy {
     const tiempoFormateado = `${horas.toString().padStart(2, '0')}:` +
           `${minutos.toString().padStart(2, '0')}:` +
           `${seg.toString().padStart(2, '0')}`;
-    console.log('[formatearTiempo] segundos:', segundos, '->', tiempoFormateado);
     return tiempoFormateado;
   }
 
@@ -674,18 +708,42 @@ export class StreamComponent implements OnInit, OnDestroy {
       return { valida: false, error: 'No hay lote seleccionado' };
     }
 
-    // VALIDACIÓN 5: Puja mínima
-    if (monto < loteActual.pujaMinima) {
-      return { valida: false, error: `El monto debe ser mayor a $${loteActual.pujaMinima}` };
-    }
-
-    // VALIDACIÓN 6: Superar puja actual
+    // VALIDACIÓN 5: Puja no puede ser menor que valorBase + pujaMinima o pujaActual + pujaMinima
+    const valorBase = Number(loteActual.valorBase) || 0;
+    const pujaMinima = Number(loteActual.pujaMinima) || 1;
     const pujaActualSegura = this.pujaActualSegura;
-    if (monto <= pujaActualSegura) {
-      return { valida: false, error: `El monto debe ser mayor a la puja actual de $${pujaActualSegura}` };
+    
+    // El monto mínimo requerido es el mayor entre:
+    // - valorBase + pujaMinima
+    // - pujaActual + pujaMinima
+    const montoMinimoDesdeBase = valorBase + pujaMinima;
+    const montoMinimoDesdeActual = pujaActualSegura + pujaMinima;
+    const montoMinimoRequerido = Math.max(montoMinimoDesdeBase, montoMinimoDesdeActual);
+    
+    if (monto < montoMinimoRequerido) {
+      return { 
+        valida: false, 
+        error: `El monto debe ser al menos $${montoMinimoRequerido} (valor base: $${valorBase} + puja mínima: $${pujaMinima} o puja actual: $${pujaActualSegura} + puja mínima: $${pujaMinima})` 
+      };
     }
 
     return { valida: true };
+  }
+
+  // 🔧 HELPER: Calcular puja actual usando la misma lógica que el backend Redis
+  private calcularPujaActual(pujaAnterior: number): number {
+    const loteActual = this.lotes[this.indexLotes];
+    if (!loteActual) return 0;
+    
+    const valorBase = Number(loteActual.valorBase) || 0;
+    const pujaMinima = Number(loteActual.pujaMinima) || 1;
+    
+    // Usar la misma lógica que el backend Redis
+    const montoMinimo = Math.max(pujaAnterior + pujaMinima, valorBase);
+    
+    console.log(`🧮 CALCULAR PUJA ACTUAL: pujaAnterior=${pujaAnterior}, valorBase=${valorBase}, pujaMinima=${pujaMinima}, resultado=${montoMinimo}`);
+    
+    return montoMinimo;
   }
 
   // ✅ UPDATED: Create Redis-compatible bid request
@@ -699,15 +757,26 @@ export class StreamComponent implements OnInit, OnDestroy {
     const usuarioIdStr = localStorage.getItem('usuario_id');
     const clienteId = usuarioIdStr ? Number(usuarioIdStr) : null;
     
+    console.log('🔍 DEBUG crearPujaRedis:', {
+      usuarioIdStr,
+      clienteId,
+      monto,
+      localStorage_keys: Object.keys(localStorage),
+      localStorage_usuario_id: localStorage.getItem('usuario_id')
+    });
+    
     // Validar que el cliente ID sea válido
     if (!clienteId || isNaN(clienteId)) {
       throw new Error('ID de usuario inválido');
     }
 
-    return {
+    const puja = {
       monto: monto,
       cliente_id: clienteId
     };
+    
+    console.log('✅ PUJA CREADA:', puja);
+    return puja;
   }
 
   // 🔄 LEGACY: Keep for compatibility if needed
@@ -720,12 +789,52 @@ export class StreamComponent implements OnInit, OnDestroy {
     };
   } 
   
-  crearPujaRapida(): void {
-    // Asegurar que pujaActual sea un número válido usando el getter seguro
-    const pujaActualSegura = this.pujaActualSegura;
-    this.pujaRapida = pujaActualSegura + 1;
+  // 🔧 DEBUG: Verificar si el usuario existe en la tabla clientes
+  debugUsuario(): void {
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!usuarioId) {
+      console.error('❌ No hay usuario_id en localStorage');
+      return;
+    }
 
-    console.log(`🚀 CREANDO PUJA RÁPIDA: pujaActual = ${this.pujaActual}, pujaActualSegura = ${pujaActualSegura}, pujaRapida = ${this.pujaRapida}`);
+    console.log('🔍 Verificando usuario:', usuarioId);
+    
+    // NUEVO: Debug directo del usuario
+    const debugDirectoUrl = `http://localhost:8080/api/pujas-redis/debug-usuario/${usuarioId}`;
+    fetch(debugDirectoUrl)
+      .then(response => response.json())
+      .then((data: any) => {
+        console.log('✅ DEBUG USUARIO DIRECTO:', data);
+      })
+      .catch((error: any) => {
+        console.error('❌ ERROR EN DEBUG USUARIO DIRECTO:', error);
+      });
+    
+    // Crear URL manualmente para el debug original
+    const debugUrl = `http://localhost:8080/api/pujas-redis/debug/cliente/${usuarioId}`;
+    fetch(debugUrl)
+      .then(response => response.json())
+      .then((data: any) => {
+        console.log('✅ DEBUG USUARIO:', data);
+      })
+      .catch((error: any) => {
+        console.error('❌ ERROR EN DEBUG USUARIO:', error);
+      });
+  }
+
+  crearPujaRapida(): void {
+    const loteActual = this.lotes[this.indexLotes];
+    if (!loteActual) {
+      alert('Error: No hay lote seleccionado');
+      return;
+    }
+
+    const pujaMinima = Number(loteActual.pujaMinima) || 1;
+    
+    // Recalcular pujaRapida = pujaActual + pujaMinima
+    this.pujaRapida = this.pujaActual + pujaMinima;
+
+    console.log(`🚀 CREANDO PUJA RÁPIDA: pujaActual = $${this.pujaActual}, pujaMinima = $${pujaMinima}, pujaRapida = $${this.pujaRapida}`);
 
     const validacion = this.validarPuja(this.pujaRapida);
     
@@ -825,7 +934,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           next: (data) => {
             console.log(`💰 NUEVA PUJA CREADA: Lote ${this.lotes[this.indexLotes].id} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
             this.pujaActual = data.monto;
-            this.pujaRapida = data.monto + 1;
+            this.pujaRapida = data.monto + (this.lotes[this.indexLotes].pujaMinima || 1);
             this.pujaComun = null;
             const nuevaPuja: pujaDto = {
               id: data.id,
@@ -921,10 +1030,17 @@ export class StreamComponent implements OnInit, OnDestroy {
           next: (data) => {
             console.log(`💰 NUEVA PUJA REDIS CREADA: Lote ${loteId} - Cliente ${puja.cliente_id} - Monto: $${data.monto}`);
             
-            // Update UI with the new bid - con validación robusta
-            const nuevoMonto = this.validarNumero(data.monto, Number(puja.monto), 'enviarPujaRedis-nuevoMonto');
-            this.pujaActual = nuevoMonto;
-            this.pujaRapida = nuevoMonto + 1;
+            // Update UI with the new bid
+            const montoRecibido = this.validarNumero(data.monto, Number(puja.monto), 'enviarPujaRedis-nuevoMonto');
+            
+            // pujaActual = el monto de la puja que acabamos de hacer
+            this.pujaActual = montoRecibido;
+            
+            // pujaRapida = pujaActual + pujaMinima (el siguiente monto mínimo)
+            const loteActual = this.lotes[this.indexLotes];
+            const pujaMinima = loteActual ? Number(loteActual.pujaMinima) || 1 : 1;
+            this.pujaRapida = this.pujaActual + pujaMinima;
+            
             console.log(`✅ PUJA ACTUALIZADA: pujaActual = $${this.pujaActual}, pujaRapida = $${this.pujaRapida}`);
             this.pujaComun = null;
 
@@ -1007,9 +1123,20 @@ export class StreamComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('❌ ERROR EN PUJA REDIS:', err);
+            console.error('❌ DETALLES DEL ERROR:', {
+              status: err.status,
+              statusText: err.statusText,
+              error: err.error,
+              url: err.url,
+              puja_enviada: puja,
+              lote_id: loteId
+            });
             
             // Handle specific Redis errors
-            if (err.status === 409) {
+            if (err.status === 422) {
+              console.error('❌ ERROR 422 - Validación fallida:', err.error);
+              alert(`Error de validación: ${err.error?.message || 'Datos enviados inválidos'}`);
+            } else if (err.status === 409) {
               alert('Tu puja ha sido superada por otra más alta. Por favor, intenta con un monto mayor.');
             } else if (err.status === 400) {
               alert('Puja inválida. Verifica que el monto sea mayor al actual.');
@@ -1375,8 +1502,15 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.boton = false;
     }
     
-    // PASO 2: SINCRONIZAR GANADORES DE TODOS LOS LOTES
+    // PASO 2: SINCRONIZAR GANADORES DE TODOS LOS LOTES (método original)
     this.sincronizarGanadoresCompleto();
+    
+    // PASO 2.5: VERIFICAR Y CORREGIR GANADORES CON REDIS (nuevo método mejorado)
+    this.verificarYCorregirGanadores().then(() => {
+      console.log('✅ Verificación de ganadores completada automáticamente');
+    }).catch(error => {
+      console.error('❌ Error en verificación automática de ganadores:', error);
+    });
     
     // PASO 3: Determinar ganador del lote actual
     const ganadorId = this.encontrarGanador();
@@ -1546,8 +1680,33 @@ export class StreamComponent implements OnInit, OnDestroy {
             return max;
           }, pujasLote[0]);
         }
+        
         if (!pujaGanadora || !pujaGanadora.id) {
           console.error('❌ No se encontró puja ganadora para el lote', ganador.numeroLote);
+          console.error('❌ Datos del lote:', lote);
+          console.error('❌ Pujas del lote:', pujasLote);
+          return;
+        }
+
+        // Validar datos antes de crear factura
+        if (!pujaGanadora.id || ganador.monto <= 0) {
+          console.error('❌ Datos inválidos para crear factura:', {
+            pujaId: pujaGanadora.id,
+            monto: ganador.monto,
+            loteId: ganador.numeroLote
+          });
+          return;
+        }
+
+        // Validar que la puja ganadora sea del cliente correcto
+        const usuarioActual = localStorage.getItem('usuario_id');
+        const clienteIdPuja = pujaGanadora.cliente?.usuario?.id;
+        if (usuarioActual && clienteIdPuja && Number(usuarioActual) !== Number(clienteIdPuja)) {
+          console.error('❌ La puja ganadora no pertenece al usuario actual:', {
+            usuarioActual: Number(usuarioActual),
+            clientePuja: Number(clienteIdPuja),
+            pujaId: pujaGanadora.id
+          });
           return;
         }
 
@@ -1561,14 +1720,20 @@ export class StreamComponent implements OnInit, OnDestroy {
           vendedor_id: null
         };
 
-        console.log(factura);
+        console.log('📋 CREANDO FACTURA:', factura);
 
         this.facturaService.crearFactura(factura).subscribe({
           next: (facturaCreada) => {
-            console.log('🧾 FACTURA CREADA:', facturaCreada);
+            console.log('🧾 FACTURA CREADA EXITOSAMENTE:', facturaCreada);
           },
           error: (err) => {
             console.error('❌ ERROR AL CREAR FACTURA:', err);
+            console.error('❌ Detalles del error:', {
+              status: err.status,
+              statusText: err.statusText,
+              message: err.message,
+              error: err.error
+            });
           }
         });
       });
@@ -1871,7 +2036,7 @@ export class StreamComponent implements OnInit, OnDestroy {
             return new Date(pujaActual.fechaHora) > new Date(maxPuja.fechaHora) ? pujaActual : maxPuja;
           }
           return maxPuja;
-        });
+        }, pujasLote[0]);
         
         // Obtener el ID del ganador
         let ganadorId = 0;
@@ -1908,6 +2073,83 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Verifica y corrige los ganadores de todos los lotes consultando directamente Redis
+   * Esta función debe ser llamada al finalizar la subasta para asegurar datos precisos
+   */
+  private async verificarYCorregirGanadores(): Promise<void> {
+    console.log('🔍 INICIANDO VERIFICACIÓN DE GANADORES');
+    
+    for (let i = 0; i < this.lotes.length; i++) {
+      const lote = this.lotes[i];
+      if (!lote || !lote.id) continue;
+
+      try {
+        console.log(`🔍 Verificando lote ${i + 1} (ID: ${lote.id})`);
+        
+        // Obtener la puja actual desde Redis
+        const response = await this.pujaService.obtenerPujaActual(lote.id).toPromise();
+        
+        if (response && response.puja_actual && response.puja_actual.monto > 0) {
+          const pujaRealGanadora = response.puja_actual;
+          const ganadorActual = this.ganadores[i];
+          
+          console.log(`📊 Lote ${i + 1}:`, {
+            'Ganador registrado': ganadorActual,
+            'Puja real en Redis': pujaRealGanadora
+          });
+          
+          // Verificar si el ganador registrado coincide con la puja real
+          const ganadorIncorrecto = !ganadorActual || 
+                                   ganadorActual.clienteId !== pujaRealGanadora.cliente_id ||
+                                   ganadorActual.monto !== pujaRealGanadora.monto;
+          
+          if (ganadorIncorrecto) {
+            console.warn(`⚠️ GANADOR INCORRECTO EN LOTE ${i + 1}:`, {
+              'Registrado': ganadorActual,
+              'Real': pujaRealGanadora
+            });
+            
+            // Corregir el ganador
+            this.ganadores[i] = {
+              numeroLote: lote.id,
+              clienteId: pujaRealGanadora.cliente_id,
+              monto: pujaRealGanadora.monto
+            };
+            
+            console.log(`✅ GANADOR CORREGIDO EN LOTE ${i + 1}:`, this.ganadores[i]);
+            
+            // También actualizar la puja actual si es el lote activo
+            if (i === this.indexLotes) {
+              this.pujaActual = pujaRealGanadora.monto;
+            }
+          } else {
+            console.log(`✅ Ganador correcto en lote ${i + 1}`);
+          }
+        } else {
+          console.log(`📝 Lote ${i + 1} sin pujas`);
+          // Asegurar que no hay ganador registrado para lotes sin pujas
+          if (this.ganadores[i] && this.ganadores[i].monto > 0) {
+            console.warn(`⚠️ Lote ${i + 1} sin pujas pero con ganador registrado, corrigiendo...`);
+            this.ganadores[i] = {
+              numeroLote: lote.id,
+              clienteId: 0,
+              monto: 0
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Error verificando lote ${i + 1}:`, error);
+      }
+    }
+    
+    console.log('🔍 VERIFICACIÓN DE GANADORES COMPLETADA');
+    console.log('📋 GANADORES FINALES:', this.ganadores);
+    
+    // Forzar actualización de la UI
+    this.cdr.detectChanges();
+  }
+
+  /**
    * Función utilitaria para validar y corregir valores numéricos
    * Asegura que el valor sea un número válido mayor o igual a 0
    */
@@ -1920,5 +2162,58 @@ export class StreamComponent implements OnInit, OnDestroy {
       return valorPorDefecto;
     }
     return numero;
+  }
+
+  /**
+   * Función de depuración para verificar el estado de la subasta y el loteIndex
+   */
+  verificarEstadoSubasta(): void {
+    if (!this.isRematador()) {
+      alert('Solo el rematador puede verificar el estado');
+      return;
+    }
+
+    console.log('🔍 ESTADO ACTUAL DE LA SUBASTA:');
+    console.log('- ID Subasta:', this.subasta?.id);
+    console.log('- Índice actual en frontend:', this.indexLotes);
+    console.log('- LoteIndex en objeto subasta:', this.subasta?.loteIndex);
+    console.log('- Total de lotes:', this.lotes.length);
+    console.log('- Lote actual:', this.lotes[this.indexLotes]);
+
+    // Hacer una consulta fresca al backend para verificar el estado real
+    if (this.subasta?.id) {
+      this.subastaService.getSubasta(this.subasta.id).subscribe({
+        next: (subastaFresca) => {
+          console.log('🔄 ESTADO EN BASE DE DATOS:');
+          console.log('- LoteIndex en BD:', subastaFresca.loteIndex);
+          console.log('- Objeto subasta completo:', subastaFresca);
+          
+          if (subastaFresca.loteIndex !== this.indexLotes) {
+            console.warn('⚠️ INCONSISTENCIA DETECTADA:');
+            console.warn('- Frontend:', this.indexLotes);
+            console.warn('- Base de datos:', subastaFresca.loteIndex);
+            
+            const sincronizar = confirm(
+              `Hay una inconsistencia entre el frontend (lote ${this.indexLotes + 1}) y la base de datos (lote ${(subastaFresca.loteIndex || 0) + 1}).\n\n` +
+              '¿Desea sincronizar el frontend con la base de datos?'
+            );
+            
+            if (sincronizar) {
+              this.indexLotes = subastaFresca.loteIndex || 0;
+              this.subasta!.loteIndex = this.indexLotes;
+              this.cargarPujas(this.indexLotes);
+              this.sendLoteChangeToWebSocket();
+              alert('✅ Frontend sincronizado con la base de datos');
+            }
+          } else {
+            alert('✅ Frontend y base de datos están sincronizados');
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error consultando estado:', err);
+          alert('Error al consultar el estado de la base de datos');
+        }
+      });
+    }
   }
 }

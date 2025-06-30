@@ -127,7 +127,7 @@
           id="subasta_id"
           formControlName="subasta_id" 
           style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
-          <option value="" disabled>Seleccione una subasta</option>
+          <option [value]="null" disabled>Seleccione una subasta</option>
           <option *ngFor="let subasta of subastas" [value]="subasta.id">
             {{ subasta.nombre }}
           </option>
@@ -144,7 +144,7 @@
           formControlName="lote_id" 
           [disabled]="!form.get('subasta_id')?.value"
           style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; background-color: white; font-family: inherit;">
-          <option value="" disabled>
+          <option [value]="null" disabled>
             {{ form.get('subasta_id')?.value ? 'Seleccione un lote' : 'Primero seleccione una subasta' }}
           </option>
           <option *ngFor="let lote of lotes" [value]="lote.id">

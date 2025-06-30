@@ -82,36 +82,45 @@ class FacturaController extends Controller
  */
    public function store(Request $request)
 {
+    \Log::info('📋 FACTURA CONTROLLER: Datos recibidos', $request->all());
+
     $validator = Validator::make($request->all(), [
         'puja_id' => 'required|exists:pujas,id',
         'vendedor_id' => 'nullable|exists:vendedores,id',
-        'montoTotal' => 'required|numeric',
+        'montoTotal' => 'required|numeric|min:0',
         'condicionesDePago' => 'required|string',
         'entrega' => 'required|string',
     ]);
 
     if ($validator->fails()) {
+        \Log::error('❌ FACTURA CONTROLLER: Validación fallida', $validator->errors()->toArray());
         return response()->json([
             'errores' => $validator->errors()
         ], 422);
     }
 
     try {
-        // Mapeamos camelCase del request a snake_case del modelo
-        $factura = new Factura();
-        $factura->puja_id = $request->puja_id;
-        $factura->vendedor_id = $request->vendedor_id;
-        $factura->monto_total = $request->montoTotal;  // <-- snake_case
-        $factura->condiciones_de_pago = $request->condicionesDePago;
-        $factura->entrega = $request->entrega;
-        $factura->save();
+        // Crear factura usando mass assignment con datos consistentes
+        $factura = Factura::create([
+            'puja_id' => $request->puja_id,
+            'vendedor_id' => $request->vendedor_id,
+            'monto_total' => $request->montoTotal,
+            'condiciones_de_pago' => $request->condicionesDePago,
+            'entrega' => $request->entrega,
+        ]);
+
+        \Log::info('✅ FACTURA CONTROLLER: Factura creada exitosamente', ['id' => $factura->id]);
 
         $factura->load(['puja', 'vendedor']);
 
-        $dto = $factura;
-
-        return response()->json($dto, 201);
+        return response()->json($factura, 201);
     } catch (\Throwable $e) {
+        \Log::error('❌ FACTURA CONTROLLER: Error al crear factura', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'request_data' => $request->all()
+        ]);
+        
         return response()->json([
             'error' => 'Error al crear la factura',
             'message' => $e->getMessage()

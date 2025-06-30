@@ -158,14 +158,8 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
   }
 
   getImagenSubasta(subasta: any): string {
-    if (subasta.lotes && 
-        subasta.lotes.length > 0 && 
-        subasta.lotes[0].articulos && 
-        subasta.lotes[0].articulos.length > 0 && 
-        subasta.lotes[0].articulos[0].imagen) {
-      return subasta.lotes[0].articulos[0].imagen;
-    }
-    return '/images/img.webp';
+    // Retorna una imagen estática para todas las subastas
+    return 'assets/img/balanza.jpg';
   }
 
   getNombreSubasta(subasta: any): string {
@@ -247,6 +241,8 @@ export class BuscadorRematesComponent implements AfterViewInit, OnInit, OnDestro
     const subastasSub = this.subastaService.getSubastas().subscribe({
       next: (data) => {
         this.subastas = data;
+        console.log('Subastas cargadas:', this.subastas.length);
+        console.log('Primera subasta:', this.subastas[0]);
         
         // Convertir fechas a la zona horaria del usuario
         this.convertirFechasSubastas();

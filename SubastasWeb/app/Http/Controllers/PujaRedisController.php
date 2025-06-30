@@ -46,18 +46,42 @@ class PujaRedisController extends Controller
     public function realizarPuja(Request $request, $loteId)
     {
         try {
+            // Debug: Log de entrada
+            Log::info('=== INICIO PUJA REDIS DEBUG ===', [
+                'loteId' => $loteId,
+                'request_data' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
+
+            // Debug: Verificar si el usuario existe antes de la validación
+            $clienteIdRequest = $request->cliente_id;
+            $usuarioExiste = \App\Models\Usuario::where('id', $clienteIdRequest)->exists();
+            Log::info('Pre-validación:', [
+                'cliente_id_request' => $clienteIdRequest,
+                'usuario_existe' => $usuarioExiste ? 'SI' : 'NO'
+            ]);
+
             $request->validate([
-                'cliente_id' => 'required|exists:clientes,usuario_id',
+                'cliente_id' => 'required|exists:usuarios,id',
                 'monto' => 'required|numeric|min:0'
             ]);
 
             $lote = Lote::find($loteId);
             if (!$lote) {
+                Log::error('Lote no encontrado', ['loteId' => $loteId]);
                 return response()->json(['error' => 'Lote no encontrado'], 404);
             }
 
             $clienteId = $request->cliente_id;
             $montoPuja = $request->monto;
+            
+            // Debug: Verificar existencia del cliente
+            $cliente = Cliente::where('usuario_id', $clienteId)->first();
+            Log::info('Cliente encontrado:', [
+                'cliente_id' => $clienteId,
+                'cliente_existe' => $cliente ? 'SÍ' : 'NO',
+                'cliente_data' => $cliente ? $cliente->toArray() : null
+            ]);
 
             // Usar transacción atómica de Redis
             $resultado = $this->procesarPujaAtomica($loteId, $clienteId, $montoPuja, $lote);
@@ -81,8 +105,37 @@ class PujaRedisController extends Controller
                 ], 422);
             }
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación en puja Redis:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+                'cliente_id_enviado' => $request->cliente_id,
+                'usuario_existe_check' => \App\Models\Usuario::where('id', $request->cliente_id)->exists()
+            ]);
+            
+            $errorMessage = 'Los datos enviados no son válidos';
+            $errors = $e->errors();
+            
+            // Mensaje específico para cliente_id
+            if (isset($errors['cliente_id'])) {
+                $errorMessage = 'El usuario especificado no existe en el sistema.';
+            }
+            
+            return response()->json([
+                'error' => $errorMessage,
+                'errors' => $errors,
+                'message' => 'Error de validación',
+                'debug_info' => [
+                    'cliente_id_enviado' => $request->cliente_id,
+                    'exists_check' => \App\Models\Usuario::where('id', $request->cliente_id)->exists(),
+                    'total_usuarios' => \App\Models\Usuario::count()
+                ]
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('Error en puja Redis: ' . $e->getMessage());
+            Log::error('Error en puja Redis: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
             return response()->json(['error' => 'Error interno del servidor'], 500);
         }
     }
@@ -183,13 +236,23 @@ class PujaRedisController extends Controller
     private function sincronizarConBaseDatos($loteId, $clienteId, $monto)
     {
         try {
-            $cliente = Cliente::find($clienteId);
+            // Verificar si existe un registro en la tabla clientes para este usuario
+            $cliente = Cliente::where('usuario_id', $clienteId)->first();
             $lote = Lote::find($loteId);
 
+            // Solo crear la puja si existe tanto el cliente como el lote
             if ($cliente && $lote) {
                 Puja::create([
                     'monto' => $monto,
-                    'fechaHora' => Carbon::now(), // Usar fechaHora según el modelo
+                    'fechaHora' => Carbon::now(),
+                    'cliente_id' => $clienteId, // Este es el usuario_id
+                    'lote_id' => $loteId
+                ]);
+                Log::info('Puja sincronizada con BD', ['lote_id' => $loteId, 'cliente_id' => $clienteId, 'monto' => $monto]);
+            } else {
+                Log::warning('No se pudo sincronizar puja - cliente o lote no encontrado', [
+                    'cliente_existe' => $cliente ? 'SI' : 'NO',
+                    'lote_existe' => $lote ? 'SI' : 'NO',
                     'cliente_id' => $clienteId,
                     'lote_id' => $loteId
                 ]);
@@ -356,6 +419,65 @@ class PujaRedisController extends Controller
         } catch (\Exception $e) {
             Log::error('Error registrando visualización: ' . $e->getMessage());
             return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * 🔧 DEBUG: Verificar si el usuario existe en la tabla clientes
+     */
+    public function debugCliente($usuarioId)
+    {
+        try {
+            $usuario = \App\Models\Usuario::find($usuarioId);
+            $cliente = Cliente::where('usuario_id', $usuarioId)->first();
+            
+            return response()->json([
+                'usuario_id' => $usuarioId,
+                'usuario_existe' => $usuario ? true : false,
+                'usuario_data' => $usuario ? [
+                    'id' => $usuario->id,
+                    'nombre' => $usuario->nombre,
+                    'email' => $usuario->email,
+                    'rol' => $usuario->rol ?? 'sin_rol'
+                ] : null,
+                'cliente_existe' => $cliente ? true : false,
+                'cliente_data' => $cliente ? $cliente->toArray() : null,
+                'debug_info' => [
+                    'total_usuarios' => \App\Models\Usuario::count(),
+                    'total_clientes' => Cliente::count(),
+                    'usuarios_sin_cliente' => \App\Models\Usuario::whereNotIn('id', Cliente::pluck('usuario_id')->toArray())->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error en debug cliente: ' . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * 🔧 DEBUG TEMPORAL: Verificar usuario directamente
+     */
+    public function debugUsuarioDirecto($usuarioId)
+    {
+        try {
+            $usuario = \App\Models\Usuario::find($usuarioId);
+            $usuarioExists = \App\Models\Usuario::where('id', $usuarioId)->exists();
+            $allUsuarios = \App\Models\Usuario::select('id', 'nombre', 'email')->get();
+            
+            return response()->json([
+                'usuario_id' => $usuarioId,
+                'usuario_find' => $usuario ? $usuario->toArray() : null,
+                'usuario_exists' => $usuarioExists,
+                'total_usuarios' => \App\Models\Usuario::count(),
+                'primeros_10_usuarios' => $allUsuarios->take(10)->toArray(),
+                'database_connection' => \DB::connection()->getDatabaseName(),
+                'table_exists' => \Schema::hasTable('usuarios')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
     }
 }

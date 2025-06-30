@@ -13,17 +13,16 @@ return new class extends Migration
     {
         Schema::create('facturas', function (Blueprint $table) {
             $table->id();
-
-            $table->float('montoTotal');
-            $table->string('condicionesDePago');
+            $table->unsignedBigInteger('puja_id'); 
+            $table->float('monto_total');
+            $table->string('condiciones_de_pago');
             $table->string('entrega');
-            $table->foreignId('vendedor_id')->constrained('vendedores')->cascadeOnDelete();
+            $table->foreignId('vendedor_id')->nullable()->constrained('vendedores')->cascadeOnDelete();
             
-            $table->unsignedBigInteger('puja_id')->nullable()->after('id'); 
-            
-
             $table->timestamps();
 
+            // Agregar foreign key constraint para puja_id
+            $table->foreign('puja_id')->references('id')->on('pujas')->cascadeOnDelete();
         });
     }
 

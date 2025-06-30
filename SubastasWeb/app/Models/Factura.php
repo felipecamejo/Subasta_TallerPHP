@@ -10,8 +10,9 @@
     protected $table = 'facturas'; // Nombre de la tabla si es diferente al plural de la clase
 
     protected $fillable = [ 
-        'montoTotal',
-        'condicionesDePago',
+        'puja_id',
+        'monto_total',
+        'condiciones_de_pago',
         'entrega',
         'vendedor_id'
     ]; 
@@ -23,8 +24,7 @@
     } 
 
     public function puja(){
-        return  $this->hasOne(Puja::class);
+        return  $this->belongsTo(Puja::class);
     } 
 
     }
-?>

@@ -33,7 +33,12 @@ export class PujaService {
 
   // 🚀 NUEVO: Método para pujas con Redis (RECOMENDADO)
   crearPujaRedis(loteId: number, puja: PujaRedisRequest): Observable<any> {
-    return this.http.post<any>(`${this.urlService.baseUrl}${this.redisEndpoint}/${loteId}/pujar`, puja);
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    
+    return this.http.post<any>(`${this.urlService.baseUrl}${this.redisEndpoint}/${loteId}/pujar`, puja, { headers });
   }
 
   // 🆕 NUEVO: Obtener puja actual desde Redis
