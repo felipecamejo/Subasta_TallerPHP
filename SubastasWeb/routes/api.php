@@ -139,12 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
         Route::get('/usuarios', [AdminController::class, 'usuariosPorRol']);
     });
-    // Rutas de administración
-    Route::get('/admin/usuarios-pendientes', [AdminController::class, 'casasPendientes']);
-    Route::post('/admin/aprobar-casa/{id}', [AdminController::class, 'aprobarCasa']);
-    Route::delete('/admin/eliminar-usuario/{usuario_id}', [AdminController::class, 'eliminarUsuario']);
-    Route::get('/admin/casas-activas', [AdminController::class, 'casasActivas']);
-    Route::post('/admin/desaprobar-casa/{id}', [AdminController::class, 'desaprobarCasa']);
+  
     
     // Rutas de PayPal
     Route::post('/paypal/create-order', [PaypalController::class, 'createOrder']);

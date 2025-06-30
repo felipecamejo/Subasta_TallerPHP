@@ -70,7 +70,7 @@ class AuthController extends Controller{
 /**
  * @OA\Post(
  *     path="/api/login",
- *     summary="Inicio de sesión",
+ *     summary="Iniciar sesión",
  *     tags={"Autenticación"},
  *     @OA\RequestBody(
  *         required=true,
@@ -78,11 +78,11 @@ class AuthController extends Controller{
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Login exitoso con token de acceso.",
+ *         description="Login exitoso",
  *         @OA\JsonContent(ref="#/components/schemas/LoginResponse")
  *     ),
- *     @OA\Response(response=403, description="Email no verificado."),
- *     @OA\Response(response=422, description="Credenciales inválidas.")
+ *     @OA\Response(response=403, description="Email no verificado"),
+ *     @OA\Response(response=422, description="Credenciales inválidas")
  * )
  */
 public function login(LoginRequest $request)

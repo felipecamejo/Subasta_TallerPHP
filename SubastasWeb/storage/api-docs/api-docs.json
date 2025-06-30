@@ -701,7 +701,7 @@
                 "tags": [
                     "Autenticación"
                 ],
-                "summary": "Inicio de sesión",
+                "summary": "Iniciar sesión",
                 "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
                 "requestBody": {
                     "required": true,
@@ -715,7 +715,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login exitoso con token de acceso.",
+                        "description": "Login exitoso",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -725,10 +725,10 @@
                         }
                     },
                     "403": {
-                        "description": "Email no verificado."
+                        "description": "Email no verificado"
                     },
                     "422": {
-                        "description": "Credenciales inválidas."
+                        "description": "Credenciales inválidas"
                     }
                 }
             }
