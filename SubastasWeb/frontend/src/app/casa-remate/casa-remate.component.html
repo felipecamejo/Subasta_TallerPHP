@@ -92,21 +92,91 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th>nombre</th>
-          <th>especificacion</th>
-          <th>disponibilidad</th>
-          <th>condicion</th>
-          <th>Nombre Vendedor</th>
+          <th>Nombre</th>
+          <th>Fecha</th>
+          <th>Duración (min)</th>
+          <th>Estado</th>
+          <th>Rematador</th>
+          <th>Lotes</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-lelo>
         <tr>
-          <td>{{ lelo.nombre }}</td>
-          <td>{{ lelo.especificacion }}</td>
-          <td>{{ lelo.disponibilidad }}</td>
-          <td>{{ lelo.condicion}}</td>
-          <td>{{ lelo.nombreVendedor}}</td>
+          <td>{{ subasta.nombre }}</td>
+          <td>{{ subasta.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ subasta.duracionMinutos }}</td>
+          <td>
+            <span [class]="subasta.activa ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+              {{ subasta.activa ? 'Activa' : 'Inactiva' }}
+            </span>
+          </td>
+          <td>{{ subasta.rematador?.usuario?.nombre || 'Sin asignar' }}</td>
+          <td>{{ subasta.lotes?.length || 0 }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">No hay subastas registradas</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </article>
+
+    <!-- SECCIÓN DE LOTES -->
+    <article class="w-full">
+        <p class="tituloCentrado w-full">Lotes de la Casa de Remate</p>
+        <div *ngIf="cargandoDatos" class="flex justify-content-center p-4">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <span class="ml-2">Cargando lotes...</span>
+        </div>
+        <p-table
+        *ngIf="!cargandoDatos"
+        class="texto"
+        [value]="lotes"
+        showGridlines
+        [paginator]="true"
+        [rows]="5"
+        [totalRecords]="lotes.length"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        paginatorPosition="bottom"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} lotes"
+        >
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID Lote</th>
+          <th>Subasta</th>
+          <th>Valor Base</th>
+          <th>Puja Mínima</th>
+          <th>Umbral</th>
+          <th>Estado Pago</th>
+          <th>Artículos</th>
+          <th>Pujas</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-lote>
+        <tr>
+          <td>{{ lote.id }}</td>
+          <td>{{ lote.subasta?.nombre || 'Sin subasta' }}</td>
+          <td>${{ lote.valorBase | number:'1.2-2' }}</td>
+          <td>${{ lote.pujaMinima | number:'1.2-2' }}</td>
+          <td>${{ lote.umbral | number:'1.2-2' }}</td>
+          <td>
+            <span [class]="lote.pago ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+              {{ lote.pago ? 'Pagado' : 'Pendiente' }}
+            </span>
+          </td>
+          <td>{{ lote.articulos?.length || 0 }}</td>
+          <td>{{ lote.pujas?.length || 0 }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center">No hay lotes registrados</td>
         </tr>
       </ng-template>
     </p-table>

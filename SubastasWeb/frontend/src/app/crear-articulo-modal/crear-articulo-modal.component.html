@@ -1,0 +1,172 @@
+<!-- crear-articulo-modal.component.html -->
+<p-dialog 
+  header="Crear Nuevo Artículo" 
+  [(visible)]="visible" 
+  modal="true" 
+  (onHide)="cerrar()" 
+  [style]="{ width: '45rem', maxWidth: '95vw' }"
+  [draggable]="false"
+  [resizable]="false">
+  
+  <style>
+    @media (max-width: 768px) {
+      .responsive-grid-articulo {
+        grid-template-columns: 1fr !important;
+      }
+      .responsive-actions-articulo {
+        flex-direction: column !important;
+      }
+      .responsive-actions-articulo p-button {
+        width: 100% !important;
+      }
+    }
+  </style>
+  
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 1rem;">
+    
+    <div class="responsive-grid-articulo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="nombre" style="font-weight: bold; color: #495057;">Nombre del Artículo *</label>
+        <input 
+          id="nombre"
+          type="text" 
+          pInputText 
+          formControlName="nombre" 
+          placeholder="Ingrese el nombre del artículo"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" style="color: #dc3545;">
+          El nombre es obligatorio
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="imagenes" style="font-weight: bold; color: #495057;">URL de Imágenes *</label>
+        <input 
+          id="imagenes"
+          type="text" 
+          pInputText 
+          formControlName="imagenes" 
+          placeholder="https://ejemplo.com/imagen.jpg"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small *ngIf="form.get('imagenes')?.invalid && form.get('imagenes')?.touched" style="color: #dc3545;">
+          Las imágenes son obligatorias
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="condicion" style="font-weight: bold; color: #495057;">Condición *</label>
+        <p-dropdown 
+          id="condicion"
+          formControlName="condicion" 
+          [options]="condicionesOptions"
+          placeholder="Seleccione la condición"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }" />
+        <small *ngIf="form.get('condicion')?.invalid && form.get('condicion')?.touched" style="color: #dc3545;">
+          La condición es obligatoria
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="vendedor_nombre" style="font-weight: bold; color: #495057;">Vendedor *</label>
+        <input 
+          id="vendedor_nombre"
+          type="text" 
+          pInputText 
+          formControlName="vendedor_nombre" 
+          placeholder="Escriba el nombre del vendedor (se creará automáticamente si no existe)"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small *ngIf="form.get('vendedor_nombre')?.invalid && form.get('vendedor_nombre')?.touched" style="color: #dc3545;">
+          El vendedor es obligatorio
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="categoria_nombre" style="font-weight: bold; color: #495057;">Categoría *</label>
+        <input 
+          id="categoria_nombre"
+          type="text" 
+          pInputText 
+          formControlName="categoria_nombre" 
+          placeholder="Escriba el nombre de la categoría (se creará automáticamente si no existe)"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px;" />
+        <small *ngIf="form.get('categoria_nombre')?.invalid && form.get('categoria_nombre')?.touched" style="color: #dc3545;">
+          La categoría es obligatoria
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="subasta_id" style="font-weight: bold; color: #495057;">Subasta *</label>
+        <p-dropdown 
+          id="subasta_id"
+          formControlName="subasta_id" 
+          [options]="subastas"
+          placeholder="Seleccione una subasta"
+          optionLabel="nombre"
+          optionValue="id"
+          [style]="{ width: '100%' }" />
+        <small *ngIf="form.get('subasta_id')?.invalid && form.get('subasta_id')?.touched" style="color: #dc3545;">
+          La subasta es obligatoria
+        </small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="lote_id" style="font-weight: bold; color: #495057;">Lote *</label>
+        <p-dropdown 
+          id="lote_id"
+          formControlName="lote_id" 
+          [options]="lotes"
+          placeholder="Primero seleccione una subasta"
+          optionLabel="descripcionLote"
+          optionValue="id"
+          [disabled]="!form.get('subasta_id')?.value"
+          [style]="{ width: '100%' }" />
+        <small *ngIf="form.get('lote_id')?.invalid && form.get('lote_id')?.touched" style="color: #dc3545;">
+          El lote es obligatorio
+        </small>
+        <small *ngIf="form.get('subasta_id')?.value && lotes.length === 0" style="color: #f39c12;">
+          No hay lotes disponibles para esta subasta
+        </small>
+      </div>
+
+    </div>
+
+    <!-- ESPECIFICACIONES -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+      <label for="especificacion" style="font-weight: bold; color: #495057;">Especificaciones *</label>
+      <p style="font-size: 0.9rem; color: #6c757d; margin: 0;">Describa las características y detalles del artículo</p>
+      <textarea 
+        id="especificacion"
+        pInputTextarea 
+        formControlName="especificacion" 
+        placeholder="Ingrese las especificaciones del artículo..."
+        rows="4"
+        style="width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; resize: vertical; font-family: inherit;">
+      </textarea>
+      <small *ngIf="form.get('especificacion')?.invalid && form.get('especificacion')?.touched" style="color: #dc3545;">
+        Las especificaciones son obligatorias
+      </small>
+    </div>
+
+    <div class="responsive-actions-articulo" style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        (onClick)="cerrar()"
+        type="button"
+        [style]="{ 'min-width': '120px' }">
+      </p-button>
+      <p-button 
+        label="Crear Artículo" 
+        icon="pi pi-check" 
+        type="submit"
+        [loading]="loading"
+        [disabled]="form.invalid || loading"
+        [style]="{ 'min-width': '120px' }">
+      </p-button>
+    </div>
+  </form>
+</p-dialog>

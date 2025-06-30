@@ -1,0 +1,161 @@
+<p-toast></p-toast>
+<p-dialog 
+  header="Crear Nuevo Lote" 
+  [(visible)]="visible" 
+  modal="true" 
+  (onHide)="cerrar()" 
+  [style]="{ width: '45rem', maxWidth: '95vw' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <style>
+    @media (max-width: 768px) {
+      .responsive-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .responsive-actions {
+        flex-direction: column !important;
+      }
+      .responsive-actions p-button {
+        width: 100% !important;
+      }
+    }
+
+    /* Asegurar que los dropdowns aparezcan correctamente */
+    ::ng-deep .p-dropdown-panel {
+      z-index: 10000 !important;
+    }
+  </style>
+  
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 1.5rem;">
+    
+    <div class="responsive-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      
+      <!-- Seleccionar Subasta -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; grid-column: 1 / -1;">
+        <label for="subasta" style="font-weight: bold; color: #495057;">Seleccionar Subasta *</label>
+        <p-dropdown 
+          id="subasta"
+          formControlName="subasta_id"
+          [options]="subastas"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione una subasta"
+          [style]="{ width: '100%' }"
+          [panelStyle]="{ 'max-height': '200px' }"
+          appendTo="body">
+          <ng-template pTemplate="selectedItem" let-selectedSubasta>
+            <div *ngIf="selectedSubasta" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="pi pi-calendar" style="color: #6366f1;"></i>
+              <span>{{ selectedSubasta.nombre }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-subasta>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem;">
+              <i class="pi pi-calendar" style="color: #6366f1;"></i>
+              <div>
+                <div style="font-weight: 500;">{{ subasta.nombre }}</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">
+                  {{ subasta.fecha | date:'dd/MM/yyyy HH:mm' }} - {{ subasta.duracionMinutos }} min
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </p-dropdown>
+        <small *ngIf="form.get('subasta_id')?.invalid && form.get('subasta_id')?.touched" style="color: #dc3545;">
+          Debe seleccionar una subasta
+        </small>
+      </div>
+
+      <!-- Valor Base -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="valorBase" style="font-weight: bold; color: #495057;">Valor Base *</label>
+        <p-inputNumber 
+          id="valorBase"
+          formControlName="valorBase"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          placeholder="0.00"
+          [min]="0.01"
+          [maxFractionDigits]="2"
+          styleClass="w-full">
+        </p-inputNumber>
+        <small *ngIf="form.get('valorBase')?.invalid && form.get('valorBase')?.touched" style="color: #dc3545;">
+          El valor base debe ser mayor a 0
+        </small>
+      </div>
+
+      <!-- Puja Mínima -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="pujaMinima" style="font-weight: bold; color: #495057;">Puja Mínima *</label>
+        <p-inputNumber 
+          id="pujaMinima"
+          formControlName="pujaMinima"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          placeholder="0.00"
+          [min]="0.01"
+          [maxFractionDigits]="2"
+          styleClass="w-full">
+        </p-inputNumber>
+        <small *ngIf="form.get('pujaMinima')?.invalid && form.get('pujaMinima')?.touched" style="color: #dc3545;">
+          La puja mínima debe ser mayor a 0
+        </small>
+      </div>
+
+      <!-- Umbral -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label for="umbral" style="font-weight: bold; color: #495057;">Umbral *</label>
+        <p-inputNumber 
+          id="umbral"
+          formControlName="umbral"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          placeholder="0.00"
+          [min]="0"
+          [maxFractionDigits]="2"
+          styleClass="w-full">
+        </p-inputNumber>
+        <small *ngIf="form.get('umbral')?.invalid && form.get('umbral')?.touched" style="color: #dc3545;">
+          El umbral debe ser mayor o igual a 0
+        </small>
+        <small style="color: #6c757d; font-size: 0.8rem;">
+          Monto mínimo requerido para que el lote sea válido
+        </small>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div style="background-color: #f8f9fa; padding: 1rem; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 1rem;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #495057; font-size: 1rem;">ℹ️ Información del Lote</h4>
+      <ul style="margin: 0; padding-left: 1.5rem; color: #6c757d; font-size: 0.9rem;">
+        <li><strong>Valor Base:</strong> Precio inicial del lote</li>
+        <li><strong>Puja Mínima:</strong> Incremento mínimo para cada puja</li>
+        <li><strong>Umbral:</strong> Monto mínimo para considerar el lote como válido</li>
+      </ul>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="responsive-actions" style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        severity="secondary" 
+        (onClick)="cerrar()"
+        type="button"
+        [style]="{ 'min-width': '120px' }">
+      </p-button>
+      <p-button 
+        label="Crear Lote" 
+        icon="pi pi-check" 
+        type="submit"
+        [disabled]="form.invalid || loading"
+        [loading]="loading"
+        [style]="{ 'min-width': '120px' }">
+      </p-button>
+    </div>
+  </form>
+</p-dialog>
