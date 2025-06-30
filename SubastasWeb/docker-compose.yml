@@ -20,6 +20,14 @@ services:
       - DB_USERNAME=user
       - DB_PASSWORD=password
       - REDIS_HOST=redis
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=subastaphp@gmail.com
+      - MAIL_PASSWORD=oyyd ggst hkgs octo
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=subastaphp@gmail.com
+      - MAIL_FROM_NAME=Subastas
       - RUN_SEEDERS=true
       # - FORCE_SEEDERS=true  # Descomenta para forzar ejecución de seeders en cada inicio
       # - SEEDER_CLASS=DatabaseSeeder  # Descomenta para ejecutar un seeder específico
