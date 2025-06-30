@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -33,6 +33,8 @@ import { subastaDto } from '../../models/subastaDto';
 })
 export class CrearLoteModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
+  @Output() loteCreado = new EventEmitter<void>();
+  @Input() actualizarSubastas = new EventEmitter<void>(); // Input para recibir señal de actualización
 
   visible = false;
   form: FormGroup;
@@ -56,6 +58,14 @@ export class CrearLoteModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarSubastas();
+    
+    // Suscribirse a actualizaciones de subastas
+    if (this.actualizarSubastas) {
+      this.actualizarSubastas.subscribe(() => {
+        console.log('Recibida señal para actualizar subastas en modal de lote');
+        this.cargarSubastas();
+      });
+    }
   }
 
   cargarSubastas(): void {
@@ -92,6 +102,15 @@ export class CrearLoteModalComponent implements OnInit {
       umbral: 0,
       pago: false
     });
+    
+    // Recargar subastas cada vez que se abre el modal
+    this.cargarSubastas();
+  }
+
+  // Método público para actualizar subastas desde el componente padre
+  actualizarListaSubastas(): void {
+    console.log('Actualizando lista de subastas en modal de lote...');
+    this.cargarSubastas();
   }
 
   cerrar() {
@@ -121,6 +140,7 @@ export class CrearLoteModalComponent implements OnInit {
             summary: 'Éxito',
             detail: 'Lote creado correctamente'
           });
+          this.loteCreado.emit(); // Emitir evento para notificar al padre
           this.cerrar();
           this.loading = false;
         },

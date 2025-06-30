@@ -139,11 +139,28 @@ export class CasaRemateComponent {
     this.modalCrearSubasta = false;
     // Recargar las subastas tras cerrar el modal
     this.cargarSubastas();
+    
+    // Actualizar también la lista de subastas en el modal de crear lote
+    if (this.crearLoteModal) {
+      this.crearLoteModal.actualizarListaSubastas();
+    }
+    
     this.messageService.add({
       severity: 'success',
       summary: 'Actualizado',
       detail: 'Lista de subastas actualizada'
     });
+  }
+
+  onSubastaCreada(subasta: any) {
+    // Método llamado cuando se crea exitosamente una subasta
+    console.log('Subasta creada:', subasta);
+    this.cargarSubastas(); // Recargar subastas inmediatamente
+    
+    // Actualizar también la lista de subastas en el modal de crear lote
+    if (this.crearLoteModal) {
+      this.crearLoteModal.actualizarListaSubastas();
+    }
   }
 
   abrirModalLote() {
@@ -158,6 +175,12 @@ export class CasaRemateComponent {
       summary: 'Actualizado',
       detail: 'Lista de lotes actualizada'
     });
+  }
+
+  onLoteCreado() {
+    // Método llamado cuando se crea exitosamente un lote
+    this.cargarLotes();
+    this.cargarSubastas(); // También recargar subastas por si afecta la relación
   }
 
   abrirModalEditarCasaRemate() {

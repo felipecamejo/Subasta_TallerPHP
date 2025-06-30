@@ -30,7 +30,7 @@ class LoteController extends Controller{
             $lotes = Lote::with([
                 'pujas.cliente.usuario', 
                 'articulos.categoria', 
-                'articulos.vendedor.usuario',
+                'articulos.vendedor',
                 'subasta.casaRemate.usuario',
                 'subasta.rematador.usuario'
             ])->get();
@@ -119,7 +119,7 @@ class LoteController extends Controller{
             $lote = Lote::with([
                 'pujas.cliente.usuario', 
                 'articulos.categoria', 
-                'articulos.vendedor.usuario',
+                'articulos.vendedor',
                 'subasta.casaRemate.usuario',
                 'subasta.rematador.usuario'
             ])->find($id);
@@ -196,7 +196,7 @@ class LoteController extends Controller{
             $lote = Lote::with([
                 'pujas.cliente.usuario', 
                 'articulos.categoria', 
-                'articulos.vendedor.usuario',
+                'articulos.vendedor',
                 'subasta.casaRemate.usuario',
                 'subasta.rematador.usuario'
             ])->find($lote->id);

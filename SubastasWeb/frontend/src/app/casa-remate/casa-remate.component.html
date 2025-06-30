@@ -15,10 +15,10 @@
           <div class="w-full flex flex-wrap gap">
             <!-- Modal de creación de SUBASTA -->
             <button pButton type="button" label="Crear Subasta" (click)="abrirModalSubasta()"></button>
-            <crear-subasta-modal (close)="cerrarModalSubasta()" #crearSubastaModal></crear-subasta-modal>
+            <crear-subasta-modal (close)="cerrarModalSubasta()" (save)="onSubastaCreada($event)" #crearSubastaModal></crear-subasta-modal>
             <!-- Modal de creación de LOTE -->
             <button pButton type="button" label="Crear Lote" (click)="abrirModalLote()"></button>
-            <app-crear-lote-modal (close)="cerrarModalLote()" #crearLoteModal></app-crear-lote-modal>
+            <app-crear-lote-modal (close)="cerrarModalLote()" (loteCreado)="onLoteCreado()" #crearLoteModal></app-crear-lote-modal>
             <!-- Modal de creación de ARTICULO -->
             <button pButton type="button" label="Crear Artículo" (click)="abrirModalArticulo()"></button>
             <app-crear-articulo-modal (close)="cerrarModalArticulo()" #crearArticuloModal></app-crear-articulo-modal>
