@@ -64,5 +64,24 @@ echo "Optimizando Laravel..."
 php artisan config:cache
 php artisan route:cache
 
+# Verificar configuración de email
+echo "Verificando configuración de email..."
+if [ "$MAIL_MAILER" = "smtp" ]; then
+    echo "✅ Configuración de email SMTP detectada: $MAIL_HOST"
+    echo "📧 Email habilitado para verificación de usuarios"
+    echo "📋 Configuración actual:"
+    echo "   • Host: $MAIL_HOST"
+    echo "   • Puerto: $MAIL_PORT"
+    echo "   • Usuario: $MAIL_USERNAME"
+    echo "   • Encriptación: $MAIL_ENCRYPTION"
+    echo "   • Remitente: $MAIL_FROM_ADDRESS"
+    echo ""
+    echo "🧪 Para probar email ejecuta:"
+    echo "   docker exec laravel_app php artisan email:test tu-email@gmail.com"
+else
+    echo "⚠️  Email configurado en modo: $MAIL_MAILER"
+    echo "💡 Para habilitar email SMTP, configura MAIL_MAILER=smtp"
+fi
+
 echo "Iniciando PHP-FPM..."
 exec "$@"
