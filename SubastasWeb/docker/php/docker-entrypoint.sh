@@ -35,6 +35,30 @@ chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 echo "Ejecutando migraciones..."
 php artisan migrate --force
 
+# Ejecutar seeders solo si es la primera vez o si se fuerza
+SEEDER_FLAG_FILE="/var/www/storage/.seeders_executed"
+if [ "$RUN_SEEDERS" = "true" ] && [ ! -f "$SEEDER_FLAG_FILE" ]; then
+    echo "Ejecutando seeders (primera ejecución)..."
+    if [ -n "$SEEDER_CLASS" ]; then
+        php artisan db:seed --class="$SEEDER_CLASS" --force
+    else
+        php artisan db:seed --force
+    fi
+    # Crear archivo de bandera para indicar que los seeders ya se ejecutaron
+    touch "$SEEDER_FLAG_FILE"
+    echo "Seeders ejecutados correctamente."
+elif [ "$RUN_SEEDERS" = "true" ] && [ -f "$SEEDER_FLAG_FILE" ]; then
+    echo "Seeders ya fueron ejecutados anteriormente. Saltando..."
+elif [ "$FORCE_SEEDERS" = "true" ]; then
+    echo "Ejecutando seeders (forzado)..."
+    if [ -n "$SEEDER_CLASS" ]; then
+        php artisan db:seed --class="$SEEDER_CLASS" --force
+    else
+        php artisan db:seed --force
+    fi
+    echo "Seeders ejecutados (forzado)."
+fi
+
 # Cachear configuración y rutas para producción
 echo "Optimizando Laravel..."
 php artisan config:cache

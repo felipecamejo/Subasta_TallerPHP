@@ -20,6 +20,9 @@ services:
       - DB_USERNAME=user
       - DB_PASSWORD=password
       - REDIS_HOST=redis
+      - RUN_SEEDERS=true
+      # - FORCE_SEEDERS=true  # Descomenta para forzar ejecución de seeders en cada inicio
+      # - SEEDER_CLASS=DatabaseSeeder  # Descomenta para ejecutar un seeder específico
 
   db:
     image: postgres:15
