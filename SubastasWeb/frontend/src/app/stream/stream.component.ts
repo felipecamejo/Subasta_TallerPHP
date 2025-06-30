@@ -18,8 +18,9 @@ import { WebsocketService } from '../../services/webSocketService';
 import { PayPalComponent } from '../pay-pal/pay-pal.component';
 import { NotificacionService } from '../../services/notificacion.service';
 import { ChatService } from '../../services/chat.service';
-import { notificacionUsuarioDto } from '../../models/notificacionDto';
 import { TimezoneService } from '../../services/timezone.service';
+import { FacturaService } from '../../services/factura.service';
+import { facturaDto } from '../../models/facturaDto';
 
 // ✅ Redis-compatible request format
 interface PujaRedisRequest {
@@ -280,7 +281,8 @@ export class StreamComponent implements OnInit, OnDestroy {
     private notificacionService: NotificacionService,
     private chatService: ChatService,
     private cdr: ChangeDetectorRef,
-    private timezoneService: TimezoneService
+    private timezoneService: TimezoneService,
+    private facturaService: FacturaService
   ) {
     (window as any).streamComponent = this;
   }
@@ -373,7 +375,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     } else {
       return null;
     }
-    
+    console.log('[parsearFechaSubasta] fechaInput:', fechaInput, '-> fecha:', fecha);
     if (isNaN(fecha.getTime())) return null;
     return fecha;
   }
@@ -390,8 +392,9 @@ export class StreamComponent implements OnInit, OnDestroy {
     if (!fechaSubasta) return;
     
     const ahora = new Date();
-    const finSubasta = new Date(fechaSubasta.getTime() + (this.subasta.duracionMinutos || 0) * 60000);
-    
+    const duracionMinutos = this.subasta.duracionMinutos;
+    const finSubasta = new Date(fechaSubasta.getTime() + duracionMinutos * 60000);
+    console.log('[validarEstadoSubasta] fechaSubasta:', fechaSubasta, 'ahora:', ahora, 'duracionMinutos:', duracionMinutos, 'finSubasta:', finSubasta);
     if (ahora < fechaSubasta) {
       // Antes de la subasta
       this.subasta.activa = false;
@@ -406,9 +409,9 @@ export class StreamComponent implements OnInit, OnDestroy {
       if (!estadoAnterior && !this.timerInitialized) {
         const tiempoTranscurridoMs = ahora.getTime() - fechaSubasta.getTime();
         const tiempoTranscurridoSegundos = Math.floor(tiempoTranscurridoMs / 1000);
-        const duracionTotalSegundos = this.subasta.duracionMinutos * 60;
+        const duracionTotalSegundos = duracionMinutos * 60;
         const tiempoRestante = Math.max(0, duracionTotalSegundos - tiempoTranscurridoSegundos);
-        
+        console.log('[validarEstadoSubasta] tiempoTranscurridoMs:', tiempoTranscurridoMs, 'tiempoTranscurridoSegundos:', tiempoTranscurridoSegundos, 'duracionTotalSegundos:', duracionTotalSegundos, 'tiempoRestante:', tiempoRestante);
         if (tiempoRestante > 0) {
           this.timerInitialized = true;
           this.timerState.tiempoRestanteSegundos = tiempoRestante;
@@ -575,6 +578,7 @@ export class StreamComponent implements OnInit, OnDestroy {
     }
 
     let tiempoRestanteSegundos = tiempoInicialSegundos ?? (this.subasta.duracionMinutos * 60);
+    console.log('[inicializarTimerWebSocket] tiempoInicialSegundos:', tiempoInicialSegundos, 'this.subasta.duracionMinutos:', this.subasta.duracionMinutos, 'tiempoRestanteSegundos:', tiempoRestanteSegundos);
     this.timerState.tiempoRestanteSegundos = tiempoRestanteSegundos;
     this.timerState.timer = this.formatearTiempo(tiempoRestanteSegundos);
     this.timerState.timerActivo = true;
@@ -598,10 +602,11 @@ export class StreamComponent implements OnInit, OnDestroy {
     const horas = Math.floor(segundos / TIMER_CONSTANTS.SECONDS_PER_HOUR);
     const minutos = Math.floor((segundos % TIMER_CONSTANTS.SECONDS_PER_HOUR) / TIMER_CONSTANTS.SECONDS_PER_MINUTE);
     const seg = segundos % TIMER_CONSTANTS.SECONDS_PER_MINUTE;
-    
-    return `${horas.toString().padStart(2, '0')}:` +
+    const tiempoFormateado = `${horas.toString().padStart(2, '0')}:` +
           `${minutos.toString().padStart(2, '0')}:` +
           `${seg.toString().padStart(2, '0')}`;
+    console.log('[formatearTiempo] segundos:', segundos, '->', tiempoFormateado);
+    return tiempoFormateado;
   }
 
   private formatearFechaInicio(fecha: Date): string {
@@ -1207,22 +1212,17 @@ export class StreamComponent implements OnInit, OnDestroy {
   private handleTimerUpdateFromWebSocket(timerData: any): void {
     if (timerData.tiempoRestante !== undefined) {
       const nuevoTiempo = timerData.tiempoRestante;
-      
-      // Actualizar estado local con los datos del servidor
+      console.log('[handleTimerUpdateFromWebSocket] timerData:', timerData, 'nuevoTiempo:', nuevoTiempo);
       this.timerState.tiempoRestanteSegundos = nuevoTiempo;
       this.timerState.timer = this.formatearTiempo(nuevoTiempo);
-      
       if (nuevoTiempo > 0) {
         this.timerState.timerActivo = true;
       } else {
         this.timerState.timer = TIMER_CONSTANTS.FINISHED_MESSAGE;
         this.timerState.tiempoRestanteSegundos = 0;
         this.timerState.timerActivo = false;
-        
         this.finalizarSubastaPorTiempo();
       }
-
-      // Forzar detección de cambios para actualizar la UI
       this.cdr.detectChanges();
     }
   }
@@ -1445,8 +1445,45 @@ export class StreamComponent implements OnInit, OnDestroy {
             console.log(`✅ LOTE PAGADO: Lote ${loteSubasta.id} marcado como pagado en this.subasta.lotes`);
           }
         }
+
+        // Buscar la puja ganadora de este lote
+        const pujasLote = (lote?.pujas as pujaDto[]) || [];
+        let pujaGanadora = null;
+        if (pujasLote.length > 0) {
+          pujaGanadora = pujasLote.reduce((max, p) => {
+            if (p.monto > max.monto) return p;
+            if (p.monto === max.monto) {
+              return new Date(p.fechaHora) > new Date(max.fechaHora) ? p : max;
+            }
+            return max;
+          }, pujasLote[0]);
+        }
+        if (!pujaGanadora || !pujaGanadora.id) {
+          console.error('❌ No se encontró puja ganadora para el lote', ganador.numeroLote);
+          return;
+        }
+
+        // Crear facturaDto para cada lote pagado
+        const factura: facturaDto = {
+          id: null,
+          puja_id: pujaGanadora.id,
+          montoTotal: ganador.monto,
+          condicionesDePago: 'Pago online',
+          entrega: 'A coordinar',
+          vendedor_id: null
+        };
+
+        console.log(factura);
+
+        this.facturaService.crearFactura(factura).subscribe({
+          next: (facturaCreada) => {
+            console.log('🧾 FACTURA CREADA:', facturaCreada);
+          },
+          error: (err) => {
+            console.error('❌ ERROR AL CREAR FACTURA:', err);
+          }
+        });
       });
-      
       this.pagando = false;
       
       // PASO 1.5: Persistir cambios en la base de datos
@@ -1599,7 +1636,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       const tiempoTranscurridoSegundos = Math.floor(tiempoTranscurridoMs / 1000);
       const duracionTotalSegundos = this.subasta!.duracionMinutos! * 60;
       const tiempoRestante = Math.max(0, duracionTotalSegundos - tiempoTranscurridoSegundos);
-
+      console.log('[manejarSubastaActiva] tiempoTranscurridoMs:', tiempoTranscurridoMs, 'tiempoTranscurridoSegundos:', tiempoTranscurridoSegundos, 'duracionTotalSegundos:', duracionTotalSegundos, 'tiempoRestante:', tiempoRestante);
       if (tiempoRestante > 0) {
         this.timerState.timer = this.formatearTiempo(tiempoRestante);
         this.timerState.tiempoRestanteSegundos = tiempoRestante;
@@ -1649,7 +1686,7 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.timerInitialized = true;
 
       const ahora = new Date();
-      const fechaSubasta = this.parsearFechaSubasta(new Date(this.subasta.fecha));
+      const fechaSubasta = new Date(this.subasta.fecha);
       const tiempoRestanteMs = fechaSubasta!.getTime() + this.subasta.duracionMinutos! * 60000 - ahora.getTime();
       const tiempoRestanteSegundos = Math.max(0, Math.ceil(tiempoRestanteMs / 1000));
 
