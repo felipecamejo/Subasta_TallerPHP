@@ -14,7 +14,10 @@
       <div class="error" *ngIf="password?.invalid && password?.touched">Campo obligatorio</div>
     </div>
 
-    <button type="submit" class="btn-primary">Entrar</button>
+    <button type="submit" [disabled]="form.invalid || loading" class="btn-primary login-button">
+      <span *ngIf="loading" class="custom-spinner"></span>
+      Entrar
+    </button>
 
     <p class="error-message" *ngIf="error">{{ error }}</p>
 
@@ -22,9 +25,8 @@
       <a routerLink="/forgot-password">¿Olvidaste tu contraseña?</a>
       <a routerLink="/registro">Crear cuenta</a>
     </div>
-
-    <!-- Componente de Google Login -->
-    <app-google-login></app-google-login>
-
   </form>
+
+  <!-- Botón de Google fuera del formulario -->
+  <app-google-login></app-google-login>
 </div>

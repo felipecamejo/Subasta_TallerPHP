@@ -7,7 +7,10 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * @OA\Schema(
  *     schema="GoogleRegisterCasaRemateRequest",
- *     required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "idFiscal"},
+ *     required={
+ *         "google_id", "nombre", "email", "telefono", "cedula",
+ *         "latitud", "longitud", "idFiscal", "contrasenia", "contrasenia_confirmation"
+ *     },
  *     @OA\Property(property="google_id", type="string", example="1234567890"),
  *     @OA\Property(property="nombre", type="string", example="Casa Rematadora S.A."),
  *     @OA\Property(property="email", type="string", format="email", example="casa@example.com"),
@@ -16,6 +19,8 @@ use Illuminate\Foundation\Http\FormRequest;
  *     @OA\Property(property="latitud", type="number", format="float", example="-34.9011"),
  *     @OA\Property(property="longitud", type="number", format="float", example="-56.1645"),
  *     @OA\Property(property="idFiscal", type="string", example="RUT123456789"),
+ *     @OA\Property(property="contrasenia", type="string", format="password", example="secreta123"),
+ *     @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="secreta123"),
  *     @OA\Property(property="imagen_url", type="string", format="url", nullable=true, example="https://example.com/avatar.jpg")
  * )
  */
@@ -33,11 +38,21 @@ class GoogleRegisterCasaRemateRequest extends FormRequest
             'nombre' => 'required|string|max:255',
             'email' => 'required|email|unique:usuarios,email',
             'telefono' => 'required|string',
-            'cedula' => 'required|string|unique:usuarios,cedula',
+            'cedula' => [
+                'nullable',
+                'string',
+                'unique:usuarios,cedula',
+                function ($attribute, $value, $fail) {
+                    if (empty($value)) {
+                        $fail('El campo cédula no puede estar vacío.');
+                    }
+                }
+            ],
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
             'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
             'imagen_url' => 'nullable|url',
+            'contrasenia' => 'required|string|min:8|confirmed',
         ];
     }
 }

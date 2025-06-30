@@ -7,7 +7,10 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * @OA\Schema(
  *     schema="GoogleRegisterRequest",
- *     required={"google_id", "nombre", "email", "telefono", "cedula", "latitud", "longitud", "rol"},
+ *     required={
+ *         "google_id", "nombre", "email", "telefono", "cedula",
+ *         "latitud", "longitud", "rol", "contrasenia", "contrasenia_confirmation"
+ *     },
  *     @OA\Property(property="google_id", type="string", example="1234567890"),
  *     @OA\Property(property="nombre", type="string", example="Juan Pérez"),
  *     @OA\Property(property="email", type="string", format="email", example="juan@example.com"),
@@ -17,7 +20,9 @@ use Illuminate\Foundation\Http\FormRequest;
  *     @OA\Property(property="longitud", type="number", format="float", example="-56.1645"),
  *     @OA\Property(property="rol", type="string", enum={"cliente", "rematador", "casa_remate"}, example="cliente"),
  *     @OA\Property(property="matricula", type="string", nullable=true, example="MAT1234"),
- *     @OA\Property(property="imagen_url", type="string", format="url", nullable=true, example="https://example.com/avatar.jpg")
+ *     @OA\Property(property="imagen_url", type="string", format="url", nullable=true, example="https://example.com/avatar.jpg"),
+ *     @OA\Property(property="contrasenia", type="string", format="password", example="secreta123"),
+ *     @OA\Property(property="contrasenia_confirmation", type="string", format="password", example="secreta123")
  * )
  */
 class GoogleRegisterRequest extends FormRequest
@@ -40,6 +45,7 @@ class GoogleRegisterRequest extends FormRequest
             'rol' => 'required|in:cliente,rematador,casa_remate',
             'matricula' => 'nullable|string',
             'imagen_url' => 'nullable|url',
+            'contrasenia' => 'required|string|min:8|confirmed',
         ];
     }
 
@@ -50,6 +56,7 @@ class GoogleRegisterRequest extends FormRequest
             'email.unique' => 'El email ya está registrado.',
             'cedula.unique' => 'La cédula ya está registrada.',
             'imagen_url.url' => 'La URL de la imagen no es válida.',
+            'contrasenia.confirmed' => 'Las contraseñas no coinciden.',
         ];
     }
 }

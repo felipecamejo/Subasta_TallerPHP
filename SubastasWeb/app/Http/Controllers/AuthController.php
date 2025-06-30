@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterUsuarioRequest;
 use App\Http\Requests\GoogleRegisterRequest;
 use App\Http\Requests\RegisterCasaRemateRequest;
+use App\Http\Requests\GoogleRegisterCasaRemateRequest;
 use App\Models\Usuario;
 use App\Models\Cliente;
 use App\Models\Rematador;
@@ -232,7 +233,7 @@ public function register(RegisterUsuarioRequest $request)
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
             'imagen' => $imagenRuta,
-            'contrasenia' => Hash::make(uniqid()),
+            'contrasenia' => Hash::make($request->contrasenia),
             'email_verified_at' => now(),
         ]);
 
@@ -270,19 +271,8 @@ public function register(RegisterUsuarioRequest $request)
  *     @OA\Response(response=500, description="Error al registrar casa de remate.")
  * )
  */
-public function registerGoogleCasaRemate(Request $request){
-    $request->validate([
-        'google_id' => 'required|string|unique:usuarios,google_id',
-        'nombre' => 'required|string|max:255',
-        'email' => 'required|email|unique:usuarios,email',
-        'telefono' => 'required|string',
-        'cedula' => 'required|string|unique:usuarios,cedula',
-        'latitud' => 'required|numeric',
-        'longitud' => 'required|numeric',
-        'idFiscal' => 'required|string|unique:casa_remates,idFiscal',
-        'imagen_url' => 'nullable|url',
-    ]);
-
+public function registerGoogleCasaRemate(GoogleRegisterCasaRemateRequest $request)
+{
     $imagenUrl = $request->imagen_url;
 
     if ($imagenUrl) {
@@ -309,7 +299,7 @@ public function registerGoogleCasaRemate(Request $request){
             'google_id' => $request->google_id,
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
-            'contrasenia' => Hash::make(uniqid()),
+            'contrasenia' => Hash::make($request->contrasenia),
             'email_verified_at' => now(),
             'imagen' => $imagenUrl ?? Arr::random([
                 'avatars/default1.png',

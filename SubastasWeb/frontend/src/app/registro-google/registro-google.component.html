@@ -4,6 +4,10 @@
   <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     <fieldset class="mb-3">
       <legend>Información personal</legend>
+      <div *ngIf="form.get('imagen')?.value">
+         <p>Imagen de perfil:</p>
+         <img [src]="form.get('imagen')?.value" alt="Imagen de perfil" width="120" height="120" style="border-radius: 50%;">
+      </div>
 
       <!-- Nombre -->
       <div class="mb-2">

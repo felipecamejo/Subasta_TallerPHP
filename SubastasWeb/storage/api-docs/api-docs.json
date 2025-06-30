@@ -4122,7 +4122,9 @@
                     "cedula",
                     "latitud",
                     "longitud",
-                    "idFiscal"
+                    "idFiscal",
+                    "contrasenia",
+                    "contrasenia_confirmation"
                 ],
                 "properties": {
                     "google_id": {
@@ -4160,6 +4162,16 @@
                         "type": "string",
                         "example": "RUT123456789"
                     },
+                    "contrasenia": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secreta123"
+                    },
+                    "contrasenia_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secreta123"
+                    },
                     "imagen_url": {
                         "type": "string",
                         "format": "url",
@@ -4178,7 +4190,9 @@
                     "cedula",
                     "latitud",
                     "longitud",
-                    "rol"
+                    "rol",
+                    "contrasenia",
+                    "contrasenia_confirmation"
                 ],
                 "properties": {
                     "google_id": {
@@ -4231,6 +4245,16 @@
                         "format": "url",
                         "example": "https://example.com/avatar.jpg",
                         "nullable": true
+                    },
+                    "contrasenia": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secreta123"
+                    },
+                    "contrasenia_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secreta123"
                     }
                 },
                 "type": "object"
