@@ -8,6 +8,17 @@ return [
         'default' => [
             'api' => [
                 'title' => 'L5 Swagger UI',
+                'info' => [
+                    'title' => 'API Subasta',
+                    'description' => 'Documentación interactiva de la API',
+                    'version' => '1.0.0',
+                ],
+                'servers' => [
+                    [
+                        'url' => env('L5_SWAGGER_BASE_SERVER', 'http://localhost:8000'),
+                        'description' => 'Servidor local',
+                    ],
+                ],
             ],
 
             'routes' => [
@@ -16,9 +27,9 @@ return [
 
             'paths' => [
                 'annotations' => [
-                    base_path('app/Docs/Schemas'),         
-                    base_path('app/Http/Controllers'),     
-                    base_path('app/Http/Requests'),        
+                    base_path('app/Docs/Schemas'),
+                    base_path('app/Http/Controllers'),
+                    base_path('app/Http/Requests'),
                 ],
 
                 'use_absolute_path' => env('L5_SWAGGER_USE_ABSOLUTE_PATH', true),

@@ -5,14 +5,9 @@ namespace App\Http\Controllers;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-
 
 class SocialAuthController extends Controller
 {
-    
-
     /**
      * @OA\Get(
      *     path="/api/auth/redirect/google",
@@ -35,7 +30,6 @@ class SocialAuthController extends Controller
      */
     public function redirectToGoogle(Request $request)
     {
-        $frontend = env('FRONTEND_URL');
         $rol = $request->query('rol');
 
         if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
@@ -45,9 +39,9 @@ class SocialAuthController extends Controller
         session(['rol' => $rol]);
 
         return Socialite::driver('google')
-    ->stateless()
-    ->with(['state' => $rol]) // usamos el parámetro `state` para enviar el rol
-    ->redirect();
+            ->stateless()
+            ->with(['state' => $rol]) // usamos el parámetro `state` para enviar el rol
+            ->redirect();
     }
 
     /**
@@ -65,11 +59,11 @@ class SocialAuthController extends Controller
      */
     public function handleGoogleCallback(Request $request)
     {
-        $frontend = env('FRONTEND_URL');
+        $frontend = trim(env('FRONTEND_URL', 'http://localhost:4200'));
         $rol = $request->input('state'); 
 
         if (!in_array($rol, ['cliente', 'rematador', 'casa_remate'])) {
-            return redirect("$frontend/login?error=rol-invalido");
+            return redirect()->away("$frontend/login?error=rol-invalido");
         }
 
         $googleUser = Socialite::driver('google')->stateless()->user();
@@ -85,12 +79,11 @@ class SocialAuthController extends Controller
                 'google_id' => $googleUser->getId(),
             ]);
 
-            return redirect("$frontend/registro-google?$query");
+            return redirect()->away("$frontend/registro-google?$query");
         }
 
         $token = $usuario->createToken('token-google')->plainTextToken;
 
-        // Detectar rol real del usuario
         $rolDetectado = null;
         if ($usuario->rematador) {
             $rolDetectado = 'rematador';
@@ -100,7 +93,7 @@ class SocialAuthController extends Controller
             $rolDetectado = 'casa_remate';
         }
 
-        return redirect("$frontend/login-google?" . http_build_query([
+        return redirect()->away("$frontend/login-google?" . http_build_query([
             'token' => $token,
             'usuario_id' => $usuario->id,
             'rol' => $rolDetectado
