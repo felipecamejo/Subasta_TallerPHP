@@ -28,10 +28,6 @@
             return $this->belongsTo(Usuario::class, 'usuario_id');
         }
 
-        public function rematador(){
-            return $this->hasOne(Rematador::class, 'usuario_id');
-        }
-
         public function valoracion(){
             return $this->hasOne(Valoracion::class, 'valorable_id', 'usuario_id');
         }
