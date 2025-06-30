@@ -610,13 +610,21 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   private formatearFechaInicio(fecha: Date): string {
-    return fecha.toLocaleString('es-ES', {
+    // Mantener el formato específico que necesitas: dd/mm/yyyy, hh:mm
+    const userTimezone = this.timezoneService.getUserTimezone();
+    
+    // Crear un formateador que use la zona horaria del usuario
+    const formatter = new Intl.DateTimeFormat('es-ES', {
       day: '2-digit',
-      month: '2-digit',
+      month: '2-digit', 
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    });  }
+      minute: '2-digit',
+      timeZone: userTimezone
+    });
+    
+    return formatter.format(fecha);
+  }
   
   // Métodos de pujas
   /**
