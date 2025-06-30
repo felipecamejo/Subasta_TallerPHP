@@ -668,9 +668,23 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   // ✅ UPDATED: Create Redis-compatible bid request
   private crearPujaRedis(monto: number): PujaRedisRequest {
+    // Validar que el monto sea válido
+    if (!monto || monto <= 0) {
+      throw new Error('El monto debe ser mayor a 0');
+    }
+
+    // Obtener ID del usuario de forma segura
+    const usuarioIdStr = localStorage.getItem('usuario_id');
+    const clienteId = usuarioIdStr ? Number(usuarioIdStr) : null;
+    
+    // Validar que el cliente ID sea válido
+    if (!clienteId || isNaN(clienteId)) {
+      throw new Error('ID de usuario inválido');
+    }
+
     return {
       monto: monto,
-      cliente_id: localStorage.getItem('usuario_id') !== null ? Number(localStorage.getItem('usuario_id')) : null
+      cliente_id: clienteId
     };
   }
 
@@ -695,9 +709,15 @@ export class StreamComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ UPDATED: Use Redis-compatible request
-    const puja = this.crearPujaRedis(this.pujaRapida!);
-    this.enviarPujaRedis(puja);
+    try {
+      // ✅ UPDATED: Use Redis-compatible request with error handling
+      const puja = this.crearPujaRedis(this.pujaRapida!);
+      this.enviarPujaRedis(puja);
+    } catch (error) {
+      console.error('Error al crear puja rápida:', error);
+      alert(`Error al crear la puja: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      this.pujaRapida = null;
+    }
   }
 
   crearPujaComun(): void {
@@ -709,9 +729,15 @@ export class StreamComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ UPDATED: Use Redis-compatible request
-    const puja = this.crearPujaRedis(this.pujaComun!);
-    this.enviarPujaRedis(puja);
+    try {
+      // ✅ UPDATED: Use Redis-compatible request with error handling
+      const puja = this.crearPujaRedis(this.pujaComun!);
+      this.enviarPujaRedis(puja);
+    } catch (error) {
+      console.error('Error al crear puja común:', error);
+      alert(`Error al crear la puja: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      this.pujaComun = null;
+    }
   }
 
   private enviarPuja(puja: PujaRequest): void {
@@ -862,21 +888,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           mensaje: `Se ha realizado una puja de $${puja.monto} en el lote ${loteId} de la subasta ${this.subasta?.nombre || 'desconocida'}.`
         };
 
-        // Update winners array before making the bid
-        if (!this.ganadores[this.indexLotes]) {
-          this.ganadores[this.indexLotes] = {
-            numeroLote: loteId,
-            clienteId: puja.cliente_id || 0,
-            monto: Number(puja.monto)
-          };
-          console.log(`🏆 NUEVO GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
-        } else {
-          const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
-          const montoAnterior = this.ganadores[this.indexLotes].monto;
-          this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
-          this.ganadores[this.indexLotes].monto = Number(puja.monto);
-          console.log(`🔄 CAMBIO DE GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
-        }
+        
 
         // Make the Redis bid request
         this.pujaService.crearPujaRedis(loteId, puja).subscribe({
@@ -908,6 +920,22 @@ export class StreamComponent implements OnInit, OnDestroy {
 
             // Send WebSocket notification
             this.sendWebSocketBidRedis(puja, loteId);
+
+            // Update winners array before making the bid
+            if (!this.ganadores[this.indexLotes]) {
+              this.ganadores[this.indexLotes] = {
+                numeroLote: loteId,
+                clienteId: puja.cliente_id || 0,
+                monto: Number(puja.monto)
+              };
+              console.log(`🏆 NUEVO GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
+            } else {
+              const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
+              const montoAnterior = this.ganadores[this.indexLotes].monto;
+              this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
+              this.ganadores[this.indexLotes].monto = Number(puja.monto);
+              console.log(`🔄 CAMBIO DE GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
+            }
 
             // Send confirmation email to bidder
             if (mail && this.esUsuarioGanadorActualLote()) {
