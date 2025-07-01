@@ -76,7 +76,7 @@ class PujaController extends Controller
     public function index()
     {
         try {
-            $pujas = Puja::with(['cliente.usuario', 'lote', 'factura'])->get();
+            $pujas = Puja::with(['cliente.valoracion', 'cliente.usuario', 'lote', 'factura'])->get();
             return response()->json($pujas);
         } catch (\Throwable $e) {
             return response()->json([
@@ -209,6 +209,23 @@ class PujaController extends Controller
                 'estimated_processing_time' => '1-3 segundos'
             ], 202); // 202 Accepted
 
+            \Log::info('Puja creada con ID: ' . $puja->id);
+
+            $puja->load(['cliente.usuario', 'cliente.valoracion', 'lote', 'factura']);
+            \Log::info('Relaciones cargadas exitosamente');
+
+            // Notificar al WebSocket sobre la nueva puja (no fallar si esto falla)
+            try {
+                \Log::info('Intentando notificar WebSocket');
+                $this->notifyWebSocket($puja);
+                \Log::info('WebSocket notificado exitosamente');
+            } catch (\Exception $wsError) {
+                \Log::error('Error en WebSocket notification: ' . $wsError->getMessage());
+                // Continuar sin fallar la creación de la puja
+            }
+
+            \Log::info('=== PUJA CREADA EXITOSAMENTE ===');
+            return response()->json($puja, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Error de validación:', $e->errors());
             return response()->json([

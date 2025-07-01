@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pujas', function (Blueprint $table) {
-            $table->foreignId('factura_id')->nullable()->constrained('facturas')->onDelete('set null');
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->string('cedula')->nullable()->change();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('pujas', function (Blueprint $table) {
-            //
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->string('cedula')->nullable(false)->change();
         });
     }
 };

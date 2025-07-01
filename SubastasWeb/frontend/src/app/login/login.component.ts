@@ -28,35 +28,35 @@ export class LoginComponent {
     });
   }
 
-  login() {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+login() {
+  this.form.markAllAsTouched();
+  if (this.form.invalid) return;
 
-    const { email, password } = this.form.value;
+  const { email, password } = this.form.value;
 
-    this.authService.loginTradicional(email, password).subscribe({
-      next: (res: any) => {
-        this.authService.login({
-          token: res.token,
-          rol: res.rol,
-          usuario_id: res.usuario_id,
-          usuario: res.usuario,
-        });
+  this.authService.loginTradicional(email, password).subscribe({
+    next: (res: any) => {
+      this.authService.login({
+        token: res.token,
+        rol: res.rol,
+        usuario_id: res.usuario_id,
+        usuario: res.usuario,
+      });
 
-        // Redirigir siempre al buscador de remates, independientemente del rol
-        this.router.navigate(['/buscadorRemates']);
-      },
-      error: (err: HttpErrorResponse) => {
-        if (err.status === 403) {
-          const email = this.form.get('email')?.value;
-          localStorage.setItem('email_para_verificar', email);
-          this.router.navigate(['/verificacion-pendiente']);
-        } else {
-          this.error = 'Email o contraseña incorrectos';
-        }
-      },
-    });
-  }
+      this.authService.redirigirPorRol(res.rol);
+    },
+    error: (err: HttpErrorResponse) => {
+      if (err.status === 403) {
+        const email = this.form.get('email')?.value;
+        localStorage.setItem('email_para_verificar', email);
+        this.router.navigate(['/verificacion-pendiente']);
+      } else {
+        this.error = 'Email o contraseña incorrectos';
+      }
+    },
+  });
+}
+
 
   get email() {
     return this.form.get('email');
@@ -66,10 +66,5 @@ export class LoginComponent {
     return this.form.get('password');
   }
 
-  loginConGoogle() {
-    // Aquí va la lógica para login con Google
-    console.log('Login con Google');
-    // Si tienes un servicio de autenticación, llama aquí al método correspondiente
-  }
-  
+ 
 }

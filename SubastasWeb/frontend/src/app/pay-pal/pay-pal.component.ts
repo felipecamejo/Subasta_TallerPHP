@@ -1,5 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { PaypalService } from '../../services/Paypal.service';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -31,37 +33,68 @@ export class PayPalComponent implements OnInit {
   async ngOnInit() {
     try {
       const paypal = await this.paypalService.initializePayPal();
+      
       await paypal.Buttons({
         createOrder: (data: any, actions: any) => {
           this.loading = true;
           this.error = null;
-          // Crear orden directamente en el frontend
-          return actions.order.create({
-            purchase_units: [
-              {
-                amount: {
-                  value: this.amount.toString(),
-                  currency_code: 'USD'
+          
+          // Crear orden a través del backend
+          return new Promise((resolve, reject) => {
+            this.paypalService.createOrder(this.facturaId, this.amount)
+              .pipe(
+                catchError(err => {
+                  console.error('Error creating order:', err);
+                  this.error = 'Error al crear la orden de pago';
+                  this.loading = false;
+                  this.paymentError.emit(err);
+                  reject(err);
+                  return throwError(() => err);
+                })
+              )
+              .subscribe(response => {
+                this.loading = false;
+                if (response && response.id) {
+                  resolve(response.id);
+                } else {
+                  this.error = 'La respuesta del servidor no contiene un ID de orden válido';
+                  reject(new Error('Invalid order ID'));
                 }
-              }
-            ]
+              });
           });
         },
         onApprove: (data: any, actions: any) => {
           this.loading = true;
           this.error = null;
-          // Capturar pago directamente en el frontend
-          return actions.order.capture().then((details: any) => {
-            this.loading = false;
-            this.paymentSuccess.emit({
-              orderId: data.orderID,
-              amount: this.amount,
-              details: details
-            });
-          }).catch((err: any) => {
-            this.loading = false;
-            this.error = 'Error al procesar el pago';
-            this.paymentError.emit(err);
+          
+          // Capturar pago a través del backend
+          return new Promise((resolve, reject) => {
+            this.paypalService.capturePayment(data.orderID)
+              .pipe(
+                catchError(err => {
+                  console.error('Error capturing payment:', err);
+                  this.error = 'Error al procesar el pago';
+                  this.loading = false;
+                  this.paymentError.emit(err);
+                  reject(err);
+                  return throwError(() => err);
+                })
+              )
+              .subscribe(response => {
+                this.loading = false;
+                if (response && response.success) {
+                  this.paymentSuccess.emit({
+                    orderId: data.orderID,
+                    amount: this.amount,
+                    details: response.data
+                  });
+                  resolve(response.data);
+                } else {
+                  this.error = 'Error al procesar el pago';
+                  this.paymentError.emit(response);
+                  reject(new Error('Payment capture failed'));
+                }
+              });
           });
         },
         onError: (err: any) => {

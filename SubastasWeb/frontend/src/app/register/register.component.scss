@@ -1,7 +1,62 @@
-#map {
-  height: 300px;
-  width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-top: 1rem;
+$form-padding: 2rem;
+$form-radius: 8px;
+$form-bg: #f9f9f9;
+$form-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+.form-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: $form-padding;
+  padding-left: 3rem;
+  padding-right: 3rem;
+  background-color: $form-bg;
+  border-radius: $form-radius;
+  box-shadow: $form-shadow;
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    input,
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      width: 100%;
+    }
+  }
+
+  .error-message {
+    color: red;
+    font-weight: bold;
+  }
+
+  .map-container {
+    height: 300px;
+    border: 1px solid #ccc;
+    border-radius: $form-radius;
+  }
+
+  .submit-button {
+    padding: 0.7rem;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+  }
 }

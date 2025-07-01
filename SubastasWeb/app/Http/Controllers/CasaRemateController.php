@@ -95,64 +95,42 @@ class CasaRemateController extends Controller
      *     @OA\Parameter(
      *         name="usuario_id",
      *         in="path",
-     *         description="ID del usuario asociado a la casa de remate a actualizar",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"nombre", "cedula", "email", "contrasenia"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="telefono", type="string"),
-     *             @OA\Property(property="imagen", type="string"),
-     *             @OA\Property(property="latitud", type="number"),
-     *             @OA\Property(property="longitud", type="number"),
-     *             @OA\Property(property="idFiscal", type="number"),
+     *             @OA\Property(property="idFiscal", type="string", maxLength=20)
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Casa Remate actualizado correctamente"),
-     *     @OA\Response(response=404, description="Casa Remate no encontrado")
+     *     @OA\Response(response=200, description="Casa de remate actualizada"),
+     *     @OA\Response(response=404, description="Casa de remate no encontrada"),
+     *     @OA\Response(response=422, description="Error de validación")
      * )
-    */
+     */
     public function update(Request $request, string $usuario_id)
     {
-       $casa = CasaRemate::find($usuario_id);
+        $casa = CasaRemate::find($usuario_id);
 
         if (!$casa) {
-            return response()->json(['error' => 'Cliente no encontrado'], 404);
+            return response()->json(['message' => 'Casa de remate no encontrada'], 404);
         }
 
-        $usuario = $casa->usuario;
-
-        $validated = $request->validate([
-            'nombre' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:usuarios,email,' . $usuario->id,
-            'telefono' => 'nullable|string',
-            'imagen' => 'nullable|string',
-            'latitud' => 'nullable|numeric',
-            'longitud' => 'nullable|numeric',
-            'idFiscal' => 'nullable|numeric',
+        $validator = Validator::make($request->all(), [
+            'idFiscal' => 'sometimes|string|max:20',
         ]);
 
-        // Actualizar usuario
-        $usuario->update([
-            'nombre' => $validated['nombre'] ?? $usuario->nombre,
-            'email' => $validated['email'] ?? $usuario->email,
-            'telefono' => $validated['telefono'] ?? $usuario->telefono,
-            'imagen' => array_key_exists('imagen', $validated) ? $validated['imagen'] : $usuario->imagen,
-            'latitud' => $validated['latitud'] ?? $usuario->latitud,
-            'longitud' => $validated['longitud'] ?? $usuario->longitud,
-        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $casa->update([
-            'idFiscal' => $validated['idFiscal'] ?? $casa->idFiscal,
-        ]);
+        $casa->update($request->only(['idFiscal']));
 
-        // Actualizar cliente (ya no hay campo calificacion)
-        $casa->load(['usuario', 'valoracion']);
-        return response()->json($casa);
+        return response()->json([
+            'mensaje' => 'Casa de remate actualizada exitosamente.',
+            'casaRemate' => $casa
+        ]);
     }
 
     /**

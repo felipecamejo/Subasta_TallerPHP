@@ -19,7 +19,7 @@ class CasaRemateSeeder extends Seeder
             'email' => 'cocoarodri@gmail.com',
             'cedula' => '212345670018', // Usamos el idFiscal como cédula para casas de remate
             'telefono' => '099123456',
-            'contrasenia' => Hash::make('123456789'),
+            'contrasenia' => Hash::make('12345678'),
             'latitud' => -34.9011,
             'longitud' => -56.1645,
             'email_verified_at' => now(),
@@ -33,7 +33,16 @@ class CasaRemateSeeder extends Seeder
             'activo' => false,
         ]);
 
-        /*
+        // Insertar valoración solo con los campos válidos
+        DB::table('valoraciones')->insert([
+            'total_puntaje' => 23,
+            'cantidad_opiniones' => 5,
+            'usuario_id' => $usuario->id,
+            'chat_id' => null, // Si no hay chat asociado, puede ser null o eliminar este campo si no corresponde
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         // Casas generadas con Faker
         $faker = Faker::create('es_UY');
 
@@ -63,7 +72,16 @@ class CasaRemateSeeder extends Seeder
                 'idFiscal' => $cedula,
                 'activo' => $faker->boolean(80),
             ]);
+
+            // Insertar valoración solo con los campos válidos
+            DB::table('valoraciones')->insert([
+                'total_puntaje' => $faker->numberBetween(0, 50),
+                'cantidad_opiniones' => $faker->numberBetween(0, 10),
+                'usuario_id' => $usuario->id,
+                'chat_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
-        */
     }
 }

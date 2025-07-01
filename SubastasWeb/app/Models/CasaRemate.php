@@ -2,6 +2,7 @@
     namespace App\Models;
     use App\Models\Rematador;
     use App\Models\Subasta;
+    use App\Models\Valoracion;
     use Illuminate\Database\Eloquent\Model;
 
     class CasaRemate extends Model{
@@ -15,6 +16,11 @@
         ]; 
 
         protected $hidden = []; // Columnas ocultas en las respuestas JSON
+
+        /**
+         * Relación polimórfica con valoraciones
+         */
+       
 
         public function rematadores() {
             return $this->belongsToMany(Rematador::class, 'casa_remate_rematador', 'casa_remate_id', 'rematador_id');

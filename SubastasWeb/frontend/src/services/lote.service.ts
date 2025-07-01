@@ -23,9 +23,6 @@ export class LoteService {
     return this.http.get<loteDto[]>(`${this.urlService.baseUrl}${this.endpoint}`);
   }
 
-  crearLote(loteData: any): Observable<loteDto> {
-    return this.http.post<loteDto>(`${this.urlService.baseUrl}${this.endpoint}`, loteData);
-  }
 
   getLotesPorSubasta(subastaId: number): Observable<Pick<loteDto, 'id' | 'valorBase' | 'pujaMinima' | 'pujas' | 'articulos' | 'umbral'| 'pago'>[]> {
     // Obtenemos la subasta completa con sus lotes incluidos

@@ -114,6 +114,7 @@ export class NotificacionService {
   private obtenerNotificaciones(): Observable<notificacionUsuarioDto[]> {
     const usuarioId = localStorage.getItem('usuario_id');
     const rol = this.authService.getRol();
+    
     // Para casas de remate, usar endpoint público
     if (rol === 'casa_remate' && usuarioId) {
       return this.obtenerNotificacionesPublico(Number(usuarioId));

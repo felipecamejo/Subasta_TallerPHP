@@ -642,11 +642,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       const response = await this.chatService.finalizarChat(
         this.chatId,
         parseInt(this.currentUserId),
-        this.valoracionSeleccionada
+        this.otroUsuarioId,
+        this.valoracionSeleccionada,
+        this.otroUsuarioTipo
       );
-      console.log('Respuesta de finalizarChat:', response);
-      // Considerar éxito si success o calificacion_agregada es true
-      if (response && (response.calificacion_agregada || response.success)) {
+      // Si la respuesta indica que ya valoró, actualizar flags
+      if (response && response.calificacion_agregada) {
         this.mostrarModalValoracion = false;
         this.mostrarValoracion = false;
         this.necesitaValorarChatFinalizado = false;
@@ -655,25 +656,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
           chatId: this.chatId,
           usuarioId: this.currentUserId
         });
-        // Forzar actualización del estado del chat
-        setTimeout(() => {
-          this.verificarEstadoChatYValoracion();
-        }, 500);
-      } else if (response && response.message && response.message.includes('ya valoró')) {
-        alert('Ya has valorado este chat.');
-        this.mostrarModalValoracion = false;
-        this.mostrarValoracion = false;
-        this.necesitaValorarChatFinalizado = false;
-        setTimeout(() => {
-          this.verificarEstadoChatYValoracion();
-        }, 500);
-      } else {
-        alert('No se pudo finalizar el chat o valorar. Revisa la consola.');
-        console.error('Respuesta inesperada al finalizar chat:', response);
       }
     } catch (error) {
       console.error('Error al finalizar chat:', error);
-      alert('Error al finalizar el chat. Revisa la consola.');
+      alert('Error al finalizar el chat');
     }
     this.enviandoValoracion = false;
   }
