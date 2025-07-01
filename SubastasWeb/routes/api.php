@@ -182,6 +182,9 @@ Route::get('/lotes', [LoteController::class, 'index']);
         Route::get('/debug-usuario/{usuarioId}', [PujaRedisController::class, 'debugUsuarioDirecto']); // 🔧 DEBUG TEMPORAL
     });
 
+    // 🏆 Ruta para obtener ganadores de subasta
+    Route::get('/subastas/{subastaId}/ganadores', [SubastaController::class, 'obtenerGanadores']);
+
 //});
 
 Route::get('/usuarioEmail/{id}', [\App\Http\Controllers\ClienteController::class, 'buscarUsuarioPorId']);

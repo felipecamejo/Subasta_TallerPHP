@@ -244,10 +244,14 @@ export class StreamComponent implements OnInit, OnDestroy {
 
   /**
    * Getter que devuelve todos los lotes ganados por el usuario actual
+   * Solo funciona correctamente después de finalizada la subasta
    */
   get lotesGanadosPorUsuario(): ganadorDto[] {
     const usuarioActual = localStorage.getItem('usuario_id');
     if (!usuarioActual) return [];
+    
+    // Si la subasta está activa, devolver array vacío ya que los ganadores se determinan al final
+    if (this.subasta?.activa) return [];
     
     const usuarioId = Number(usuarioActual);
     return this.ganadores.filter(ganador => 
@@ -913,22 +917,7 @@ export class StreamComponent implements OnInit, OnDestroy {
           });
         }
 
-        
-        // Actualizar el array de ganadores
-        if (!this.ganadores[this.indexLotes]) {
-          this.ganadores[this.indexLotes] = {
-            numeroLote: this.lotes[this.indexLotes].id || (this.indexLotes + 1),
-            clienteId: puja.cliente_id || 0,
-            monto: Number(puja.monto)
-          };
-          console.log(`🏆 NUEVO GANADOR: Lote ${this.indexLotes} (ID: ${this.lotes[this.indexLotes].id}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
-        } else {
-          const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
-          const montoAnterior = this.ganadores[this.indexLotes].monto;
-          this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
-          this.ganadores[this.indexLotes].monto = Number(puja.monto);
-          console.log(`🔄 CAMBIO DE GANADOR: Lote ${this.indexLotes} (ID: ${this.lotes[this.indexLotes].id}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
-        }
+        // ✅ Ya no actualizamos el array local de ganadores - se consultará al servidor al final de la subasta
 
         this.pujaService.crearPuja(puja).subscribe({
           next: (data) => {
@@ -1068,21 +1057,7 @@ export class StreamComponent implements OnInit, OnDestroy {
             // Send WebSocket notification
             this.sendWebSocketBidRedis(puja, loteId);
 
-            // Update winners array before making the bid
-            if (!this.ganadores[this.indexLotes]) {
-              this.ganadores[this.indexLotes] = {
-                numeroLote: loteId,
-                clienteId: puja.cliente_id || 0,
-                monto: Number(puja.monto)
-              };
-              console.log(`🏆 NUEVO GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Cliente ${puja.cliente_id} con $${puja.monto}`);
-            } else {
-              const ganadorAnterior = this.ganadores[this.indexLotes].clienteId;
-              const montoAnterior = this.ganadores[this.indexLotes].monto;
-              this.ganadores[this.indexLotes].clienteId = puja.cliente_id || 0;
-              this.ganadores[this.indexLotes].monto = Number(puja.monto);
-              console.log(`🔄 CAMBIO DE GANADOR (Redis): Lote ${this.indexLotes} (ID: ${loteId}) - Anterior: Cliente ${ganadorAnterior} ($${montoAnterior}) → Nuevo: Cliente ${puja.cliente_id} ($${puja.monto})`);
-            }
+            // ✅ Ya no actualizamos el array local de ganadores - se consultará al servidor al final de la subasta
 
             // Send confirmation email to bidder
             if (mail && this.esUsuarioGanadorActualLote()) {
@@ -1396,16 +1371,27 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   private esUsuarioGanadorActualLote(): boolean {
-    // Busca el ganador del lote actual en el array ganadores
+    // Durante la subasta activa, cualquier usuario puede recibir notificaciones
+    // Al final de la subasta, se consultará el servidor para determinar ganadores reales
+    if (this.subasta?.activa) {
+      return true;
+    }
+    
+    // Si la subasta no está activa, verificar en el array de ganadores
     const ganadorLote = this.ganadores[this.indexLotes];
     const usuarioActual = localStorage.getItem('usuario_id');
-    if (!ganadorLote || !ganadorLote.clienteId || ganadorLote.clienteId === 0) return true;
+    if (!ganadorLote || !ganadorLote.clienteId || ganadorLote.clienteId === 0) return false;
     if (!usuarioActual) return false;
     return Number(usuarioActual) === Number(ganadorLote.clienteId);
   }
 
    private esUsuarioUmbral(): boolean {
-    // Busca el ganador del lote actual en el array ganadores
+    // Durante la subasta activa, cualquier usuario puede recibir notificaciones de umbral
+    if (this.subasta?.activa) {
+      return true;
+    }
+    
+    // Si la subasta no está activa, verificar en el array de ganadores
     const ganadorLote = this.ganadores[this.indexLotes];
     const usuarioActual = localStorage.getItem('usuario_id');
     
@@ -1502,59 +1488,56 @@ export class StreamComponent implements OnInit, OnDestroy {
       this.boton = false;
     }
     
-    // PASO 2: SINCRONIZAR GANADORES DE TODOS LOS LOTES (método original)
-    this.sincronizarGanadoresCompleto();
-    
-    // PASO 2.5: VERIFICAR Y CORREGIR GANADORES CON REDIS (nuevo método mejorado)
-    this.verificarYCorregirGanadores().then(() => {
-      console.log('✅ Verificación de ganadores completada automáticamente');
-    }).catch(error => {
-      console.error('❌ Error en verificación automática de ganadores:', error);
+    // PASO 2: OBTENER GANADORES REALES DEL SERVIDOR
+    this.obtenerGanadoresDesdeServidor().then(() => {
+      console.log('✅ Ganadores obtenidos del servidor correctamente');
+      
+      // PASO 3: Determinar ganador del lote actual
+      const ganadorId = this.encontrarGanador();
+      
+      // PASO 4: Si el usuario actual es ganador de lotes sin pagar, mostrar PayPal con el total sin pagar
+      const lotesSinPagar = this.lotesGanadosSinPagar;
+      if (lotesSinPagar.length > 0) {
+        this.paypalMonto = this.montoTotalGanadorSinPagar; // Usar el monto total sin pagar
+        
+        // Asegurar que el componente PayPal se inicialice correctamente
+        this.paypalComponentKey = true;
+        this.pagando = true;
+        
+        // Mensaje de confirmación con detalles
+        setTimeout(() => {
+          const cantidadLotes = lotesSinPagar.length;
+          const mensaje = cantidadLotes === 1 
+            ? `¡Felicidades! Has ganado 1 lote por $${this.montoTotalGanadorSinPagar}. Procede con el pago.`
+            : `¡Felicidades! Has ganado ${cantidadLotes} lotes por un total de $${this.montoTotalGanadorSinPagar}. Procede con el pago.`;
+          alert(mensaje);
+        }, 1000);
+      } else if (ganadorId) {
+        setTimeout(() => {
+          alert(`La subasta ha finalizado. El ganador pagó $${this.pujaActual}.`);
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          alert('La subasta ha finalizado sin ganador (no hubo pujas).');
+        }, 1000);
+      }
+      
+      // PASO 5 y 6: Solo el rematador maneja notificaciones y backend
+      if (this.isRematador()) {
+        if (ganadorId) {
+          this.enviarNotificacionesFinalizacion(ganadorId);
+        }
+        
+        if (this.subasta) {
+          this.subastaService.updateSubasta(this.subasta).subscribe({
+            next: () => console.log('✅ REMATADOR: Subasta marcada como finalizada en la base de datos'),
+            error: (err) => console.error('❌ REMATADOR: Error al finalizar subasta en la base de datos:', err)
+          });
+        }
+      }
+    }).catch((error: any) => {
+      console.error('❌ Error al obtener ganadores del servidor:', error);
     });
-    
-    // PASO 3: Determinar ganador del lote actual
-    const ganadorId = this.encontrarGanador();
-    
-    // PASO 4: Si el usuario actual es ganador de lotes sin pagar, mostrar PayPal con el total sin pagar
-    const lotesSinPagar = this.lotesGanadosSinPagar;
-    if (lotesSinPagar.length > 0) {
-      this.paypalMonto = this.montoTotalGanadorSinPagar; // Usar el monto total sin pagar
-      
-      // Asegurar que el componente PayPal se inicialice correctamente
-      this.paypalComponentKey = true;
-      this.pagando = true;
-      
-      // Mensaje de confirmación con detalles
-      setTimeout(() => {
-        const cantidadLotes = lotesSinPagar.length;
-        const mensaje = cantidadLotes === 1 
-          ? `¡Felicidades! Has ganado 1 lote por $${this.montoTotalGanadorSinPagar}. Procede con el pago.`
-          : `¡Felicidades! Has ganado ${cantidadLotes} lotes por un total de $${this.montoTotalGanadorSinPagar}. Procede con el pago.`;
-        alert(mensaje);
-      }, 1000);
-    } else if (ganadorId) {
-      setTimeout(() => {
-        alert(`La subasta ha finalizado. El ganador pagó $${this.pujaActual}.`);
-      }, 1000);
-    } else {
-      setTimeout(() => {
-        alert('La subasta ha finalizado sin ganador (no hubo pujas).');
-      }, 1000);
-    }
-    
-    // PASO 5 y 6: Solo el rematador maneja notificaciones y backend
-    if (this.isRematador()) {
-      if (ganadorId) {
-        this.enviarNotificacionesFinalizacion(ganadorId);
-      }
-      
-      if (this.subasta) {
-        this.subastaService.updateSubasta(this.subasta).subscribe({
-          next: () => console.log('✅ REMATADOR: Subasta marcada como finalizada en la base de datos'),
-          error: (err) => console.error('❌ REMATADOR: Error al finalizar subasta en la base de datos:', err)
-        });
-      }
-    }
   }
 
 
@@ -2008,6 +1991,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * MÉTODO OBSOLETO: Ya no se usa - se reemplazó por obtenerGanadoresDesdeServidor()
    * Inicializa el array de ganadores con el tamaño correcto (uno por lote)
    */
   private initializarArrayGanadores(): void {
@@ -2019,6 +2003,7 @@ export class StreamComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * MÉTODO OBSOLETO: Ya no se usa - se reemplazó por obtenerGanadoresDesdeServidor()
    * Sincroniza el array de ganadores basándose en las pujas reales de TODOS los lotes.
    * Este método debe llamarse al final de la subasta para asegurar que el array ganadores
    * refleje correctamente quién ganó cada lote.
@@ -2214,6 +2199,39 @@ export class StreamComponent implements OnInit, OnDestroy {
           alert('Error al consultar el estado de la base de datos');
         }
       });
+    }
+  }
+
+  /**
+   * Obtiene los ganadores reales desde el servidor.
+   * Reemplaza el array local con los datos del servidor para garantizar consistencia.
+   */
+  private async obtenerGanadoresDesdeServidor(): Promise<void> {
+    if (!this.subasta?.id) {
+      throw new Error('No hay subasta activa');
+    }
+
+    try {
+      const ganadoresServidor = await this.subastaService.obtenerGanadores(this.subasta.id).toPromise();
+      
+      if (ganadoresServidor && ganadoresServidor.length > 0) {
+        // Mapear los datos del servidor al formato local
+        this.ganadores = ganadoresServidor.map((ganador: any) => ({
+          numeroLote: ganador.loteId, // Usar loteId como numeroLote
+          clienteId: ganador.clienteId,
+          monto: ganador.monto
+        }));
+        
+        console.log('✅ Ganadores actualizados desde servidor:', this.ganadores);
+      } else {
+        // Si no hay ganadores, inicializar array vacío
+        this.initializarArrayGanadores();
+        console.log('📝 No hay ganadores, inicializando array vacío');
+      }
+    } catch (error) {
+      console.error('❌ Error al obtener ganadores del servidor:', error);
+      // Fallback: usar sincronización local
+      this.sincronizarGanadoresCompleto();
     }
   }
 }

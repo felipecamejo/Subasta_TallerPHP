@@ -76,5 +76,15 @@ export class SubastaService {
       })
     );
   }
+
+  // Método para obtener ganadores de la subasta
+  obtenerGanadores(subastaId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.urlService.baseUrl}${this.endpoint}/${subastaId}/ganadores`).pipe(
+      catchError(error => {
+        console.error('Error al obtener ganadores:', error);
+        return of([]);
+      })
+    );
+  }
 }
 

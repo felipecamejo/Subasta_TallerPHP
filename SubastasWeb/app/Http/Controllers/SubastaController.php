@@ -398,4 +398,84 @@ class SubastaController extends Controller
             return response()->json(['error' => 'Error al enviar el email: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/subastas/{subastaId}/ganadores",
+     *     summary="Obtener los ganadores de cada lote de una subasta",
+     *     tags={"Subastas"},
+     *     @OA\Parameter(
+     *         name="subastaId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de ganadores por lote",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="numeroLote", type="integer"),
+     *                 @OA\Property(property="loteId", type="integer"),
+     *                 @OA\Property(property="clienteId", type="integer"),
+     *                 @OA\Property(property="monto", type="number", format="float"),
+     *                 @OA\Property(property="nombreCliente", type="string"),
+     *                 @OA\Property(property="emailCliente", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Subasta no encontrada")
+     * )
+     */
+    public function obtenerGanadores($subastaId)
+    {
+        try {
+            $subasta = Subasta::find($subastaId);
+            if (!$subasta) {
+                return response()->json(['error' => 'Subasta no encontrada'], 404);
+            }
+
+            // Obtener todos los lotes de la subasta con sus pujas
+            $lotes = Lote::where('subasta_id', $subastaId)
+                ->with(['pujas.cliente.usuario'])
+                ->orderBy('id')
+                ->get();
+
+            $ganadores = [];
+
+            foreach ($lotes as $index => $lote) {
+                // Obtener la puja más alta del lote
+                $pujaGanadora = $lote->pujas()
+                    ->orderBy('monto', 'desc')
+                    ->orderBy('fechaHora', 'desc') // En caso de empate, la más reciente gana
+                    ->first();
+
+                if ($pujaGanadora) {
+                    $ganadores[] = [
+                        'numeroLote' => $index + 1,
+                        'loteId' => $lote->id,
+                        'clienteId' => $pujaGanadora->cliente->usuario_id ?? 0,
+                        'monto' => floatval($pujaGanadora->monto),
+                        'nombreCliente' => $pujaGanadora->cliente->usuario->nombre ?? 'Usuario',
+                        'emailCliente' => $pujaGanadora->cliente->usuario->email ?? ''
+                    ];
+                } else {
+                    // Lote sin pujas
+                    $ganadores[] = [
+                        'numeroLote' => $index + 1,
+                        'loteId' => $lote->id,
+                        'clienteId' => 0,
+                        'monto' => 0,
+                        'nombreCliente' => '',
+                        'emailCliente' => ''
+                    ];
+                }
+            }
+
+            return response()->json($ganadores);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener ganadores: ' . $e->getMessage()], 500);
+        }
+    }
 }
